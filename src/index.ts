@@ -53,9 +53,9 @@ export async function main(): Promise<void> {
     .version('2.0.0')
     .description('AI-powered book illustration guide generator v2.0')
     // Phase selection
-    .option('--text', 'Generate Contents.md with visual concepts (analyze phase)')
+    .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')
-    .option('--images', 'Generate images for concepts/elements (illustrate phase)')
+    .option('--images', 'Generate images with DALL-E and update Chapters.md (illustrate phase)')
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
     .option('--elements-filter <filter>', 'Filter elements (e.g., "character:*,place:castle")')

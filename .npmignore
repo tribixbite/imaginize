@@ -1,0 +1,51 @@
+# Source files (we publish dist/)
+src/
+tsconfig.json
+.eslintrc.json
+.prettierrc
+
+# Development files
+*.test.ts
+*.spec.ts
+test/
+tests/
+__tests__/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test books
+*.epub
+*.pdf
+*.mobi
+
+# Output directories
+illustrate_*/
+
+# Config files with secrets
+.illustrate.config
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Misc
+.DS_Store
+npm-debug.log*

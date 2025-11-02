@@ -1,0 +1,25 @@
+# illustrate configuration file
+# Copy this to .illustrate.config and add your API key
+
+# Number of pages per image recommendation
+pagesPerImage: 10
+
+# Whether to extract character/item descriptions
+extractElements: true
+
+# Whether to generate actual images for characters/items (requires API credits)
+generateElementImages: false
+
+# OpenAI API configuration
+apiKey: "sk-your-api-key-here"
+baseUrl: "https://api.openai.com/v1"
+model: "gpt-4o"
+
+# Image generation settings
+imageModel: "dall-e-3"
+imageSize: "1024x1024"  # Options: 1024x1024, 1024x1792, 1792x1024
+imageQuality: "standard"  # Options: standard, hd
+
+# Output settings
+outputPattern: "illustrate_{name}"
+maxConcurrency: 3

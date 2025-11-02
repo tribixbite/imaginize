@@ -73,6 +73,9 @@ export interface IllustrateConfig {
 
   /** Initial retry timeout in ms (default: 5000) */
   retryTimeout?: number;
+
+  /** Limit number of items to process (for testing) */
+  limit?: number;
 }
 
 export interface BookMetadata {

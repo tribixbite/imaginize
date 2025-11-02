@@ -17,7 +17,7 @@ import { retryWithBackoff, formatRetryError } from '../retry-utils.js';
 import { estimateTokens, createTokenEstimate } from '../token-counter.js';
 
 export interface PhaseContext {
-  config: Required<IllustrateConfig>;
+  config: Required<IllustrateConfig> & { limit?: number };
   openai: OpenAI;
   imageOpenai?: OpenAI;
   stateManager: StateManager;

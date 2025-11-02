@@ -18,6 +18,7 @@ import { parsePdf } from './lib/pdf-parser.js';
 import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
+import type { IllustrateConfig } from './types/config.js';
 import { prepareConfiguration, parseChapterSelection, parseElementSelection } from './lib/provider-utils.js';
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
@@ -251,9 +252,15 @@ export async function main(): Promise<void> {
       });
     }
 
+    // Merge CLI options into config
+    const runtimeConfig = {
+      ...config,
+      limit: options.limit, // Add limit from CLI options
+    } as Required<IllustrateConfig> & { limit?: number };
+
     // Create phase context
     const context = {
-      config,
+      config: runtimeConfig,
       openai,
       imageOpenai,
       stateManager,

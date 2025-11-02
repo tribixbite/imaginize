@@ -120,13 +120,20 @@ export class IllustratePhase extends BasePhase {
       return { success: true };
     }
 
-    await progressTracker.log(`Generating images for ${this.concepts.length} concepts...`, 'info');
+    // Apply limit if specified
+    const limit = config.limit ?? undefined;
+    const conceptsToProcess = limit !== undefined ? this.concepts.slice(0, limit) : this.concepts;
+
+    await progressTracker.log(
+      `Generating images for ${conceptsToProcess.length} concepts${limit ? ` (limited from ${this.concepts.length})` : ''}...`,
+      'info'
+    );
 
     const imageModel = config.imageEndpoint?.model || 'dall-e-3';
     let generatedCount = 0;
     let sceneCounter = 1; // Counter for scene numbering
 
-    for (const concept of this.concepts) {
+    for (const concept of conceptsToProcess) {
       try {
         await progressTracker.log(
           `Generating image for: ${concept.chapter} (${concept.pageRange})`,

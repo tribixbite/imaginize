@@ -1,6 +1,7 @@
 {
   "name": "illustrate",
   "version": "2.0.0",
+  "type": "module",
   "description": "AI-powered book illustration guide generator v2 - Multi-provider support with granular phase control and state management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

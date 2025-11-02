@@ -89,6 +89,7 @@ export interface ImageConcept {
   quote: string;
   description: string;
   reasoning?: string;
+  imageUrl?: string;
 }
 
 export interface BookElement {
@@ -120,6 +121,7 @@ export interface ChapterState {
   tokensUsed?: number;
   completedAt?: string;
   error?: string;
+  imageUrl?: string;
 }
 
 export interface PhaseState {

@@ -46,8 +46,9 @@ Return your response as a JSON array with this structure:
 ]`;
 
   try {
+    const modelName = typeof config.model === 'string' ? config.model : config.model.name;
     const response = await openai.chat.completions.create({
-      model: config.model,
+      model: modelName,
       messages: [
         {
           role: 'system',
@@ -113,8 +114,9 @@ Return as JSON array:
 ]`;
 
   try {
+    const modelName = typeof config.model === 'string' ? config.model : config.model.name;
     const response = await openai.chat.completions.create({
-      model: config.model,
+      model: modelName,
       messages: [
         {
           role: 'system',
@@ -142,6 +144,7 @@ Return as JSON array:
 
 /**
  * Generate an image for a given concept or element
+ * Note: Expects imageOpenai client configured with image-capable model
  */
 export async function generateImage(
   description: string,
@@ -149,15 +152,18 @@ export async function generateImage(
   openai: OpenAI
 ): Promise<string | undefined> {
   try {
+    // Extract model name from config
+    const rawModel = config.imageEndpoint?.model || 'dall-e-3';
+    const imageModel = typeof rawModel === 'string' ? rawModel : rawModel.name;
     const response = await openai.images.generate({
-      model: config.imageModel,
+      model: imageModel,
       prompt: description,
       size: config.imageSize,
       quality: config.imageQuality,
       n: 1,
     });
 
-    return response.data[0]?.url;
+    return response.data?.[0]?.url;
   } catch (error) {
     console.error('Error generating image:', error);
     return undefined;

@@ -125,10 +125,10 @@ export interface ChapterState {
 export interface PhaseState {
   status: PhaseStatus;
   currentSubPhase?: SubPhase;
-  subPhases?: Record<SubPhase, {
+  subPhases?: Partial<Record<SubPhase, {
     status: PhaseStatus;
     [key: string]: any;
-  }>;
+  }>>;
   chapters?: Record<string, ChapterState>;
   completedAt?: string;
   error?: string;

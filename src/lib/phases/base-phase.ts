@@ -38,9 +38,7 @@ export interface SubPhaseResult {
  */
 export abstract class BasePhase {
   protected context: PhaseContext;
-  protected phaseName: keyof IllustrateConfig['phases'] extends never
-    ? string
-    : 'parse' | 'analyze' | 'extract' | 'illustrate';
+  protected phaseName: 'parse' | 'analyze' | 'extract' | 'illustrate';
 
   constructor(context: PhaseContext, phaseName: any) {
     this.context = context;
@@ -89,10 +87,11 @@ export abstract class BasePhase {
     const state = stateManager.getState();
 
     // Update current sub-phase
+    const currentSubPhases = state.phases[this.phaseName].subPhases || {};
     stateManager.updatePhase(this.phaseName, 'in_progress', {
       currentSubPhase: subPhase,
       subPhases: {
-        ...state.phases[this.phaseName].subPhases,
+        ...currentSubPhases,
         [subPhase]: { status: 'in_progress' as PhaseStatus },
       },
     });
@@ -124,23 +123,25 @@ export abstract class BasePhase {
 
       // Mark sub-phase as completed
       const currentState = stateManager.getState();
+      const updatedSubPhases = currentState.phases[this.phaseName].subPhases || {};
       stateManager.updatePhase(this.phaseName, 'in_progress', {
         currentSubPhase: subPhase,
         subPhases: {
-          ...currentState.phases[this.phaseName].subPhases,
+          ...updatedSubPhases,
           [subPhase]: {
             status: 'completed' as PhaseStatus,
-            ...result.data,
+            ...(result.data || {}),
           },
         },
       });
       await stateManager.save();
     } catch (error: any) {
       const currentState = stateManager.getState();
+      const failedSubPhases = currentState.phases[this.phaseName].subPhases || {};
       stateManager.updatePhase(this.phaseName, 'in_progress', {
         currentSubPhase: subPhase,
         subPhases: {
-          ...currentState.phases[this.phaseName].subPhases,
+          ...failedSubPhases,
           [subPhase]: {
             status: 'failed' as PhaseStatus,
             error: error.message,

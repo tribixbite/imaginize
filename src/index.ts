@@ -210,8 +210,8 @@ export async function main(): Promise<void> {
 
     // Determine which phases to run
     const needsText = options.text || (!options.elements && !options.images);
-    const needsElements = options.elements;
-    const needsImages = options.images;
+    const needsElements = !!options.elements;
+    const needsImages = !!options.images;
 
     // Filter chapters if requested
     let chaptersToProcess = chapters;

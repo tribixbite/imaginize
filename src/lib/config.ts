@@ -10,14 +10,13 @@ import { existsSync } from 'fs';
 import type { IllustrateConfig, ModelConfig } from '../types/config.js';
 import { getRecommendedFreeTextModel } from './provider-utils.js';
 
-const DEFAULT_CONFIG: Required<IllustrateConfig> = {
+const DEFAULT_CONFIG: IllustrateConfig = {
   pagesPerImage: 10,
   extractElements: true,
   generateElementImages: false,
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
   model: 'gpt-4o-mini',
-  imageEndpoint: undefined,
   outputPattern: 'illustrate_{name}',
   maxConcurrency: 3,
   imageSize: '1024x1024',
@@ -104,7 +103,7 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
     );
   }
 
-  return config;
+  return config as Required<IllustrateConfig>;
 }
 
 /**

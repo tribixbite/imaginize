@@ -1,12 +1,12 @@
 /**
- * Analyze phase - Generate Contents.md with visual concepts
+ * Analyze phase - Generate Chapters.md with visual scenes
  * Corresponds to --text flag
  */
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { ImageConcept, ChapterContent } from '../../types/config.js';
 import { estimateTokens, createTokenEstimate, calculateSplits, resolveModelConfig } from '../token-counter.js';
-import { generateContentsFile } from '../output-generator.js';
+import { generateChaptersFile } from '../output-generator.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -193,7 +193,7 @@ export class AnalyzePhase extends BasePhase {
   }
 
   /**
-   * Sub-phase 5: Save results to Contents.md
+   * Sub-phase 5: Save results to Chapters.md
    */
   protected async save(): Promise<SubPhaseResult> {
     const { outputDir, stateManager, progressTracker } = this.context;
@@ -202,7 +202,7 @@ export class AnalyzePhase extends BasePhase {
       return { success: true };
     }
 
-    await progressTracker.log('Generating Contents.md...', 'info');
+    await progressTracker.log('Generating Chapters.md...', 'info');
 
     const state = stateManager.getState();
     const metadata = {
@@ -210,9 +210,9 @@ export class AnalyzePhase extends BasePhase {
       totalPages: state.totalPages,
     };
 
-    await generateContentsFile(outputDir, metadata, this.conceptsByChapter);
+    await generateChaptersFile(outputDir, metadata, this.conceptsByChapter);
 
-    await progressTracker.log('Contents.md generated', 'success');
+    await progressTracker.log('Chapters.md generated', 'success');
 
     return { success: true };
   }
@@ -230,7 +230,7 @@ export class AnalyzePhase extends BasePhase {
       chapter.content.split(/\s+/).length / (config.pagesPerImage * 300)
     );
 
-    const prompt = `You are analyzing a book chapter to identify the most visually interesting and important concepts for illustration.
+    const prompt = `You are analyzing a book chapter to identify visually rich scenes for illustration.
 
 Chapter: ${chapter.chapterTitle}
 Page Range: ${chapter.pageRange}
@@ -238,18 +238,22 @@ Page Range: ${chapter.pageRange}
 Content:
 ${chapter.content}
 
-Please identify ${numImages} key visual concepts from this chapter that would make compelling illustrations. For each concept:
-1. Choose a significant quote (20-50 words) that captures the visual moment
-2. Provide a brief description of what should be illustrated
-3. Explain why this moment is important or visually interesting
+Identify ${numImages} visually compelling scenes from this chapter. For each scene:
+1. Extract the COMPLETE original description from the text (2-5 consecutive sentences that describe the visual scene)
+2. Provide ONLY a factual description of what is shown (no interpretation, no "why it matters")
 
-Return your response as a JSON object with a "concepts" array:
+IMPORTANT:
+- Use EXACT quotes from the source text (not paraphrased)
+- Include the FULL descriptive passage (multiple sentences if the description spans them)
+- Stay true to the author's words - do not add interpretation
+- Focus on moments with strong visual descriptions
+
+Return JSON format:
 {
   "concepts": [
     {
-      "quote": "exact quote from the text",
-      "description": "what to illustrate",
-      "reasoning": "why this is significant"
+      "quote": "full multi-sentence quote from source text",
+      "description": "factual description of visual elements only"
     }
   ]
 }`;
@@ -280,7 +284,6 @@ Return your response as a JSON object with a "concepts" array:
       pageRange: chapter.pageRange,
       quote: c.quote || '',
       description: c.description || '',
-      reasoning: c.reasoning || '',
     }));
   }
 }

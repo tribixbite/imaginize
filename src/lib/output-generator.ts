@@ -8,14 +8,15 @@ import { join } from 'path';
 import type { ImageConcept, BookElement, BookMetadata } from '../types/config.js';
 
 /**
- * Generate Contents.md file with chapter summaries and image concepts
+ * Generate Contents.md - Table of Contents linking to other files
  */
 export async function generateContentsFile(
   outputDir: string,
   metadata: BookMetadata,
-  conceptsByChapter: Map<string, ImageConcept[]>
+  chaptersCount: number,
+  elementsCount: number
 ): Promise<void> {
-  let content = `# Contents - ${metadata.title}\n\n`;
+  let content = `# ${metadata.title}\n\n`;
 
   if (metadata.author) {
     content += `**Author:** ${metadata.author}\n`;
@@ -28,8 +29,32 @@ export async function generateContentsFile(
   }
 
   content += '\n---\n\n';
-  content += '## Visual Concepts by Chapter\n\n';
-  content += 'This document contains key visual concepts identified throughout the book, organized by chapter. Each entry includes a direct quote and description for potential illustration.\n\n';
+  content += '## Generated Documentation\n\n';
+  content += 'This illustration guide contains:\n\n';
+  content += `- **[Chapters.md](./Chapters.md)** - ${chaptersCount} visual scenes organized by chapter\n`;
+  content += `- **[Elements.md](./Elements.md)** - ${elementsCount} story elements (characters, places, items)\n`;
+  content += '\n---\n\n';
+  content += '## How to Use This Guide\n\n';
+  content += '1. **Chapters.md**: Browse visual scenes chapter by chapter. Each scene includes exact quotes from the source text and factual descriptions.\n\n';
+  content += '2. **Elements.md**: Reference catalog of characters, creatures, places, and items with multiple source quotes for accurate illustration.\n\n';
+  content += '3. **Cross-Reference**: When illustrating a scene mentioning a character or place, check Elements.md for their complete description.\n\n';
+
+  const filePath = join(outputDir, 'Contents.md');
+  await writeFile(filePath, content);
+}
+
+/**
+ * Generate Chapters.md file with visual scenes by chapter
+ */
+export async function generateChaptersFile(
+  outputDir: string,
+  metadata: BookMetadata,
+  conceptsByChapter: Map<string, ImageConcept[]>
+): Promise<void> {
+  let content = `# Chapters - ${metadata.title}\n\n`;
+  content += '## Visual Scenes by Chapter\n\n';
+  content += 'Each scene includes exact quotes from the source text for illustration reference.\n\n';
+  content += '---\n\n';
 
   // Group concepts by chapter
   for (const [chapterTitle, concepts] of conceptsByChapter.entries()) {
@@ -38,20 +63,15 @@ export async function generateContentsFile(
     content += `### ${chapterTitle}\n\n`;
 
     concepts.forEach((concept, index) => {
-      content += `#### Visual Concept ${index + 1}\n\n`;
+      content += `#### Scene ${index + 1}\n\n`;
       content += `**Pages:** ${concept.pageRange}\n\n`;
-      content += `**Quote:**\n> ${concept.quote}\n\n`;
-      content += `**Description:** ${concept.description}\n\n`;
-
-      if (concept.reasoning) {
-        content += `**Why This Matters:** ${concept.reasoning}\n\n`;
-      }
-
+      content += `**Source Text:**\n> ${concept.quote}\n\n`;
+      content += `**Visual Elements:** ${concept.description}\n\n`;
       content += '---\n\n';
     });
   }
 
-  const filePath = join(outputDir, 'Contents.md');
+  const filePath = join(outputDir, 'Chapters.md');
   await writeFile(filePath, content);
 }
 

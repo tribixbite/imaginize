@@ -138,30 +138,37 @@
 ---
 
 ### 3. Element Cross-Referencing for Image Generation
-**Current:** Image generation is placeholder
-**Required:** When generating images, check if prompt mentions characters/places and pull their full description from Elements.md
+**Status:** ✅ COMPLETED
 
-**Example:**
+**Implementation:**
 ```typescript
-// Scene mentions "Mal" and "Tor Vyord"
-const sceneDescription = "Mal flying over Tor Vyord";
+// 1. Load and parse Elements.md (illustrate-phase.ts:193-262)
+const elementsContent = await readFile(elementsPath, 'utf-8');
+this.elements = this.parseElementsFile(elementsContent);
 
-// Cross-reference Elements.md:
-const malDescription = elements.find(e => e.name === "Mal").description;
-const torVyordDescription = elements.find(e => e.name === "Tor Vyord").description;
+// 2. Extract entity names from descriptions (extractEntityNames)
+const mentionedEntities = this.extractEntityNames(concept.description, concept.quote);
+// Extracts: ["Mal", "Arvorian", etc.]
 
-// Concatenate for image prompt:
-const fullPrompt = `${sceneDescription}. Mal: ${malDescription}. Tor Vyord: ${torVyordDescription}`;
+// 3. Fuzzy match to elements (findElement)
+const element = this.findElement("Mal");
+// Matches: "Mal Arvorian" via partial matching
+
+// 4. Build enhanced prompt (buildImagePrompt)
+prompt += '\n\nAdditional context:\n' +
+  `Mal Arvorian: ${element.description}`;
 ```
 
-**Implementation Needed:**
-1. Load Elements.md or read from state
-2. Parse element names from scene descriptions
-3. Match names (fuzzy matching recommended - "the Kraken" → "Kraken")
-4. Concatenate element descriptions into image prompt
-5. Pass to DALL-E API
+**Features:**
+- ✅ Parses Elements.md markdown structure
+- ✅ Extracts capitalized words as potential entities
+- ✅ Fuzzy matching (exact, case-insensitive, partial)
+- ✅ Appends descriptions to DALL-E prompts
 
-**Complexity:** MEDIUM
+**Test Results:**
+- Loaded 6 elements for cross-referencing
+- Image generated with enhanced character context
+- Logs show: "Loaded 6 elements for cross-referencing"
 
 ---
 
@@ -381,8 +388,8 @@ described as spinning and twisting in the cold air.
 - ✅ DALL-E image generation working
 - ✅ Contents.md TOC generation complete
 - ✅ Image URLs added to Chapters.md output
-- ⏳ Element cross-referencing for images (optional enhancement, estimated 3-4 hours)
+- ✅ Element cross-referencing for images complete
 - ⏳ Line number tracking (optional enhancement, estimated 6-8 hours)
 
-**Current Progress: 85% Complete**
-All core user requirements implemented except optional enhancements.
+**Current Progress: 95% Complete**
+All user requirements implemented except optional line number tracking.

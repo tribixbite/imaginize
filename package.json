@@ -1,7 +1,7 @@
 {
   "name": "illustrate",
-  "version": "1.0.0",
-  "description": "AI-powered book illustration guide generator - extracts key visual concepts from EPUB and PDF books",
+  "version": "2.0.0",
+  "description": "AI-powered book illustration guide generator v2 - Multi-provider support with granular phase control and state management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "test": "node --test",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\""
   },
@@ -53,11 +54,14 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/pdf-parse": "^1.1.4",
+    "@types/adm-zip": "^0.5.5",
+    "@types/xml2js": "^0.4.14",
     "typescript": "^5.4.5",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0"
+    "@typescript-eslint/parser": "^7.0.0",
+    "bun-types": "latest"
   },
   "files": [
     "dist",

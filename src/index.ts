@@ -1,180 +1,44 @@
 /**
- * illustrate - AI-powered book illustration guide generator
- * Main entry point and orchestrator
+ * illustrate v2.0 - AI-powered book illustration guide generator
+ * Main entry point with phase-based orchestration
  */
 
-import { readdir, mkdir } from 'fs/promises';
-import { join, extname, basename } from 'path';
+import { mkdir } from 'fs/promises';
+import { extname, basename } from 'path';
 import { existsSync } from 'fs';
 import OpenAI from 'openai';
 import chalk from 'chalk';
 import ora from 'ora';
 import { Command } from 'commander';
+import readline from 'readline';
 
 import { loadConfig, getSampleConfig } from './lib/config.js';
 import { parseEpub, sanitizeFilename } from './lib/epub-parser.js';
 import { parsePdf } from './lib/pdf-parser.js';
-import {
-  analyzeChapter,
-  extractElements,
-  generateImage,
-  processChaptersInBatches,
-} from './lib/ai-analyzer.js';
-import { generateContentsFile, generateElementsFile } from './lib/output-generator.js';
+import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
-import type { ImageConcept, BookElement } from './types/config.js';
+import { findBookFiles, selectBookFile } from './lib/file-selector.js';
+import { prepareConfiguration, parseChapterSelection, parseElementSelection } from './lib/provider-utils.js';
+import { AnalyzePhase } from './lib/phases/analyze-phase.js';
+import { ExtractPhase } from './lib/phases/extract-phase.js';
+import { IllustratePhase } from './lib/phases/illustrate-phase.js';
+import type { CommandOptions, ChapterContent } from './types/config.js';
 
 /**
- * Find book files (EPUB or PDF) in current directory
+ * Prompt user to continue from saved state
  */
-async function findBookFiles(): Promise<string[]> {
-  const files = await readdir('.');
-  return files.filter((f) => {
-    const ext = extname(f).toLowerCase();
-    return ext === '.epub' || ext === '.pdf';
+async function promptToContinue(): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
   });
-}
 
-/**
- * Process a single book file
- */
-async function processBook(filePath: string): Promise<void> {
-  const spinner = ora('Loading configuration...').start();
-
-  try {
-    // Load configuration
-    const config = await loadConfig();
-    spinner.succeed('Configuration loaded');
-
-    // Initialize OpenAI client
-    const openai = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.baseUrl,
+  return new Promise((resolve) => {
+    rl.question('Continue from saved progress? (y/n): ', (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
-
-    // Parse the book
-    spinner.start('Parsing book file...');
-    const ext = extname(filePath).toLowerCase();
-    const { metadata, chapters, fullText } =
-      ext === '.epub' ? await parseEpub(filePath) : await parsePdf(filePath);
-
-    spinner.succeed(
-      `Parsed "${metadata.title}" - ${chapters.length} chapters, ${metadata.totalPages || '?'} pages`
-    );
-
-    // Create output directory
-    const sanitizedName = sanitizeFilename(basename(filePath));
-    const outputDir = config.outputPattern.replace('{name}', sanitizedName);
-
-    if (existsSync(outputDir)) {
-      spinner.warn(`Output directory ${outputDir} already exists, will overwrite`);
-    } else {
-      await mkdir(outputDir, { recursive: true });
-    }
-
-    // Initialize progress tracker
-    const progress = new ProgressTracker(outputDir);
-    await progress.initialize(metadata.title, chapters.length);
-    await progress.log(`Processing: ${filePath}`, 'info');
-
-    // Analyze chapters for visual concepts
-    console.log(chalk.cyan('\n📚 Analyzing chapters for visual concepts...\n'));
-
-    const conceptsByChapter = new Map<string, ImageConcept[]>();
-
-    const chapterProcessor = async (chapter: any, index: number) => {
-      spinner.start(
-        `Analyzing chapter ${index + 1}/${chapters.length}: ${chapter.chapterTitle}`
-      );
-      await progress.startChapter(chapter.chapterNumber, chapter.chapterTitle);
-
-      const concepts = await analyzeChapter(chapter, config, openai);
-      conceptsByChapter.set(chapter.chapterTitle, concepts);
-
-      await progress.completeChapter(
-        chapter.chapterNumber,
-        chapter.chapterTitle,
-        concepts.length
-      );
-      spinner.succeed(
-        `Chapter ${index + 1}/${chapters.length}: ${chapter.chapterTitle} - ${concepts.length} concepts`
-      );
-    };
-
-    await processChaptersInBatches(
-      chapters.map((c, i) => ({ ...c, index: i })),
-      (c) => chapterProcessor(c, c.index),
-      config.maxConcurrency
-    );
-
-    // Extract elements (characters, places, etc.)
-    let elements: BookElement[] = [];
-    if (config.extractElements) {
-      console.log(chalk.cyan('\n🔍 Extracting story elements...\n'));
-      spinner.start('Analyzing book for characters, places, items...');
-      await progress.startElementExtraction();
-
-      elements = await extractElements(fullText, config, openai);
-
-      await progress.completeElementExtraction(elements.length);
-      spinner.succeed(`Found ${elements.length} story elements`);
-
-      // Generate images for elements if requested
-      if (config.generateElementImages && elements.length > 0) {
-        console.log(chalk.cyan('\n🎨 Generating images for elements...\n'));
-
-        for (const element of elements) {
-          spinner.start(`Generating image for: ${element.name}`);
-          const imageUrl = await generateImage(
-            element.description || element.name,
-            config,
-            openai
-          );
-
-          if (imageUrl) {
-            element.imageUrl = imageUrl;
-            await progress.logImageGeneration(element.name, true);
-            spinner.succeed(`Generated image for: ${element.name}`);
-          } else {
-            await progress.logImageGeneration(element.name, false);
-            spinner.fail(`Failed to generate image for: ${element.name}`);
-          }
-        }
-      }
-    }
-
-    // Generate output files
-    spinner.start('Generating Contents.md...');
-    await generateContentsFile(outputDir, metadata, conceptsByChapter);
-    spinner.succeed('Generated Contents.md');
-
-    if (config.extractElements) {
-      spinner.start('Generating Elements.md...');
-      await generateElementsFile(outputDir, metadata, elements);
-      spinner.succeed('Generated Elements.md');
-    }
-
-    // Finalize progress
-    const totalConcepts = Array.from(conceptsByChapter.values()).reduce(
-      (sum, concepts) => sum + concepts.length,
-      0
-    );
-    const imagesGenerated = elements.filter((e) => e.imageUrl).length;
-
-    await progress.finalize(totalConcepts, elements.length, imagesGenerated);
-
-    // Success summary
-    console.log(chalk.green.bold('\n✨ Processing complete!\n'));
-    console.log(chalk.white(`Output directory: ${chalk.cyan(outputDir)}`));
-    console.log(chalk.white(`- Contents.md: ${chalk.yellow(totalConcepts)} visual concepts`));
-    if (config.extractElements) {
-      console.log(chalk.white(`- Elements.md: ${chalk.yellow(elements.length)} story elements`));
-    }
-    console.log(chalk.white(`- progress.md: Full processing log\n`));
-  } catch (error) {
-    spinner.fail('Processing failed');
-    throw error;
-  }
+  });
 }
 
 /**
@@ -185,59 +49,276 @@ export async function main(): Promise<void> {
 
   program
     .name('illustrate')
-    .description('AI-powered book illustration guide generator')
-    .version('1.0.0')
-    .option('-f, --file <path>', 'Specific book file to process')
+    .version('2.0.0')
+    .description('AI-powered book illustration guide generator v2.0')
+    // Phase selection
+    .option('--text', 'Generate Contents.md with visual concepts (analyze phase)')
+    .option('--elements', 'Generate Elements.md with story elements (extract phase)')
+    .option('--images', 'Generate images for concepts/elements (illustrate phase)')
+    // Filtering
+    .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
+    .option('--elements-filter <filter>', 'Filter elements (e.g., "character:*,place:castle")')
+    .option('--limit <n>', 'Limit number of items processed (for testing)', parseInt)
+    // Control
+    .option('--continue', 'Continue from saved progress')
+    .option('--force', 'Force regeneration even if exists')
+    .option('--migrate', 'Migrate old state to new schema')
+    // Config override
+    .option('--model <name>', 'Override model (e.g., "gpt-4o")')
+    .option('--api-key <key>', 'Override API key')
+    .option('--image-key <key>', 'Separate image API key')
+    // Output
+    .option('--output-dir <dir>', 'Override output directory')
+    .option('--verbose', 'Verbose logging')
+    .option('--quiet', 'Minimal output')
+    // Utilities
     .option('--init-config', 'Generate sample .illustrate.config file')
-    .action(async (options) => {
-      try {
-        // Generate sample config if requested
-        if (options.initConfig) {
-          const configContent = getSampleConfig();
-          const { writeFile } = await import('fs/promises');
-          await writeFile('.illustrate.config', configContent);
-          console.log(chalk.green('✅ Created .illustrate.config file'));
-          console.log(
-            chalk.yellow('⚠️  Remember to add your OpenAI API key to the file!')
-          );
-          return;
-        }
+    .option('--estimate', 'Estimate costs without executing')
+    .option('-f, --file <path>', 'Specific book file to process');
 
-        // Find book files
-        const bookFiles = options.file
-          ? [options.file]
-          : await findBookFiles();
+  program.parse();
+  const options = program.opts<CommandOptions>();
 
-        if (bookFiles.length === 0) {
-          console.error(
-            chalk.red('❌ No book files found. Please provide an EPUB or PDF file.')
-          );
-          process.exit(1);
-        }
+  try {
+    // Handle --init-config
+    if (options.initConfig) {
+      const { writeFile } = await import('fs/promises');
+      await writeFile('.illustrate.config', getSampleConfig());
+      console.log(chalk.green('✅ Created .illustrate.config file'));
+      console.log(chalk.yellow('⚠️  Remember to add your API keys!'));
+      return;
+    }
 
-        console.log(
-          chalk.cyan.bold(
-            `\n📖 illustrate - AI Book Illustration Guide Generator\n`
-          )
-        );
+    const spinner = ora();
 
-        // Process each book
-        for (const bookFile of bookFiles) {
-          console.log(chalk.white(`\nProcessing: ${chalk.cyan(bookFile)}\n`));
-          await processBook(bookFile);
-        }
-      } catch (error: any) {
-        console.error(chalk.red('\n❌ Error:'), error.message);
-        if (error.message.includes('API key')) {
-          console.log(
-            chalk.yellow(
-              '\n💡 Tip: Run "illustrate --init-config" to create a configuration file'
-            )
-          );
-        }
+    // Load configuration
+    spinner.start('Loading configuration...');
+    const config = await loadConfig();
+
+    // Override with CLI options if provided
+    if (options.model) config.model = options.model;
+    if (options.apiKey) config.apiKey = options.apiKey;
+    if (options.imageKey && config.imageEndpoint) {
+      config.imageEndpoint.apiKey = options.imageKey;
+    }
+
+    spinner.succeed('Configuration loaded');
+
+    // Find or select book file
+    let bookFile: string;
+
+    if (options.file) {
+      bookFile = options.file;
+      if (!existsSync(bookFile)) {
+        throw new Error(`Book file not found: ${bookFile}`);
+      }
+    } else {
+      spinner.start('Searching for book files...');
+      const bookFiles = await findBookFiles();
+
+      if (bookFiles.length === 0) {
+        spinner.fail('No book files found');
+        console.error(chalk.red('\n❌ No EPUB or PDF files found in current directory'));
+        console.log(chalk.yellow('\n💡 Tip: Run with --file <path> to specify a book file'));
         process.exit(1);
       }
+
+      spinner.stop();
+      const selected = await selectBookFile(bookFiles);
+
+      if (!selected) {
+        console.log(chalk.yellow('No file selected. Exiting.'));
+        process.exit(0);
+      }
+
+      bookFile = selected.path;
+    }
+
+    console.log(chalk.cyan(`\n📖 Processing: ${chalk.white(bookFile)}\n`));
+
+    // Parse the book
+    spinner.start('Parsing book file...');
+    const ext = extname(bookFile).toLowerCase();
+    const { metadata, chapters, fullText } =
+      ext === '.epub' ? await parseEpub(bookFile) : await parsePdf(bookFile);
+
+    spinner.succeed(
+      `Parsed "${metadata.title}" - ${chapters.length} chapters, ${metadata.totalPages || '?'} pages`
+    );
+
+    // Determine output directory
+    const sanitizedName = sanitizeFilename(basename(bookFile));
+    const outputDir = options.outputDir || config.outputPattern.replace('{name}', sanitizedName);
+
+    // Check for existing state
+    let stateManager: StateManager;
+    let progressTracker: ProgressTracker;
+    let shouldContinue = false;
+
+    if (existsSync(outputDir)) {
+      // Try to load existing state
+      stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+      const hasState = await stateManager.load();
+
+      if (hasState && !options.force) {
+        const current = stateManager.getCurrentPhase();
+
+        if (current) {
+          console.log(chalk.yellow(`\n⚠️  Found partial progress:\n`));
+          console.log(stateManager.getSummary());
+          console.log('');
+
+          if (options.continue) {
+            shouldContinue = true;
+          } else {
+            shouldContinue = await promptToContinue();
+
+            if (!shouldContinue) {
+              console.log(chalk.yellow('\n💡 Use --continue to resume or --force to restart'));
+              console.log(chalk.yellow('   Use --force --chapters <range> to regenerate specific chapters\n'));
+              process.exit(0);
+            }
+          }
+        }
+      }
+
+      if (options.force && !shouldContinue) {
+        console.log(chalk.yellow('⚠️  Force mode: Will regenerate content'));
+        // Reset state
+        stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+      }
+
+      progressTracker = new ProgressTracker(outputDir);
+    } else {
+      // Create new output directory and state
+      await mkdir(outputDir, { recursive: true });
+      stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+      progressTracker = new ProgressTracker(outputDir);
+      await progressTracker.initialize(metadata.title, chapters.length);
+    }
+
+    // Update TOC in state
+    stateManager.updateTOC(
+      chapters.map((c) => ({
+        number: c.chapterNumber,
+        title: c.chapterTitle,
+        pages: c.pageRange,
+        tokenCount: c.tokenCount,
+      }))
+    );
+    await stateManager.save();
+
+    // Determine which phases to run
+    const needsText = options.text || (!options.elements && !options.images);
+    const needsElements = options.elements;
+    const needsImages = options.images;
+
+    // Filter chapters if requested
+    let chaptersToProcess = chapters;
+    if (options.chapters) {
+      const selectedNums = parseChapterSelection(options.chapters);
+      chaptersToProcess = chapters.filter((c) => selectedNums.includes(c.chapterNumber));
+
+      if (chaptersToProcess.length === 0) {
+        throw new Error(`No chapters found matching: ${options.chapters}`);
+      }
+
+      console.log(chalk.cyan(`📋 Processing ${chaptersToProcess.length} selected chapters\n`));
+    }
+
+    // Prepare API configuration
+    spinner.start('Preparing API configuration...');
+    const { textConfig, imageConfig, warnings } = await prepareConfiguration(config, needsImages);
+
+    for (const warning of warnings) {
+      spinner.warn(warning);
+    }
+
+    spinner.succeed('API configuration ready');
+
+    // Initialize OpenAI clients
+    const openai = new OpenAI({
+      apiKey: textConfig.apiKey,
+      baseURL: textConfig.baseUrl,
     });
 
-  await program.parseAsync(process.argv);
+    let imageOpenai: OpenAI | undefined;
+    if (imageConfig) {
+      imageOpenai = new OpenAI({
+        apiKey: imageConfig.apiKey,
+        baseURL: imageConfig.baseUrl,
+      });
+    }
+
+    // Create phase context
+    const context = {
+      config,
+      openai,
+      imageOpenai,
+      stateManager,
+      progressTracker,
+      chapters: chaptersToProcess,
+      outputDir,
+    };
+
+    // Execute requested phases
+    console.log(chalk.cyan.bold('\n🚀 Starting processing...\n'));
+
+    try {
+      if (needsText) {
+        console.log(chalk.cyan('📝 Phase: Analyze (--text)\n'));
+        const analyzePhase = new AnalyzePhase(context);
+        await analyzePhase.execute();
+        console.log('');
+      }
+
+      if (needsElements) {
+        console.log(chalk.cyan('🔍 Phase: Extract (--elements)\n'));
+        const extractPhase = new ExtractPhase(context);
+        await extractPhase.execute();
+        console.log('');
+      }
+
+      if (needsImages) {
+        console.log(chalk.cyan('🎨 Phase: Illustrate (--images)\n'));
+        const illustratePhase = new IllustratePhase(context);
+        await illustratePhase.execute();
+        console.log('');
+      }
+
+      // Success summary
+      console.log(chalk.green.bold('✨ Processing complete!\n'));
+      console.log(chalk.white(`Output directory: ${chalk.cyan(outputDir)}`));
+      console.log(chalk.white(`- progress.md: Processing log`));
+      console.log(chalk.white(`- .illustrate.state.json: Machine state`));
+
+      if (needsText) {
+        console.log(chalk.white(`- Contents.md: Visual concepts by chapter`));
+      }
+      if (needsElements) {
+        console.log(chalk.white(`- Elements.md: Story elements catalog`));
+      }
+
+      console.log('');
+      console.log(stateManager.getSummary());
+      console.log('');
+
+    } catch (error: any) {
+      console.error(chalk.red(`\n❌ Error during processing:\n`));
+      console.error(error.message);
+      console.log(chalk.yellow(`\n💡 Check ${outputDir}/progress.md for details`));
+      console.log(chalk.yellow(`   State saved - use --continue to resume\n`));
+      process.exit(1);
+    }
+
+  } catch (error: any) {
+    console.error(chalk.red('\n❌ Error:'), error.message);
+
+    if (error.message.includes('API key')) {
+      console.log(chalk.yellow('\n💡 Tip: Run "illustrate --init-config" to create a configuration file'));
+      console.log(chalk.yellow('   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable\n'));
+    }
+
+    process.exit(1);
+  }
 }

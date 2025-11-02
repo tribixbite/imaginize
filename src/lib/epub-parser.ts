@@ -71,6 +71,7 @@ export async function parseEpub(filePath: string): Promise<{
   const chapters: ChapterContent[] = [];
   let fullText = '';
   let currentPage = 1;
+  let currentLine = 1;
 
   // Process each chapter in spine order
   for (let i = 0; i < spine.length; i++) {
@@ -102,15 +103,22 @@ export async function parseEpub(filePath: string): Promise<{
           $('title').text() ||
           `Chapter ${i + 1}`;
 
+        // Count lines in this chapter
+        const lineCount = textContent.split('\n').length;
+        const lineStart = currentLine;
+        const lineEnd = currentLine + lineCount - 1;
+
         chapters.push({
           chapterNumber: i + 1,
           chapterTitle: chapterTitle.trim(),
           pageRange,
           content: textContent,
+          lineNumbers: { start: lineStart, end: lineEnd },
         });
 
         fullText += textContent + '\n\n';
         currentPage += estimatedPages;
+        currentLine = lineEnd + 1;
       }
     } catch (error) {
       console.warn(`Warning: Failed to parse chapter ${i + 1}:`, error);

@@ -284,6 +284,7 @@ Return JSON format:
       pageRange: chapter.pageRange,
       quote: c.quote || '',
       description: c.description || '',
+      lineNumbers: chapter.lineNumbers,
     }));
   }
 }

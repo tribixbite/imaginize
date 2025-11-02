@@ -90,6 +90,7 @@ export interface ImageConcept {
   description: string;
   reasoning?: string;
   imageUrl?: string;
+  lineNumbers?: { start: number; end: number };
 }
 
 export interface BookElement {
@@ -109,6 +110,7 @@ export interface ChapterContent {
   pageRange: string;
   content: string;
   tokenCount?: number;
+  lineNumbers?: { start: number; end: number };
 }
 
 /** State management types */

@@ -64,7 +64,14 @@ export async function generateChaptersFile(
 
     concepts.forEach((concept, index) => {
       content += `#### Scene ${index + 1}\n\n`;
-      content += `**Pages:** ${concept.pageRange}\n\n`;
+
+      // Display pages with line numbers if available
+      if (concept.lineNumbers) {
+        content += `**Pages:** ${concept.pageRange} (Lines ${concept.lineNumbers.start}-${concept.lineNumbers.end})\n\n`;
+      } else {
+        content += `**Pages:** ${concept.pageRange}\n\n`;
+      }
+
       content += `**Source Text:**\n> ${concept.quote}\n\n`;
       content += `**Visual Elements:** ${concept.description}\n\n`;
 

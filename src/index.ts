@@ -22,6 +22,7 @@ import { prepareConfiguration, parseChapterSelection, parseElementSelection } fr
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
 import { IllustratePhase } from './lib/phases/illustrate-phase.js';
+import { generateContentsFile } from './lib/output-generator.js';
 import type { CommandOptions, ChapterContent } from './types/config.js';
 
 /**
@@ -286,16 +287,40 @@ export async function main(): Promise<void> {
         console.log('');
       }
 
+      // Generate Contents.md TOC if we have any content
+      const state = stateManager.getState();
+      const hasChapters = state.phases.analyze.status === 'completed';
+      const hasElements = state.phases.extract.status === 'completed';
+
+      if (hasChapters || hasElements) {
+        // Count chapters and elements
+        const chaptersCount = Object.values(state.phases.analyze.chapters || {}).reduce(
+          (sum, ch) => sum + (ch.concepts || 0),
+          0
+        );
+        const elementsCount = state.elements?.length || 0;
+
+        await generateContentsFile(
+          outputDir,
+          { title: metadata.title, author: metadata.author, totalPages: metadata.totalPages },
+          chaptersCount,
+          elementsCount
+        );
+      }
+
       // Success summary
       console.log(chalk.green.bold('✨ Processing complete!\n'));
       console.log(chalk.white(`Output directory: ${chalk.cyan(outputDir)}`));
       console.log(chalk.white(`- progress.md: Processing log`));
       console.log(chalk.white(`- .illustrate.state.json: Machine state`));
 
-      if (needsText) {
-        console.log(chalk.white(`- Contents.md: Visual concepts by chapter`));
+      if (hasChapters || hasElements) {
+        console.log(chalk.white(`- Contents.md: Table of contents`));
       }
-      if (needsElements) {
+      if (hasChapters) {
+        console.log(chalk.white(`- Chapters.md: Visual scenes by chapter`));
+      }
+      if (hasElements) {
         console.log(chalk.white(`- Elements.md: Story elements catalog`));
       }
 

@@ -67,6 +67,11 @@ export async function generateChaptersFile(
       content += `**Pages:** ${concept.pageRange}\n\n`;
       content += `**Source Text:**\n> ${concept.quote}\n\n`;
       content += `**Visual Elements:** ${concept.description}\n\n`;
+
+      if (concept.imageUrl) {
+        content += `**Generated Image:** [View Image](${concept.imageUrl})\n\n`;
+      }
+
       content += '---\n\n';
     });
   }

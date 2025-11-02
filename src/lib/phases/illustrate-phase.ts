@@ -8,6 +8,7 @@ import { resolveModelConfig } from '../token-counter.js';
 import type { ImageConcept } from '../../types/config.js';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { generateChaptersFile } from '../output-generator.js';
 
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
@@ -254,10 +255,37 @@ export class IllustratePhase extends BasePhase {
   }
 
   /**
-   * Sub-phase 5: Save image URLs
+   * Sub-phase 5: Save image URLs to Chapters.md
    */
   protected async save(): Promise<SubPhaseResult> {
-    // TODO: Update Contents.md and Elements.md with image URLs
+    const { outputDir, stateManager, progressTracker } = this.context;
+
+    if (this.concepts.length === 0) {
+      return { success: true };
+    }
+
+    // Group concepts by chapter for regeneration
+    const conceptsByChapter = new Map<string, ImageConcept[]>();
+    for (const concept of this.concepts) {
+      if (!conceptsByChapter.has(concept.chapter)) {
+        conceptsByChapter.set(concept.chapter, []);
+      }
+      conceptsByChapter.get(concept.chapter)!.push(concept);
+    }
+
+    // Regenerate Chapters.md with image URLs
+    await progressTracker.log('Updating Chapters.md with image URLs...', 'info');
+
+    const state = stateManager.getState();
+    const metadata = {
+      title: state.bookTitle,
+      totalPages: state.totalPages,
+    };
+
+    await generateChaptersFile(outputDir, metadata, conceptsByChapter);
+
+    await progressTracker.log('Chapters.md updated with image URLs', 'success');
+
     return { success: true };
   }
 }

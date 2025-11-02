@@ -287,6 +287,7 @@ Return JSON format:
 
     return concepts.map((c: any) => ({
       chapter: chapter.chapterTitle,
+      chapterNumber: chapter.chapterNumber, // Add actual chapter number
       pageRange: chapter.pageRange,
       quote: c.quote || '',
       description: c.description || '',

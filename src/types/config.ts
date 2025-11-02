@@ -88,6 +88,7 @@ export interface BookMetadata {
 
 export interface ImageConcept {
   chapter: string;
+  chapterNumber?: number; // Actual chapter number from TOC
   pageRange: string;
   quote: string;
   description: string;

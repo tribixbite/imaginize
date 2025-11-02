@@ -131,7 +131,9 @@ export class IllustratePhase extends BasePhase {
 
     const imageModel = config.imageEndpoint?.model || 'dall-e-3';
     let generatedCount = 0;
-    let sceneCounter = 1; // Counter for scene numbering
+
+    // Track scene numbers per chapter
+    const sceneCounters = new Map<number, number>();
 
     for (const concept of conceptsToProcess) {
       try {
@@ -155,8 +157,13 @@ export class IllustratePhase extends BasePhase {
         );
 
         // Download image from temporary URL and save to disk
-        const chapterNum = this.getChapterNumber(concept.chapter);
-        const filename = `chapter_${chapterNum}_scene_${sceneCounter}.png`;
+        const chapterNum = concept.chapterNumber || this.getChapterNumber(concept.chapter);
+
+        // Get or initialize scene counter for this chapter
+        const sceneNum = (sceneCounters.get(chapterNum) || 0) + 1;
+        sceneCounters.set(chapterNum, sceneNum);
+
+        const filename = `chapter_${chapterNum}_scene_${sceneNum}.png`;
         const filepath = join(outputDir, filename);
 
         await progressTracker.log(
@@ -180,7 +187,6 @@ export class IllustratePhase extends BasePhase {
         // Update concept with local file path (relative to output dir)
         concept.imageUrl = `./${filename}`;
         generatedCount++;
-        sceneCounter++;
 
         // Update state with local image path
         stateManager.updateChapter('illustrate', chapterNum, 'completed', {
@@ -243,10 +249,18 @@ export class IllustratePhase extends BasePhase {
     const concepts: ImageConcept[] = [];
     const chapterRegex = /### (.+?)\n\n#### Scene \d+\n\n\*\*Pages:\*\* (.+?)\n\n\*\*Source Text:\*\*\n> (.+?)\n\n\*\*Visual Elements:\*\* (.+?)\n/gs;
 
+    // Get chapter number mapping from state TOC
+    const state = this.context.stateManager.getState();
+    const toc = state.toc?.chapters || [];
+    const chapterTitleToNumber = new Map<string, number>();
+    toc.forEach(ch => chapterTitleToNumber.set(ch.title, ch.number));
+
     let match;
     while ((match = chapterRegex.exec(content)) !== null) {
+      const chapterTitle = match[1];
       concepts.push({
-        chapter: match[1],
+        chapter: chapterTitle,
+        chapterNumber: chapterTitleToNumber.get(chapterTitle),
         pageRange: match[2],
         quote: match[3].replace(/\n> /g, ' '),
         description: match[4],

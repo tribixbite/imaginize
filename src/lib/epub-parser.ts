@@ -42,11 +42,21 @@ export async function parseEpub(filePath: string): Promise<{
 
   // Extract metadata
   const metadataNode = opfData.package.metadata[0];
+
+  // Helper to extract text from xml2js objects
+  const extractText = (value: any): string | undefined => {
+    if (!value) return undefined;
+    if (typeof value === 'string') return value;
+    if (value._) return value._;
+    if (typeof value === 'object' && !Array.isArray(value)) return undefined;
+    return value;
+  };
+
   const metadata: BookMetadata = {
-    title: metadataNode['dc:title']?.[0] || 'Unknown',
-    author: metadataNode['dc:creator']?.[0]?._ || metadataNode['dc:creator']?.[0] || undefined,
-    publisher: metadataNode['dc:publisher']?.[0] || undefined,
-    language: metadataNode['dc:language']?.[0] || undefined,
+    title: extractText(metadataNode['dc:title']?.[0]) || 'Unknown',
+    author: extractText(metadataNode['dc:creator']?.[0]) || undefined,
+    publisher: extractText(metadataNode['dc:publisher']?.[0]) || undefined,
+    language: extractText(metadataNode['dc:language']?.[0]) || undefined,
   };
 
   // Get spine (reading order) and manifest (file locations)

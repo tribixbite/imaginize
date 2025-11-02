@@ -226,9 +226,15 @@ export class AnalyzePhase extends BasePhase {
   ): Promise<ImageConcept[]> {
     const { config, openai } = this.context;
 
-    const numImages = Math.ceil(
-      chapter.content.split(/\s+/).length / (config.pagesPerImage * 300)
-    );
+    // Calculate number of images based on actual page count
+    // Parse page range (e.g., "8-8" or "9-11")
+    const pageRange = chapter.pageRange.split('-').map(p => parseInt(p.trim()));
+    const pageCount = pageRange.length === 2
+      ? (pageRange[1] - pageRange[0] + 1)
+      : 1;
+
+    // Generate 1 image per pagesPerImage (default: 10)
+    const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
     const prompt = `You are analyzing a book chapter to identify visually rich scenes for illustration.
 

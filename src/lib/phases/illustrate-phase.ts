@@ -5,13 +5,15 @@
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import { resolveModelConfig } from '../token-counter.js';
-import type { ImageConcept } from '../../types/config.js';
+import type { ImageConcept, BookElement } from '../../types/config.js';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { existsSync } from 'fs';
 import { generateChaptersFile } from '../output-generator.js';
 
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
+  private elements: BookElement[] = [];
 
   constructor(context: PhaseContext) {
     super(context, 'illustrate');
@@ -179,13 +181,25 @@ export class IllustratePhase extends BasePhase {
     // TODO: Store full concept data in state, not just count
 
     // For testing, let's try to load from Chapters.md
-    const { outputDir } = this.context;
+    const { outputDir, progressTracker } = this.context;
     try {
       const chaptersPath = join(outputDir, 'Chapters.md');
       const chaptersContent = await readFile(chaptersPath, 'utf-8');
       this.concepts = this.parseChaptersFile(chaptersContent);
     } catch (error) {
       // Chapters.md doesn't exist yet
+    }
+
+    // Load elements from Elements.md for cross-referencing
+    try {
+      const elementsPath = join(outputDir, 'Elements.md');
+      if (existsSync(elementsPath)) {
+        const elementsContent = await readFile(elementsPath, 'utf-8');
+        this.elements = this.parseElementsFile(elementsContent);
+        await progressTracker.log(`Loaded ${this.elements.length} elements for cross-referencing`, 'info');
+      }
+    } catch (error) {
+      // Elements.md doesn't exist, cross-referencing not available
     }
   }
 
@@ -210,13 +224,115 @@ export class IllustratePhase extends BasePhase {
   }
 
   /**
-   * Build image prompt from concept
-   * TODO: Cross-reference with Elements.md for character/place descriptions
+   * Parse Elements.md to extract element definitions
+   */
+  private parseElementsFile(content: string): BookElement[] {
+    const elements: BookElement[] = [];
+
+    // Match each element section (#### Name)
+    const elementRegex = /#### (.+?)\n\n\*\*Description:\*\* (.+?)\n\n\*\*Reference Quotes:\*\*/gs;
+
+    let match;
+    while ((match = elementRegex.exec(content)) !== null) {
+      const name = match[1];
+      const description = match[2];
+
+      // Determine type from section headers
+      let type: BookElement['type'] = 'object';
+      const beforeElement = content.substring(0, match.index);
+      if (beforeElement.includes('### Characters') && !beforeElement.includes('### Creatures')) {
+        type = 'character';
+      } else if (beforeElement.includes('### Creatures')) {
+        type = 'creature';
+      } else if (beforeElement.includes('### Places')) {
+        type = 'place';
+      } else if (beforeElement.includes('### Items') || beforeElement.includes('### Objects')) {
+        type = 'item';
+      }
+
+      elements.push({
+        type,
+        name,
+        description,
+        quotes: [], // We don't need quotes for cross-referencing prompts
+      });
+    }
+
+    return elements;
+  }
+
+  /**
+   * Build image prompt from concept with element cross-referencing
    */
   private buildImagePrompt(concept: ImageConcept): string {
-    // For now, use the description directly
-    // TODO: Extract entity names and cross-reference Elements.md
-    return concept.description;
+    let prompt = concept.description;
+
+    // If we have elements, try to cross-reference
+    if (this.elements.length > 0) {
+      const referencedElements: string[] = [];
+
+      // Extract entity names mentioned in the description
+      const mentionedEntities = this.extractEntityNames(concept.description, concept.quote);
+
+      for (const entityName of mentionedEntities) {
+        // Find matching element (fuzzy match)
+        const element = this.findElement(entityName);
+        if (element) {
+          referencedElements.push(`${element.name}: ${element.description}`);
+        }
+      }
+
+      // Append element descriptions to prompt
+      if (referencedElements.length > 0) {
+        prompt += '\n\nAdditional context:\n' + referencedElements.join('\n');
+      }
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Extract entity names from description and quote
+   */
+  private extractEntityNames(description: string, quote: string): string[] {
+    const entities = new Set<string>();
+
+    // Common proper noun patterns and capitalized words
+    const text = `${description} ${quote}`;
+
+    // Extract capitalized words (potential entity names)
+    const capitalizedWords = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
+
+    for (const word of capitalizedWords) {
+      // Skip common non-entity words
+      const skipWords = ['The', 'A', 'An', 'She', 'He', 'It', 'They', 'When', 'Where', 'What', 'How', 'Why'];
+      if (!skipWords.includes(word)) {
+        entities.add(word);
+      }
+    }
+
+    return Array.from(entities);
+  }
+
+  /**
+   * Find element by name (fuzzy matching)
+   */
+  private findElement(entityName: string): BookElement | undefined {
+    // Exact match
+    let element = this.elements.find(e => e.name === entityName);
+    if (element) return element;
+
+    // Case-insensitive match
+    element = this.elements.find(e => e.name.toLowerCase() === entityName.toLowerCase());
+    if (element) return element;
+
+    // Partial match (entity name contains element name or vice versa)
+    element = this.elements.find(e =>
+      e.name.toLowerCase().includes(entityName.toLowerCase()) ||
+      entityName.toLowerCase().includes(e.name.toLowerCase())
+    );
+
+    return element;
   }
 
   /**

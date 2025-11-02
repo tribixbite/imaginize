@@ -6,10 +6,11 @@
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import { resolveModelConfig } from '../token-counter.js';
 import type { ImageConcept, BookElement } from '../../types/config.js';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { generateChaptersFile } from '../output-generator.js';
+import fetch from 'node-fetch';
 
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
@@ -123,6 +124,7 @@ export class IllustratePhase extends BasePhase {
 
     const imageModel = config.imageEndpoint?.model || 'dall-e-3';
     let generatedCount = 0;
+    let sceneCounter = 1; // Counter for scene numbering
 
     for (const concept of this.concepts) {
       try {
@@ -140,18 +142,42 @@ export class IllustratePhase extends BasePhase {
           `generate image for ${concept.chapter}`
         );
 
-        // Save URL to concept
-        concept.imageUrl = imageUrl;
-        generatedCount++;
-
         await progressTracker.log(
-          `✅ Generated image: ${imageUrl.substring(0, 50)}...`,
+          `✅ Generated image URL: ${imageUrl.substring(0, 50)}...`,
           'success'
         );
 
-        // Update state with image URL
-        stateManager.updateChapter('illustrate', this.getChapterNumber(concept.chapter), 'completed', {
-          imageUrl,
+        // Download image from temporary URL and save to disk
+        const chapterNum = this.getChapterNumber(concept.chapter);
+        const filename = `chapter_${chapterNum}_scene_${sceneCounter}.png`;
+        const filepath = join(outputDir, filename);
+
+        await progressTracker.log(
+          `Downloading image to ${filename}...`,
+          'info'
+        );
+
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to download image: ${response.statusText}`);
+        }
+
+        const imageBuffer = await response.arrayBuffer();
+        await writeFile(filepath, Buffer.from(imageBuffer));
+
+        await progressTracker.log(
+          `✅ Saved image to ${filename}`,
+          'success'
+        );
+
+        // Update concept with local file path (relative to output dir)
+        concept.imageUrl = `./${filename}`;
+        generatedCount++;
+        sceneCounter++;
+
+        // Update state with local image path
+        stateManager.updateChapter('illustrate', chapterNum, 'completed', {
+          imageUrl: concept.imageUrl,
         });
         await stateManager.save();
 

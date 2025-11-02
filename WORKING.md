@@ -263,9 +263,26 @@ npm test             # Run tests (not implemented yet)
 
 ---
 
+### ✅ Runtime Testing Complete
+- [x] CLI executable works (`node bin/illustrate.js`)
+- [x] Configuration loading with OPENAI_API_KEY
+- [x] EPUB parsing (83 chapters, 297 pages)
+- [x] Full text analysis phase completed
+- [x] Contents.md generated successfully
+- [x] State management (.illustrate.state.json) working
+- [x] Progress tracking (progress.md) working
+- [x] Token usage tracking (120,608 tokens for full book)
+
+### 🐛 Bugs Fixed During Testing
+1. ✅ xml2js object format in EPUB metadata - added extractText helper
+2. ✅ Book title displaying as [object Object] - now shows correctly
+
+---
+
 **Last Updated:** 2025-11-02
-**Status:** ✅ v2.0 BUILD COMPLETE - Ready for testing with API keys
+**Status:** ✅ v2.0 FULLY FUNCTIONAL - Tested with real EPUB and API
 **Build:** SUCCESS (0 TypeScript errors)
+**Runtime:** SUCCESS (processed full 83-chapter book)
 **Lines of Code:** ~3000+ new/refactored
-**Commits:** 12
+**Commits:** 15
 **Version:** 2.0.0

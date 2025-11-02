@@ -216,5 +216,35 @@ npm test             # Run tests (not implemented yet)
 
 ---
 
+## v2.0 Production-Ready Features (IN PROGRESS)
+
+### ✅ Completed
+- [x] Comprehensive SPEC.md documenting full v2.0 design
+- [x] Extended type system (ModelConfig, PhaseState, CommandOptions, etc.)
+- [x] State management system (.illustrate.state.json)
+- [x] Token counting and estimation
+- [x] Chapter auto-splitting for token limits
+- [x] Provider detection (OpenAI, OpenRouter, custom)
+- [x] Multi-provider configuration
+- [x] Chapter selection parsing (ranges, wildcards)
+- [x] Element selection parsing (types, patterns, wildcards)
+
+### 🚧 In Progress
+- [ ] Phase-based CLI command system (--text, --images, --elements)
+- [ ] Multi-file selection UI
+- [ ] Resume/continue logic with state validation
+- [ ] Retry logic with exponential backoff
+- [ ] Updated config management with new options
+- [ ] Complete refactor of index.ts for phase-based execution
+
+### 📋 TODO
+- [ ] Bun test suite with 7 pipeline tests
+- [ ] Test with ImpossibleCreatures.epub
+- [ ] Update README for v2.0 features
+- [ ] Migration command for v1 to v2 state
+- [ ] Cost estimation command (--estimate)
+
+---
+
 **Last Updated:** 2025-11-02
-**Status:** Ready for testing and publication
+**Status:** v2.0 Infrastructure Complete - CLI & Testing Remaining

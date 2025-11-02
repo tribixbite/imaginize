@@ -7,7 +7,8 @@ import { cosmiconfig } from 'cosmiconfig';
 import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import type { IllustrateConfig } from '../types/config.js';
+import type { IllustrateConfig, ModelConfig } from '../types/config.js';
+import { getRecommendedFreeTextModel } from './provider-utils.js';
 
 const DEFAULT_CONFIG: Required<IllustrateConfig> = {
   pagesPerImage: 10,
@@ -15,12 +16,16 @@ const DEFAULT_CONFIG: Required<IllustrateConfig> = {
   generateElementImages: false,
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
-  model: 'gpt-4o',
+  model: 'gpt-4o-mini',
+  imageEndpoint: undefined,
   outputPattern: 'illustrate_{name}',
   maxConcurrency: 3,
-  imageModel: 'dall-e-3',
   imageSize: '1024x1024',
   imageQuality: 'standard',
+  pagesPerAutoChapter: 50,
+  tokenSafetyMargin: 0.9,
+  maxRetries: 1,
+  retryTimeout: 5000,
 };
 
 /**
@@ -60,20 +65,42 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   }
 
   // Override with environment variables (highest priority)
-  if (process.env.OPENAI_API_KEY) {
+  // Priority: OPENROUTER_API_KEY > OPENAI_API_KEY
+  if (process.env.OPENROUTER_API_KEY) {
+    config.apiKey = process.env.OPENROUTER_API_KEY;
+    if (!config.baseUrl || config.baseUrl === 'https://api.openai.com/v1') {
+      config.baseUrl = 'https://openrouter.ai/api/v1';
+    }
+    if (config.model === 'gpt-4o-mini') {
+      // Use free model for OpenRouter by default
+      config.model = getRecommendedFreeTextModel().name;
+    }
+  } else if (process.env.OPENAI_API_KEY) {
     config.apiKey = process.env.OPENAI_API_KEY;
   }
-  if (process.env.OPENAI_BASE_URL) {
-    config.baseUrl = process.env.OPENAI_BASE_URL;
+
+  if (process.env.OPENAI_BASE_URL || process.env.OPENROUTER_BASE_URL) {
+    config.baseUrl = process.env.OPENROUTER_BASE_URL || process.env.OPENAI_BASE_URL!;
   }
-  if (process.env.OPENAI_MODEL) {
-    config.model = process.env.OPENAI_MODEL;
+
+  if (process.env.OPENAI_MODEL || process.env.OPENROUTER_MODEL) {
+    config.model = process.env.OPENROUTER_MODEL || process.env.OPENAI_MODEL!;
+  }
+
+  // Handle image endpoint env vars
+  if (process.env.OPENAI_API_KEY && process.env.OPENROUTER_API_KEY) {
+    // If both exist, use OpenAI for images by default
+    config.imageEndpoint = {
+      apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: 'https://api.openai.com/v1',
+      model: 'dall-e-3',
+    };
   }
 
   // Validate required fields
   if (!config.apiKey) {
     throw new Error(
-      'OpenAI API key is required. Set OPENAI_API_KEY environment variable or add apiKey to .illustrate.config'
+      'API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .illustrate.config'
     );
   }
 
@@ -84,30 +111,38 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
  * Get a sample configuration file content
  */
 export function getSampleConfig(): string {
-  return `# illustrate configuration file
+  return `# illustrate configuration file v2.0
 # Place this file as .illustrate.config in your home directory or project directory
 
-# Number of pages per image recommendation
+# Text analysis (primary endpoint)
+baseUrl: "https://openrouter.ai/api/v1"  # or "https://api.openai.com/v1"
+apiKey: "\${OPENROUTER_API_KEY}"  # Reference env var or use literal key
+model:
+  name: "google/gemini-flash-1.5:free"  # Free model on OpenRouter
+  contextLength: 1000000
+  maxTokens: 8192
+
+# Separate image generation endpoint (optional)
+imageEndpoint:
+  baseUrl: "https://api.openai.com/v1"
+  apiKey: "\${OPENAI_API_KEY}"
+  model: "dall-e-3"
+
+# Processing options
 pagesPerImage: 10
-
-# Whether to extract character/item descriptions
+pagesPerAutoChapter: 50
 extractElements: true
-
-# Whether to generate actual images for characters/items (requires API credits)
 generateElementImages: false
 
-# OpenAI API configuration
-apiKey: "your-api-key-here"
-baseUrl: "https://api.openai.com/v1"
-model: "gpt-4o"
-
-# Image generation settings
-imageModel: "dall-e-3"
-imageSize: "1024x1024"  # Options: 1024x1024, 1024x1792, 1792x1024
-imageQuality: "standard"  # Options: standard, hd
+# Performance & reliability
+maxConcurrency: 3
+tokenSafetyMargin: 0.9
+maxRetries: 1
+retryTimeout: 5000
 
 # Output settings
 outputPattern: "illustrate_{name}"
-maxConcurrency: 3
+imageSize: "1024x1024"  # Options: 1024x1024, 1024x1792, 1792x1024
+imageQuality: "standard"  # Options: standard, hd
 `;
 }

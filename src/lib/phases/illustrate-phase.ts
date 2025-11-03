@@ -197,6 +197,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
           `generate image for ${concept.chapter}`
         );
 
+        if (!imageUrl) {
+          throw new Error('Image generation returned no URL');
+        }
+
         await progressTracker.log(
           `✅ Generated image URL: ${imageUrl.substring(0, 50)}...`,
           'success'
@@ -438,8 +442,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
   }
 
   /**
-   * Generate image using DALL-E API
-   * Uses dall-e-3 by default (gpt-image-1 requires org verification)
+   * Generate image using best available API
+   * Tries gpt-image-1 first, falls back to dall-e-3
    */
   private async generateImage(
     imageOpenai: any,
@@ -447,17 +451,53 @@ Return ONLY the style guide text, no JSON or formatting.`;
     model: string | any,
     config: any
   ): Promise<string> {
-    // Use dall-e-3 (gpt-image-1 requires organization verification)
-    const modelName = 'dall-e-3';
+    const size = config.imageSize || '1024x1024';
+    const { progressTracker } = this.context;
 
-    // dall-e-3 accepts 'standard' or 'hd'
+    // Try gpt-image-1 first (newer, better model)
+    try {
+      // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
+      const qualityMap: Record<string, string> = {
+        'standard': 'medium',
+        'hd': 'high',
+      };
+      const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
+
+      const response = await imageOpenai.images.generate({
+        model: 'gpt-image-1',
+        prompt: prompt,
+        n: 1,
+        size: size,
+        quality: quality,
+      });
+
+      const url = response.data?.[0]?.url;
+      if (url) {
+        await progressTracker.log('Using gpt-image-1', 'info');
+        return url;
+      }
+
+      // No URL returned - fall back
+      await progressTracker.log(
+        'gpt-image-1 returned no URL, falling back to dall-e-3',
+        'warning'
+      );
+    } catch (error: any) {
+      // If gpt-image-1 fails, fall back to dall-e-3
+      await progressTracker.log(
+        `gpt-image-1 failed (${error.message}), falling back to dall-e-3`,
+        'warning'
+      );
+    }
+
+    // Fallback to dall-e-3
     const quality = config.imageQuality || 'standard';
 
     const response = await imageOpenai.images.generate({
-      model: modelName,
+      model: 'dall-e-3',
       prompt: prompt,
       n: 1,
-      size: config.imageSize || '1024x1024',
+      size: size,
       quality: quality,
     });
 

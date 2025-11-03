@@ -279,10 +279,37 @@ npm test             # Run tests (not implemented yet)
 
 ---
 
-**Last Updated:** 2025-11-02
-**Status:** ✅ v2.0 FULLY FUNCTIONAL - Tested with real EPUB and API
+### ✅ Image Generation Improvements (Nov 3, 2025)
+- [x] Implemented gpt-image-1 smart fallback (tries gpt-image-1 first, falls back to dall-e-3)
+- [x] Quality parameter mapping (standard→medium, hd→high for gpt-image-1)
+- [x] Book-wide style guide generation from first 3 chapters
+- [x] Style guide prepended to all image prompts for visual consistency
+- [x] No-text instruction appended to prevent unwanted text in images
+- [x] Improved quote extraction: 3-8 sentences minimum (vs previous 1-2 sentences)
+- [x] Enhanced analyze-phase.ts prompt with explicit examples
+- [x] Fixed null check for imageUrl before substring()
+- [x] Robust fallback handling for both errors and empty responses
+
+### 🧪 Testing Status
+- [x] Generated 2 test images with improved prompts (chapter_8_scene_1.png, chapter_10_scene_1.png)
+- [x] Comparison set preserved (dalle3_chapter_*.png files)
+- [x] Quote quality verified: Chapter 10 now has 7-sentence quote vs previous 1-sentence
+- [ ] Style guide verification (need to check if it's being applied to prompts)
+- [ ] Full book image generation with new improvements
+- [ ] gpt-image-1 vs dall-e-3 quality comparison
+
+### 📋 Next Tasks
+1. [ ] Verify style guide is being generated and applied to prompts
+2. [ ] Compare dalle3_*.png vs new chapter_*.png images for quality difference
+3. [ ] Run full book image generation if comparison looks good
+4. [ ] Document which model produces better results (gpt-image-1 vs dall-e-3)
+
+---
+
+**Last Updated:** 2025-11-03
+**Status:** ✅ v2.0 FULLY FUNCTIONAL - Image generation improvements implemented
 **Build:** SUCCESS (0 TypeScript errors)
-**Runtime:** SUCCESS (processed full 83-chapter book)
+**Runtime:** SUCCESS (processed full 83-chapter book + 2 test images)
 **Lines of Code:** ~3000+ new/refactored
-**Commits:** 15
+**Commits:** 16
 **Version:** 2.0.0

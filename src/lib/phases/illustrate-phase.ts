@@ -438,7 +438,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
   }
 
   /**
-   * Generate image using DALL-E API with gpt-image-1
+   * Generate image using DALL-E API
+   * Uses dall-e-3 by default (gpt-image-1 requires org verification)
    */
   private async generateImage(
     imageOpenai: any,
@@ -446,15 +447,18 @@ Return ONLY the style guide text, no JSON or formatting.`;
     model: string | any,
     config: any
   ): Promise<string> {
-    // Use gpt-image-1 as recommended in API docs
-    const modelName = 'gpt-image-1';
+    // Use dall-e-3 (gpt-image-1 requires organization verification)
+    const modelName = 'dall-e-3';
+
+    // dall-e-3 accepts 'standard' or 'hd'
+    const quality = config.imageQuality || 'standard';
 
     const response = await imageOpenai.images.generate({
       model: modelName,
       prompt: prompt,
       n: 1,
       size: config.imageSize || '1024x1024',
-      quality: config.imageQuality || 'standard',
+      quality: quality,
     });
 
     return response.data[0].url;

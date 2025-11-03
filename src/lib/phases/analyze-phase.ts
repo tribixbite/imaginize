@@ -245,21 +245,36 @@ Content:
 ${chapter.content}
 
 Identify ${numImages} visually compelling scenes from this chapter. For each scene:
-1. Extract the COMPLETE original description from the text (2-5 consecutive sentences that describe the visual scene)
-2. Provide ONLY a factual description of what is shown (no interpretation, no "why it matters")
+1. Extract a COMPLETE passage of 3-8 consecutive sentences that contains rich visual description
+2. The quote MUST be verbatim from the source text - copy it exactly as written
+3. For the description field, extract ONLY the visual details from those sentences (what can be drawn)
 
-IMPORTANT:
-- Use EXACT quotes from the source text (not paraphrased)
-- Include the FULL descriptive passage (multiple sentences if the description spans them)
-- Stay true to the author's words - do not add interpretation
-- Focus on moments with strong visual descriptions
+CRITICAL REQUIREMENTS:
+- Quote length: MINIMUM 3 sentences, MAXIMUM 8 sentences - select the full passage that describes the scene
+- EXACT quotes: Copy the text word-for-word, preserving all punctuation and capitalization
+- Multi-sentence context: Include surrounding sentences that add visual detail to the scene
+- Description: List only physical visual elements (characters, creatures, settings, objects, actions, lighting, weather)
+- NO single-sentence quotes - always include contextual sentences before/after
+- Focus on narrative scenes with action, not glossary/appendix entries
+
+GOOD EXAMPLE:
+{
+  "quote": "The sky was darkening to purple, and the first stars were beginning to show. The griffin landed on a rocky outcrop, its wings spread wide against the sunset. Its feathers caught the last rays of light, turning gold and amber. Christopher could see every detail of its eagle face - the sharp curve of its beak, the fierce intelligence in its eyes.",
+  "description": "A griffin landing on a rocky outcrop at sunset with wings spread wide. Purple darkening sky with first stars appearing. Griffin's feathers are gold and amber in the sunset light. Close view showing eagle face details, curved beak, and intelligent eyes."
+}
+
+BAD EXAMPLE (too short):
+{
+  "quote": "The griffin landed.",
+  "description": "A griffin landing."
+}
 
 Return JSON format:
 {
   "concepts": [
     {
-      "quote": "full multi-sentence quote from source text",
-      "description": "factual description of visual elements only"
+      "quote": "3-8 consecutive sentences verbatim from source",
+      "description": "visual elements only: who, what, where, appearance, actions, lighting, atmosphere"
     }
   ]
 }`;

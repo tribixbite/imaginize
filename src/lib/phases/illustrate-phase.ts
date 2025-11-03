@@ -15,6 +15,7 @@ import fetch from 'node-fetch';
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
   private elements: BookElement[] = [];
+  private styleGuide: string = '';
 
   constructor(context: PhaseContext) {
     super(context, 'illustrate');
@@ -83,11 +84,11 @@ export class IllustratePhase extends BasePhase {
   }
 
   /**
-   * Sub-phase 3: Prepare
+   * Sub-phase 3: Prepare - Generate style guide
    */
   protected async prepare(): Promise<SubPhaseResult> {
     // Validate image endpoint is configured
-    const { imageOpenai, progressTracker } = this.context;
+    const { imageOpenai, progressTracker, chapters, stateManager } = this.context;
 
     if (!imageOpenai) {
       await progressTracker.log(
@@ -97,7 +98,52 @@ export class IllustratePhase extends BasePhase {
       return { success: true, data: { skipImages: true } };
     }
 
+    // Generate style guide from book content
+    await progressTracker.log('Generating book-wide visual style guide...', 'info');
+    this.styleGuide = await this.generateStyleGuide(chapters, stateManager);
+    await progressTracker.log('Style guide created', 'success');
+
     return { success: true };
+  }
+
+  /**
+   * Generate a consistent visual style guide from book content
+   */
+  private async generateStyleGuide(chapters: any[], stateManager: any): Promise<string> {
+    const { openai } = this.context;
+
+    // Sample first 3 chapters for style analysis
+    const sampleText = chapters.slice(0, 3).map(ch => ch.content).join('\n\n').substring(0, 8000);
+
+    const state = stateManager.getState();
+    const bookTitle = state.bookTitle;
+
+    const prompt = `Analyze this fantasy book excerpt and create a concise visual style guide for illustration.
+
+Book: ${bookTitle}
+
+Sample text:
+${sampleText}
+
+Create a brief style guide (3-4 sentences) covering:
+1. Overall visual tone and atmosphere (whimsical, dark, realistic, painterly, etc.)
+2. Color palette tendencies
+3. Level of detail (realistic vs stylized)
+4. Any signature visual elements
+
+Return ONLY the style guide text, no JSON or formatting.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a visual style analyst for book illustrations.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 200,
+    });
+
+    return response.choices[0]?.message?.content || 'Detailed fantasy illustration with rich atmospheric detail.';
   }
 
   /**
@@ -309,12 +355,13 @@ export class IllustratePhase extends BasePhase {
   }
 
   /**
-   * Build image prompt from concept with element cross-referencing
+   * Build image prompt from concept with element cross-referencing and style guide
    */
   private buildImagePrompt(concept: ImageConcept): string {
+    // Start with the visual description from the concept
     let prompt = concept.description;
 
-    // If we have elements, try to cross-reference
+    // Add element cross-references if available
     if (this.elements.length > 0) {
       const referencedElements: string[] = [];
 
@@ -331,9 +378,17 @@ export class IllustratePhase extends BasePhase {
 
       // Append element descriptions to prompt
       if (referencedElements.length > 0) {
-        prompt += '\n\nAdditional context:\n' + referencedElements.join('\n');
+        prompt += '\n\nCharacter/creature details:\n' + referencedElements.join('\n');
       }
     }
+
+    // Prepend style guide
+    if (this.styleGuide) {
+      prompt = `Style: ${this.styleGuide}\n\nScene: ${prompt}`;
+    }
+
+    // Add critical instruction about text
+    prompt += '\n\nIMPORTANT: Do not include any text, letters, words, or writing in the image unless explicitly described in the scene.';
 
     return prompt;
   }
@@ -383,7 +438,7 @@ export class IllustratePhase extends BasePhase {
   }
 
   /**
-   * Generate image using DALL-E API
+   * Generate image using DALL-E API with gpt-image-1
    */
   private async generateImage(
     imageOpenai: any,
@@ -391,7 +446,8 @@ export class IllustratePhase extends BasePhase {
     model: string | any,
     config: any
   ): Promise<string> {
-    const modelName = typeof model === 'string' ? model : model.name;
+    // Use gpt-image-1 as recommended in API docs
+    const modelName = 'gpt-image-1';
 
     const response = await imageOpenai.images.generate({
       model: modelName,

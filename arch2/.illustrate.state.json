@@ -1,0 +1,591 @@
+{
+  "version": "2.0.0",
+  "bookFile": "ImpossibleCreatures.epub",
+  "bookTitle": "Impossible Creatures",
+  "totalPages": 297,
+  "phases": {
+    "parse": {
+      "status": "pending"
+    },
+    "analyze": {
+      "status": "completed",
+      "currentSubPhase": "save",
+      "subPhases": {
+        "plan": {
+          "status": "completed",
+          "chaptersToProcess": [
+            30,
+            31,
+            32
+          ],
+          "totalEstimatedTokens": 10746,
+          "estimatedCost": 0.04936499999999999,
+          "requiresSplitting": false
+        },
+        "estimate": {
+          "status": "completed",
+          "modelSelected": "gpt-4o-mini",
+          "estimatedCost": 0.04936499999999999
+        },
+        "prepare": {
+          "status": "completed"
+        },
+        "execute": {
+          "status": "completed"
+        },
+        "save": {
+          "status": "completed"
+        }
+      },
+      "chapters": {
+        "30": {
+          "status": "completed",
+          "concepts": 1,
+          "tokensUsed": 1702,
+          "completedAt": "2025-11-02T21:28:30.938Z"
+        },
+        "31": {
+          "status": "completed",
+          "concepts": 1,
+          "tokensUsed": 2491,
+          "completedAt": "2025-11-02T21:28:34.505Z"
+        },
+        "32": {
+          "status": "completed",
+          "concepts": 1,
+          "tokensUsed": 4153,
+          "completedAt": "2025-11-02T21:28:37.994Z"
+        }
+      },
+      "completedAt": "2025-11-02T21:28:38.000Z"
+    },
+    "extract": {
+      "status": "completed",
+      "currentSubPhase": "save",
+      "subPhases": {
+        "plan": {
+          "status": "completed",
+          "textLength": 30986,
+          "estimatedTokens": 9747,
+          "estimatedCost": 0.0393675
+        },
+        "estimate": {
+          "status": "completed",
+          "modelSelected": "gpt-4o-mini",
+          "estimatedCost": 0.0393675
+        },
+        "prepare": {
+          "status": "completed"
+        },
+        "execute": {
+          "status": "completed"
+        },
+        "save": {
+          "status": "completed"
+        }
+      },
+      "completedAt": "2025-11-02T21:29:01.844Z"
+    },
+    "illustrate": {
+      "status": "completed",
+      "currentSubPhase": "save",
+      "subPhases": {
+        "plan": {
+          "status": "completed",
+          "totalConcepts": 3
+        },
+        "estimate": {
+          "status": "completed"
+        },
+        "prepare": {
+          "status": "completed"
+        },
+        "execute": {
+          "status": "completed",
+          "generatedCount": 3
+        },
+        "save": {
+          "status": "completed"
+        }
+      },
+      "chapters": {
+        "30": {
+          "status": "completed",
+          "imageUrl": "./chapter_30_scene_1.png",
+          "completedAt": "2025-11-02T21:29:17.189Z"
+        },
+        "32": {
+          "status": "completed",
+          "imageUrl": "./chapter_32_scene_1.png",
+          "completedAt": "2025-11-02T21:29:43.135Z"
+        },
+        "74": {
+          "status": "completed",
+          "imageUrl": "./chapter_74_scene_1.png",
+          "completedAt": "2025-11-02T21:29:28.787Z"
+        }
+      },
+      "completedAt": "2025-11-02T21:29:43.139Z"
+    }
+  },
+  "toc": {
+    "chapters": [
+      {
+        "number": 2,
+        "title": "Also by Katherine Rundell, Impossible Creatures",
+        "pages": "1-1"
+      },
+      {
+        "number": 4,
+        "title": "Copyright, Impossible Creatures",
+        "pages": "2-3"
+      },
+      {
+        "number": 5,
+        "title": "Contents",
+        "pages": "4-4"
+      },
+      {
+        "number": 6,
+        "title": "Dedication, Impossible Creatures",
+        "pages": "5-5"
+      },
+      {
+        "number": 8,
+        "title": "Epigraph, Impossible Creatures",
+        "pages": "6-6"
+      },
+      {
+        "number": 9,
+        "title": "The Beginning",
+        "pages": "7-7"
+      },
+      {
+        "number": 10,
+        "title": "The Beginning, Elsewhere",
+        "pages": "8-8"
+      },
+      {
+        "number": 11,
+        "title": "Arrival",
+        "pages": "9-11"
+      },
+      {
+        "number": 12,
+        "title": "Arrival, Elsewhere",
+        "pages": "12-15"
+      },
+      {
+        "number": 13,
+        "title": "Frank Aureate",
+        "pages": "16-17"
+      },
+      {
+        "number": 14,
+        "title": "Before the Murderer",
+        "pages": "18-22"
+      },
+      {
+        "number": 15,
+        "title": "The Forbidden Hilltop",
+        "pages": "23-25"
+      },
+      {
+        "number": 16,
+        "title": "The Dying of the Light",
+        "pages": "26-28"
+      },
+      {
+        "number": 17,
+        "title": "The One Place You May Not Go",
+        "pages": "29-30"
+      },
+      {
+        "number": 18,
+        "title": "The Murder",
+        "pages": "31-35"
+      },
+      {
+        "number": 19,
+        "title": "The Stampede",
+        "pages": "36-39"
+      },
+      {
+        "number": 20,
+        "title": "The Guardian’s Secret",
+        "pages": "40-47"
+      },
+      {
+        "number": 21,
+        "title": "The Dog in the Water",
+        "pages": "48-53"
+      },
+      {
+        "number": 22,
+        "title": "Phosphorescence",
+        "pages": "54-56"
+      },
+      {
+        "number": 23,
+        "title": "Archipelago",
+        "pages": "57-60"
+      },
+      {
+        "number": 24,
+        "title": "The Arrival of Unicorns",
+        "pages": "61-65"
+      },
+      {
+        "number": 25,
+        "title": "The Neverfear",
+        "pages": "66-70"
+      },
+      {
+        "number": 26,
+        "title": "A Stark and Shining Blue",
+        "pages": "71-77"
+      },
+      {
+        "number": 27,
+        "title": "The Flying Senate",
+        "pages": "78-86"
+      },
+      {
+        "number": 28,
+        "title": "Fidens Nighthand’s Preferred Drinking Establishment",
+        "pages": "87-95"
+      },
+      {
+        "number": 29,
+        "title": "Fire in the Sky",
+        "pages": "96-103"
+      },
+      {
+        "number": 30,
+        "title": "Repair",
+        "pages": "104-107"
+      },
+      {
+        "number": 31,
+        "title": "Kraken",
+        "pages": "108-113"
+      },
+      {
+        "number": 32,
+        "title": "The City of Scholars",
+        "pages": "114-123"
+      },
+      {
+        "number": 33,
+        "title": "The Sphinx Peninsula",
+        "pages": "124-131"
+      },
+      {
+        "number": 34,
+        "title": "The Opposite of Falling",
+        "pages": "132-134"
+      },
+      {
+        "number": 35,
+        "title": "The Written Mountain",
+        "pages": "135-140"
+      },
+      {
+        "number": 36,
+        "title": "Four Riddles",
+        "pages": "141-144"
+      },
+      {
+        "number": 37,
+        "title": "The Man Who Said No",
+        "pages": "145-150"
+      },
+      {
+        "number": 38,
+        "title": "An Eruption of Violence",
+        "pages": "151-156"
+      },
+      {
+        "number": 39,
+        "title": "Malum, Apple",
+        "pages": "157-159"
+      },
+      {
+        "number": 40,
+        "title": "Leaving",
+        "pages": "160-165"
+      },
+      {
+        "number": 41,
+        "title": "Gelifen",
+        "pages": "166-167"
+      },
+      {
+        "number": 42,
+        "title": "The Worst Question",
+        "pages": "168-172"
+      },
+      {
+        "number": 43,
+        "title": "A Piece of Complicating and Unwelcome News",
+        "pages": "173-178"
+      },
+      {
+        "number": 44,
+        "title": "The Island of the Immortal",
+        "pages": "179-186"
+      },
+      {
+        "number": 45,
+        "title": "The Heat of Living Gold",
+        "pages": "187-196"
+      },
+      {
+        "number": 46,
+        "title": "The Island of Murderers",
+        "pages": "197-208"
+      },
+      {
+        "number": 47,
+        "title": "The Stink of Manticore Breath",
+        "pages": "209-217"
+      },
+      {
+        "number": 48,
+        "title": "Fidens Nighthand",
+        "pages": "218-222"
+      },
+      {
+        "number": 49,
+        "title": "Dryads",
+        "pages": "223-226"
+      },
+      {
+        "number": 50,
+        "title": "The Potion",
+        "pages": "227-231"
+      },
+      {
+        "number": 51,
+        "title": "No Mortal Man Has Ever Returned",
+        "pages": "232-235"
+      },
+      {
+        "number": 52,
+        "title": "The Maze",
+        "pages": "236-240"
+      },
+      {
+        "number": 53,
+        "title": "The Gray Mist",
+        "pages": "241-244"
+      },
+      {
+        "number": 54,
+        "title": "At the Center",
+        "pages": "245-251"
+      },
+      {
+        "number": 55,
+        "title": "The Immortal",
+        "pages": "252-254"
+      },
+      {
+        "number": 56,
+        "title": "Flight",
+        "pages": "255-257"
+      },
+      {
+        "number": 57,
+        "title": "The Funeral March",
+        "pages": "258-261"
+      },
+      {
+        "number": 58,
+        "title": "The Kindness of Sphinxes",
+        "pages": "262-267"
+      },
+      {
+        "number": 59,
+        "title": "The Beginning, Again",
+        "pages": "268-268"
+      },
+      {
+        "number": 60,
+        "title": "Christopher’s Journey",
+        "pages": "269-270"
+      },
+      {
+        "number": 61,
+        "title": "What She Said",
+        "pages": "271-271"
+      },
+      {
+        "number": 62,
+        "title": "The Guardian’s Bestiary",
+        "pages": "272-272"
+      },
+      {
+        "number": 63,
+        "title": "Al-miraj",
+        "pages": "273-273"
+      },
+      {
+        "number": 64,
+        "title": "Avanc",
+        "pages": "274-274"
+      },
+      {
+        "number": 65,
+        "title": "Borometz",
+        "pages": "275-275"
+      },
+      {
+        "number": 66,
+        "title": "Centaur",
+        "pages": "276-276"
+      },
+      {
+        "number": 67,
+        "title": "Chimaera",
+        "pages": "277-277"
+      },
+      {
+        "number": 68,
+        "title": "Dragon",
+        "pages": "278-278"
+      },
+      {
+        "number": 69,
+        "title": "Griffin",
+        "pages": "279-279"
+      },
+      {
+        "number": 70,
+        "title": "Hippocamp",
+        "pages": "280-280"
+      },
+      {
+        "number": 71,
+        "title": "Kanko",
+        "pages": "281-281"
+      },
+      {
+        "number": 72,
+        "title": "Karkadann",
+        "pages": "282-282"
+      },
+      {
+        "number": 73,
+        "title": "Kludde",
+        "pages": "283-283"
+      },
+      {
+        "number": 74,
+        "title": "Kraken",
+        "pages": "284-284"
+      },
+      {
+        "number": 75,
+        "title": "Lavellan",
+        "pages": "285-285"
+      },
+      {
+        "number": 76,
+        "title": "Longma",
+        "pages": "286-286"
+      },
+      {
+        "number": 77,
+        "title": "Manticore",
+        "pages": "287-287"
+      },
+      {
+        "number": 78,
+        "title": "Mermaid",
+        "pages": "288-288"
+      },
+      {
+        "number": 79,
+        "title": "Nereid",
+        "pages": "289-289"
+      },
+      {
+        "number": 80,
+        "title": "Ratatoska",
+        "pages": "290-290"
+      },
+      {
+        "number": 81,
+        "title": "Sphinx",
+        "pages": "291-291"
+      },
+      {
+        "number": 82,
+        "title": "Twrch Tryth",
+        "pages": "292-292"
+      },
+      {
+        "number": 83,
+        "title": "Unicorn",
+        "pages": "293-293"
+      },
+      {
+        "number": 84,
+        "title": "Acknowledgments",
+        "pages": "294-295"
+      },
+      {
+        "number": 85,
+        "title": "About the Author, Impossible Creatures",
+        "pages": "296-296"
+      },
+      {
+        "number": 86,
+        "title": "What’s next on your reading list?",
+        "pages": "297-297"
+      }
+    ]
+  },
+  "tokenStats": {
+    "totalUsed": 18093
+  },
+  "lastUpdated": "2025-11-02T21:29:43.139Z",
+  "elements": [
+    {
+      "type": "character",
+      "name": "Christopher",
+      "status": "completed"
+    },
+    {
+      "type": "character",
+      "name": "Mal",
+      "status": "completed"
+    },
+    {
+      "type": "creature",
+      "name": "Kraken",
+      "status": "completed"
+    },
+    {
+      "type": "creature",
+      "name": "Nereid",
+      "status": "completed"
+    },
+    {
+      "type": "place",
+      "name": "City of Scholars",
+      "status": "completed"
+    },
+    {
+      "type": "item",
+      "name": "Flying Coat",
+      "status": "completed"
+    },
+    {
+      "type": "object",
+      "name": "Gelifen",
+      "status": "completed"
+    }
+  ]
+}

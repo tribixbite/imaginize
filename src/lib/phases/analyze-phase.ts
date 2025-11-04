@@ -218,13 +218,31 @@ export class AnalyzePhase extends BasePhase {
   }
 
   /**
+   * Check if chapter is story content (not metadata/epigraph/appendix)
+   */
+  private isStoryContent(chapterTitle: string): boolean {
+    const nonStoryPattern = /epigraph|appendix|appendices|glossary|contents?|table of contents|copyright|dedication|acknowledgements?|about the author|prologue|epilogue|foreword|preface|introduction|bibliography|index|notes?$/i;
+
+    return !nonStoryPattern.test(chapterTitle.trim());
+  }
+
+  /**
    * Analyze a single chapter to extract visual concepts
    */
   private async analyzeChapter(
     chapter: ChapterContent,
     modelConfig: any
   ): Promise<ImageConcept[]> {
-    const { config, openai } = this.context;
+    const { config, openai, progressTracker } = this.context;
+
+    // Filter non-story content
+    if (!this.isStoryContent(chapter.chapterTitle)) {
+      await progressTracker.log(
+        `Skipping non-story chapter: ${chapter.chapterTitle}`,
+        'info'
+      );
+      return []; // Return empty concepts for non-story chapters
+    }
 
     // Calculate number of images based on actual page count
     // Parse page range (e.g., "8-8" or "9-11")
@@ -274,7 +292,9 @@ Return JSON format:
   "concepts": [
     {
       "quote": "3-8 consecutive sentences verbatim from source",
-      "description": "visual elements only: who, what, where, appearance, actions, lighting, atmosphere"
+      "description": "visual elements only: who, what, where, appearance, actions",
+      "mood": "emotional atmosphere (e.g., tense, whimsical, ominous, peaceful, adventurous)",
+      "lighting": "time of day and lighting (e.g., sunrise, night with moonlight, stormy afternoon, candlelit evening)"
     }
   ]
 }`;
@@ -284,7 +304,7 @@ Return JSON format:
       messages: [
         {
           role: 'system',
-          content: 'You are a literary analyst specializing in visual storytelling. Return only valid JSON.',
+          content: 'You are a literary analyst specializing in visual storytelling. Extract mood and lighting details for cinematic illustration. Return only valid JSON.',
         },
         { role: 'user', content: prompt },
       ],
@@ -306,6 +326,8 @@ Return JSON format:
       pageRange: chapter.pageRange,
       quote: c.quote || '',
       description: c.description || '',
+      mood: c.mood || 'neutral',
+      lighting: c.lighting || 'natural daylight',
       lineNumbers: chapter.lineNumbers,
     }));
   }

@@ -93,6 +93,8 @@ export interface ImageConcept {
   quote: string;
   description: string;
   reasoning?: string;
+  mood?: string; // Emotional atmosphere of the scene
+  lighting?: string; // Time of day and lighting conditions
   imageUrl?: string;
   lineNumbers?: { start: number; end: number };
 }

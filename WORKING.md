@@ -396,14 +396,64 @@ imaginize
 
 ---
 
-**Last Updated:** 2025-11-04 08:30
-**Status:** ✅ v2.0 PUBLISHED TO NPM - Auto-selection working
+### ✅ Pipeline Improvements Implemented (Nov 4, 2025)
+Based on PIPELINE_EVALUATION.md recommendations:
+
+**Priority 1 Improvements:**
+- [x] Enhanced element extraction with dynamic targets (15-45 elements based on book length)
+- [x] Added comprehensive extraction prompt with type breakdowns (characters, creatures, places, items)
+- [x] Implemented non-story content filtering (epigraphs, appendices, glossaries, etc.)
+- [x] Added style guide verification logging to progress output
+
+**Priority 2 Improvements:**
+- [x] Enhanced image prompts with structured format (GENRE, STYLE, MOOD, LIGHTING, SCENE)
+- [x] Added mood extraction (e.g., tense, whimsical, ominous, peaceful)
+- [x] Added lighting extraction (e.g., sunrise, night with moonlight, stormy afternoon)
+- [x] Improved prompt technical requirements section
+
+**Priority 3 Improvements:**
+- [x] Implemented parallel batch image generation (configurable via maxConcurrency)
+- [x] Default batch size: 3 parallel images
+- [x] Expected speedup: 3x faster (90min → 30min for full book)
+- [x] Added batch progress logging
+
+**Technical Changes:**
+1. analyze-phase.ts:
+   - isStoryContent() method filters non-narrative chapters
+   - Enhanced analyzeChapter() to extract mood and lighting
+   - Updated JSON response format for richer metadata
+
+2. extract-phase.ts:
+   - Dynamic element count targets based on page count
+   - Comprehensive extraction prompt with type-specific guidance
+   - Validation logging for insufficient extraction
+
+3. illustrate-phase.ts:
+   - Parallel batch processing with Promise.all()
+   - Structured prompt building with labeled sections
+   - Enhanced buildImagePrompt() using mood/lighting data
+
+4. types/config.ts:
+   - Added mood?: string to ImageConcept
+   - Added lighting?: string to ImageConcept
+
+**Expected Results:**
+- Element extraction: 25-45 elements (vs previous 8)
+- Processing speed: ~30 minutes (vs previous 90 minutes)
+- Quote quality: More contextual 3-8 sentence passages
+- Image quality: Better atmosphere and lighting consistency
+- Reduced noise: No epigraphs/appendices in visual concepts
+
+---
+
+**Last Updated:** 2025-11-04 09:15
+**Status:** ✅ v2.1 PIPELINE IMPROVEMENTS COMPLETE
 **Build:** SUCCESS (0 TypeScript errors)
-**Runtime:** SUCCESS (64 images generated, all systems operational)
-**NPM:** PUBLISHED (imaginize@2.0.0)
-**Lines of Code:** ~3200+ new/refactored
-**Commits:** 23
-**Version:** 2.0.0
+**Runtime:** READY FOR TESTING
+**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
+**Lines of Code:** ~3400+ (added ~200 lines of improvements)
+**Commits:** 24+
+**Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize
 **GitHub URL:** https://github.com/tribixbite/imaginize

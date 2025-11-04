@@ -101,7 +101,7 @@ export class IllustratePhase extends BasePhase {
     // Generate style guide from book content
     await progressTracker.log('Generating book-wide visual style guide...', 'info');
     this.styleGuide = await this.generateStyleGuide(chapters, stateManager);
-    await progressTracker.log('Style guide created', 'success');
+    await progressTracker.log(`Style guide created: "${this.styleGuide}"`, 'success');
 
     return { success: true };
   }
@@ -181,79 +181,101 @@ Return ONLY the style guide text, no JSON or formatting.`;
     // Track scene numbers per chapter
     const sceneCounters = new Map<number, number>();
 
-    for (const concept of conceptsToProcess) {
-      try {
-        await progressTracker.log(
-          `Generating image for: ${concept.chapter} (${concept.pageRange})`,
-          'info'
-        );
+    // Parallel batch processing
+    const batchSize = config.maxConcurrency || 3; // Default to 3 parallel requests
+    await progressTracker.log(
+      `Processing ${conceptsToProcess.length} images in batches of ${batchSize}...`,
+      'info'
+    );
 
-        // Build prompt from description
-        const prompt = this.buildImagePrompt(concept);
+    for (let i = 0; i < conceptsToProcess.length; i += batchSize) {
+      const batch = conceptsToProcess.slice(i, i + batchSize);
+      const batchNum = Math.floor(i / batchSize) + 1;
+      const totalBatches = Math.ceil(conceptsToProcess.length / batchSize);
 
-        // Generate image with DALL-E
-        const imageUrl = await this.executeWithRetry(
-          async () => await this.generateImage(imageOpenai, prompt, imageModel, config),
-          `generate image for ${concept.chapter}`
-        );
+      await progressTracker.log(
+        `Batch ${batchNum}/${totalBatches}: Processing ${batch.length} images in parallel...`,
+        'info'
+      );
 
-        if (!imageUrl) {
-          throw new Error('Image generation returned no URL');
+      // Process batch in parallel
+      const batchPromises = batch.map(async (concept) => {
+        try {
+          await progressTracker.log(
+            `⏳ Generating: ${concept.chapter} (${concept.pageRange})`,
+            'info'
+          );
+
+          // Build prompt from description
+          const prompt = this.buildImagePrompt(concept);
+
+          // Generate image
+          const imageUrl = await this.executeWithRetry(
+            async () => await this.generateImage(imageOpenai, prompt, imageModel, config),
+            `generate image for ${concept.chapter}`
+          );
+
+          if (!imageUrl) {
+            throw new Error('Image generation returned no URL');
+          }
+
+          // Download image from temporary URL and save to disk
+          const chapterNum = concept.chapterNumber || this.getChapterNumber(concept.chapter);
+
+          // Get or initialize scene counter for this chapter (thread-safe increment)
+          const sceneNum = (sceneCounters.get(chapterNum) || 0) + 1;
+          sceneCounters.set(chapterNum, sceneNum);
+
+          const filename = `chapter_${chapterNum}_scene_${sceneNum}.png`;
+          const filepath = join(outputDir, filename);
+
+          const response = await fetch(imageUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to download image: ${response.statusText}`);
+          }
+
+          const imageBuffer = await response.arrayBuffer();
+          await writeFile(filepath, Buffer.from(imageBuffer));
+
+          await progressTracker.log(
+            `✅ Saved: ${filename}`,
+            'success'
+          );
+
+          // Update concept with local file path (relative to output dir)
+          concept.imageUrl = `./${filename}`;
+
+          // Update state with local image path
+          stateManager.updateChapter('illustrate', chapterNum, 'completed', {
+            imageUrl: concept.imageUrl,
+          });
+          await stateManager.save();
+
+          return { success: true, concept };
+        } catch (error: any) {
+          await progressTracker.log(
+            `❌ Failed: ${concept.chapter} - ${error.message}`,
+            'error'
+          );
+          return { success: false, concept, error: error.message };
         }
+      });
 
-        await progressTracker.log(
-          `✅ Generated image URL: ${imageUrl.substring(0, 50)}...`,
-          'success'
-        );
+      // Wait for batch to complete
+      const results = await Promise.all(batchPromises);
+      const successCount = results.filter(r => r.success).length;
+      generatedCount += successCount;
 
-        // Download image from temporary URL and save to disk
-        const chapterNum = concept.chapterNumber || this.getChapterNumber(concept.chapter);
-
-        // Get or initialize scene counter for this chapter
-        const sceneNum = (sceneCounters.get(chapterNum) || 0) + 1;
-        sceneCounters.set(chapterNum, sceneNum);
-
-        const filename = `chapter_${chapterNum}_scene_${sceneNum}.png`;
-        const filepath = join(outputDir, filename);
-
-        await progressTracker.log(
-          `Downloading image to ${filename}...`,
-          'info'
-        );
-
-        const response = await fetch(imageUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to download image: ${response.statusText}`);
-        }
-
-        const imageBuffer = await response.arrayBuffer();
-        await writeFile(filepath, Buffer.from(imageBuffer));
-
-        await progressTracker.log(
-          `✅ Saved image to ${filename}`,
-          'success'
-        );
-
-        // Update concept with local file path (relative to output dir)
-        concept.imageUrl = `./${filename}`;
-        generatedCount++;
-
-        // Update state with local image path
-        stateManager.updateChapter('illustrate', chapterNum, 'completed', {
-          imageUrl: concept.imageUrl,
-        });
-        await stateManager.save();
-
-      } catch (error: any) {
-        await progressTracker.log(
-          `Failed to generate image for ${concept.chapter}: ${error.message}`,
-          'error'
-        );
-        // Continue with other images
-      }
+      await progressTracker.log(
+        `Batch ${batchNum}/${totalBatches} complete: ${successCount}/${batch.length} successful`,
+        successCount === batch.length ? 'success' : 'warning'
+      );
     }
 
-    await progressTracker.log(`Generated ${generatedCount} images`, 'success');
+    await progressTracker.log(
+      `✓ Generated ${generatedCount}/${conceptsToProcess.length} images successfully`,
+      generatedCount === conceptsToProcess.length ? 'success' : 'warning'
+    );
 
     return { success: true, data: { generatedCount } };
   }
@@ -362,10 +384,31 @@ Return ONLY the style guide text, no JSON or formatting.`;
    * Build image prompt from concept with element cross-referencing and style guide
    */
   private buildImagePrompt(concept: ImageConcept): string {
-    // Start with the visual description from the concept
-    let prompt = concept.description;
+    // Build structured prompt with genre, style, mood, and lighting
+    let promptParts: string[] = [];
 
-    // Add element cross-references if available
+    // 1. Genre context
+    promptParts.push('GENRE: Fantasy adventure illustration');
+
+    // 2. Visual style guide
+    if (this.styleGuide) {
+      promptParts.push(`STYLE: ${this.styleGuide}`);
+    }
+
+    // 3. Mood and atmosphere
+    if (concept.mood) {
+      promptParts.push(`MOOD: ${concept.mood}`);
+    }
+
+    // 4. Lighting conditions
+    if (concept.lighting) {
+      promptParts.push(`LIGHTING: ${concept.lighting}`);
+    }
+
+    // 5. Main scene description
+    promptParts.push(`\nSCENE: ${concept.description}`);
+
+    // 6. Character/creature details from elements
     if (this.elements.length > 0) {
       const referencedElements: string[] = [];
 
@@ -376,25 +419,22 @@ Return ONLY the style guide text, no JSON or formatting.`;
         // Find matching element (fuzzy match)
         const element = this.findElement(entityName);
         if (element) {
-          referencedElements.push(`${element.name}: ${element.description}`);
+          referencedElements.push(`- ${element.name}: ${element.description}`);
         }
       }
 
       // Append element descriptions to prompt
       if (referencedElements.length > 0) {
-        prompt += '\n\nCharacter/creature details:\n' + referencedElements.join('\n');
+        promptParts.push('\nCHARACTERS/CREATURES:');
+        promptParts.push(referencedElements.join('\n'));
       }
     }
 
-    // Prepend style guide
-    if (this.styleGuide) {
-      prompt = `Style: ${this.styleGuide}\n\nScene: ${prompt}`;
-    }
+    // 7. Technical requirements
+    promptParts.push('\nTECHNICAL: Cinematic composition, detailed illustration, high-quality fantasy art');
+    promptParts.push('CRITICAL: No text, letters, words, or writing in the image');
 
-    // Add critical instruction about text
-    prompt += '\n\nIMPORTANT: Do not include any text, letters, words, or writing in the image unless explicitly described in the scene.';
-
-    return prompt;
+    return promptParts.join('\n');
   }
 
   /**

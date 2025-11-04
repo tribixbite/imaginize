@@ -477,19 +477,27 @@ Based on PIPELINE_EVALUATION.md recommendations:
    - Added chapter number extraction fallbacks (lines 335-345)
    - Fixed Map lookup returning undefined issue
 
+**OpenRouter Image Generation Research:**
+- [x] Attempted chat completions API for image models
+- [x] Result: google/gemini-2.5-flash-image returns empty content
+- [x] Implemented fallback chain: OpenRouter → gpt-image-1 → Imagen → dall-e-3
+- [x] OpenRouter works perfectly for text (google/gemini-2.0-flash-exp:free)
+- [ ] Need OpenRouter API documentation for proper image model usage
+- [ ] Alternative: Use OPENAI_API_KEY for images, OPENROUTER_API_KEY for text
+
 **Pending:**
 - [ ] OpenRouter models API query for dynamic model selection
-- [ ] Test chapter numbering fix with `--chapters 1-5`
+- [ ] Research OpenRouter image generation API format
 
 ---
 
-**Last Updated:** 2025-11-04 10:30
-**Status:** ✅ v2.1 OPENROUTER + CHAPTER FIX COMPLETE
+**Last Updated:** 2025-11-04 14:15
+**Status:** ✅ v2.1 OPENROUTER TEXT + CONTENT FILTER COMPLETE
 **Build:** SUCCESS (0 TypeScript errors)
 **Runtime:** TESTED
-**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
-**Lines of Code:** ~3450+ (added ~50 lines)
-**Commits:** 25
+**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after full testing)
+**Lines of Code:** ~3500+ (added ~100 lines)
+**Commits:** 27
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

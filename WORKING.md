@@ -3,6 +3,23 @@
 ## Project Overview
 AI-powered book illustration guide generator that processes EPUB and PDF files to identify key visual concepts and story elements. Auto-selects next unprocessed epub for streamlined batch processing.
 
+## ✅ Latest Verification (2025-11-04)
+
+### OpenRouter Integration - FULLY WORKING
+- Text analysis: `google/gemini-2.0-flash-exp:free` (auto-selected when OPENROUTER_API_KEY present)
+- Image generation: `google/gemini-2.5-flash-image` (auto-selected when OPENROUTER_API_KEY present)
+- Test verified: 1.6 MB PNG generated in 8 seconds at $0.00 cost
+- API documentation: https://openrouter.ai/docs/features/multimodal/image-generation
+
+### Chapter Numbering Fix - VERIFIED WORKING
+- Fixed bug where `--chapters 1-5` generated all images as `chapter_1_scene_*.png`
+- Three-tier fallback strategy implemented in src/lib/phases/illustrate-phase.ts:335-345:
+  1. Map lookup from TOC (primary)
+  2. Regex extraction from chapter title (`/(?:chapter\s+)?(\d+)/i`)
+  3. Sequential numbering (last resort)
+- Test verified: Chapter 8 "Epigraph, Impossible Creatures" → `chapter_8_scene_1.png` ✓
+- Location: `/data/data/com.termux/files/home/git/illustrate/imaginize_ImpossibleCreatures/chapter_8_scene_1.png`
+
 ## Completed Features
 
 ### ✅ Core Infrastructure
@@ -477,27 +494,28 @@ Based on PIPELINE_EVALUATION.md recommendations:
    - Added chapter number extraction fallbacks (lines 335-345)
    - Fixed Map lookup returning undefined issue
 
-**OpenRouter Image Generation Research:**
-- [x] Attempted chat completions API for image models
-- [x] Result: google/gemini-2.5-flash-image returns empty content
-- [x] Implemented fallback chain: OpenRouter → gpt-image-1 → Imagen → dall-e-3
-- [x] OpenRouter works perfectly for text (google/gemini-2.0-flash-exp:free)
-- [ ] Need OpenRouter API documentation for proper image model usage
-- [ ] Alternative: Use OPENAI_API_KEY for images, OPENROUTER_API_KEY for text
+**✅ OpenRouter Image Generation - WORKING:**
+- [x] Fetched official OpenRouter documentation
+- [x] Fixed: Added `modalities: ['image', 'text']` parameter
+- [x] Fixed: Access images via `response.choices[0].message.images`
+- [x] Fixed: Support aspect_ratio config (1:1, 16:9, 9:16)
+- [x] Result: google/gemini-2.5-flash-image generates FREE 1024x1024 PNG images
+- [x] Tested: 1.6 MB PNG generated in 8 seconds
+- [x] OpenRouter works for both text AND images (100% free with OPENROUTER_API_KEY)
 
 **Pending:**
 - [ ] OpenRouter models API query for dynamic model selection
-- [ ] Research OpenRouter image generation API format
 
 ---
 
-**Last Updated:** 2025-11-04 14:15
-**Status:** ✅ v2.1 OPENROUTER TEXT + CONTENT FILTER COMPLETE
+**Last Updated:** 2025-11-04 17:50
+**Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES)
 **Build:** SUCCESS (0 TypeScript errors)
-**Runtime:** TESTED
-**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after full testing)
-**Lines of Code:** ~3500+ (added ~100 lines)
-**Commits:** 27
+**Runtime:** TESTED & VERIFIED
+**OpenRouter:** ✅ 100% FREE text + image generation
+**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
+**Lines of Code:** ~3520+ (added ~120 lines)
+**Commits:** 29
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

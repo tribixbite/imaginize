@@ -1,7 +1,7 @@
-# illustrate - Development Status
+# imaginize - Development Status
 
 ## Project Overview
-AI-powered book illustration guide generator that processes EPUB and PDF files to identify key visual concepts and story elements.
+AI-powered book illustration guide generator that processes EPUB and PDF files to identify key visual concepts and story elements. Auto-selects next unprocessed epub for streamlined batch processing.
 
 ## Completed Features
 
@@ -365,11 +365,45 @@ npm test             # Run tests (not implemented yet)
 
 ---
 
-**Last Updated:** 2025-11-04 06:10
-**Status:** ✅ v2.0 PRODUCTION READY - Full test successful
+---
+
+### ✅ NPM Publication & Auto-Selection (Nov 4, 2025)
+- [x] Rebranded to imaginize across all files
+- [x] Updated README with imaginize branding
+- [x] Updated package.json repository URLs to tribixbite/imaginize
+- [x] Implemented auto-selection of next unprocessed epub
+- [x] Files sorted: unprocessed first, then by modification date
+- [x] Published to npm as imaginize@2.0.0
+- [x] Verified npx imaginize@latest works end-to-end
+- [x] Package live at https://www.npmjs.com/package/imaginize
+- [x] GitHub repository at https://github.com/tribixbite/imaginize
+
+**Auto-Selection Behavior:**
+- Running `npx imaginize` automatically selects first unprocessed epub
+- Shows "Auto-selected next unprocessed book: filename.epub"
+- If all books processed, prompts user to select which to regenerate
+- Use `--force` to regenerate any book
+
+**Installation:**
+```bash
+# One-time use
+npx imaginize
+
+# Global install
+npm install -g imaginize
+imaginize
+```
+
+---
+
+**Last Updated:** 2025-11-04 08:30
+**Status:** ✅ v2.0 PUBLISHED TO NPM - Auto-selection working
 **Build:** SUCCESS (0 TypeScript errors)
 **Runtime:** SUCCESS (64 images generated, all systems operational)
+**NPM:** PUBLISHED (imaginize@2.0.0)
 **Lines of Code:** ~3200+ new/refactored
-**Commits:** 20
+**Commits:** 23
 **Version:** 2.0.0
-**Package Name:** imaginize (ready for NPM publication)
+**Package Name:** imaginize
+**NPM URL:** https://www.npmjs.com/package/imaginize
+**GitHub URL:** https://github.com/tribixbite/imaginize

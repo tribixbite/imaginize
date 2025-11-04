@@ -8,7 +8,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import type { IllustrateConfig, ModelConfig } from '../types/config.js';
-import { getRecommendedFreeTextModel } from './provider-utils.js';
+import { getRecommendedFreeTextModel, getRecommendedFreeImageModel } from './provider-utils.js';
 
 const DEFAULT_CONFIG: IllustrateConfig = {
   pagesPerImage: 10,
@@ -74,6 +74,16 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
       // Use free model for OpenRouter by default
       config.model = getRecommendedFreeTextModel().name;
     }
+
+    // Set OpenRouter for images if no explicit image endpoint configured
+    if (!config.imageEndpoint?.apiKey) {
+      const recommendedImage = getRecommendedFreeImageModel();
+      config.imageEndpoint = {
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseUrl: 'https://openrouter.ai/api/v1',
+        model: recommendedImage.name,
+      };
+    }
   } else if (process.env.OPENAI_API_KEY) {
     config.apiKey = process.env.OPENAI_API_KEY;
   }
@@ -87,8 +97,8 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   }
 
   // Handle image endpoint env vars
-  if (process.env.OPENAI_API_KEY && process.env.OPENROUTER_API_KEY) {
-    // If both exist, use OpenAI for images by default
+  // If both OpenAI and OpenRouter exist but no image endpoint set, prefer OpenAI for images (DALL-E better quality)
+  if (process.env.OPENAI_API_KEY && process.env.OPENROUTER_API_KEY && !config.imageEndpoint?.apiKey) {
     config.imageEndpoint = {
       apiKey: process.env.OPENAI_API_KEY,
       baseUrl: 'https://api.openai.com/v1',

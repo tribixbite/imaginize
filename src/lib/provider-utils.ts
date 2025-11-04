@@ -32,10 +32,11 @@ export function supportsImageGeneration(model: string | ModelConfig): boolean {
 
 /**
  * Get recommended free text model for OpenRouter
+ * Priority: google/gemini-2.0-flash-exp:free (best performance)
  */
 export function getRecommendedFreeTextModel(): ModelConfig {
   return {
-    name: 'google/gemini-flash-1.5:free',
+    name: 'google/gemini-2.0-flash-exp:free',
     contextLength: 1_000_000,
     maxTokens: 8_192,
     inputCostPer1M: 0.0,
@@ -45,13 +46,29 @@ export function getRecommendedFreeTextModel(): ModelConfig {
 }
 
 /**
- * Get recommended free image model
+ * Get recommended free image model for OpenRouter
+ * Currently: google/gemini-2.5-flash-image (top-weekly on OpenRouter)
+ * Fallback: google/gemini-exp-1206:free
  */
 export function getRecommendedFreeImageModel(): ModelConfig {
   return {
-    name: 'black-forest-labs/flux-schnell:free',
-    contextLength: 4_000,
-    maxTokens: 4_000,
+    name: 'google/gemini-2.5-flash-image',
+    contextLength: 8_000,
+    maxTokens: 8_000,
+    inputCostPer1M: 0.0,
+    outputCostPer1M: 0.0,
+    supportsImages: true,
+  };
+}
+
+/**
+ * Get fallback free image model
+ */
+export function getFallbackFreeImageModel(): ModelConfig {
+  return {
+    name: 'google/gemini-exp-1206:free',
+    contextLength: 8_000,
+    maxTokens: 8_000,
     inputCostPer1M: 0.0,
     outputCostPer1M: 0.0,
     supportsImages: true,

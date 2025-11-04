@@ -330,9 +330,23 @@ Return ONLY the style guide text, no JSON or formatting.`;
     let match;
     while ((match = chapterRegex.exec(content)) !== null) {
       const chapterTitle = match[1];
+      let chapterNum = chapterTitleToNumber.get(chapterTitle);
+
+      // Fallback: extract chapter number from title if Map lookup fails
+      // Handles patterns like "Chapter 5", "Chapter Five", "5. Title"
+      if (chapterNum === undefined) {
+        const numMatch = chapterTitle.match(/(?:chapter\s+)?(\d+)/i);
+        if (numMatch) {
+          chapterNum = parseInt(numMatch[1], 10);
+        } else {
+          // Last resort: use sequential numbering
+          chapterNum = concepts.filter(c => c.chapter !== chapterTitle).length + 1;
+        }
+      }
+
       concepts.push({
         chapter: chapterTitle,
-        chapterNumber: chapterTitleToNumber.get(chapterTitle),
+        chapterNumber: chapterNum,
         pageRange: match[2],
         quote: match[3].replace(/\n> /g, ' '),
         description: match[4],

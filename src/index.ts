@@ -74,7 +74,7 @@ export async function main(): Promise<void> {
     .option('--verbose', 'Verbose logging')
     .option('--quiet', 'Minimal output')
     // Utilities
-    .option('--init-config', 'Generate sample .illustrate.config file')
+    .option('--init-config', 'Generate sample .imaginize.config file')
     .option('--estimate', 'Estimate costs without executing')
     .option('-f, --file <path>', 'Specific book file to process');
 
@@ -85,8 +85,8 @@ export async function main(): Promise<void> {
     // Handle --init-config
     if (options.initConfig) {
       const { writeFile } = await import('fs/promises');
-      await writeFile('.illustrate.config', getSampleConfig());
-      console.log(chalk.green('✅ Created .illustrate.config file'));
+      await writeFile('.imaginize.config', getSampleConfig());
+      console.log(chalk.green('✅ Created .imaginize.config file'));
       console.log(chalk.yellow('⚠️  Remember to add your API keys!'));
       return;
     }
@@ -319,7 +319,7 @@ export async function main(): Promise<void> {
       console.log(chalk.green.bold('✨ Processing complete!\n'));
       console.log(chalk.white(`Output directory: ${chalk.cyan(outputDir)}`));
       console.log(chalk.white(`- progress.md: Processing log`));
-      console.log(chalk.white(`- .illustrate.state.json: Machine state`));
+      console.log(chalk.white(`- .imaginize.state.json: Machine state`));
 
       if (hasChapters || hasElements) {
         console.log(chalk.white(`- Contents.md: Table of contents`));

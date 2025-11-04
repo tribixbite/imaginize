@@ -50,7 +50,7 @@ export interface IllustrateConfig {
     model?: string | ModelConfig;
   };
 
-  /** Output directory name pattern (default: 'illustrate_{name}') */
+  /** Output directory name pattern (default: 'imaginize_{name}') */
   outputPattern?: string;
 
   /** Maximum concurrent AI requests (default: 3) */

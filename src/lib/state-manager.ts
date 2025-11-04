@@ -1,6 +1,6 @@
 /**
- * State management for illustrate
- * Manages .illustrate.state.json and coordinates with progress.md
+ * State management for imaginize
+ * Manages .imaginize.state.json and coordinates with progress.md
  */
 
 import { readFile, writeFile } from 'fs/promises';
@@ -15,7 +15,7 @@ export class StateManager {
   private state: IllustrateState;
 
   constructor(outputDir: string, bookFile: string, bookTitle: string, totalPages: number) {
-    this.statePath = join(outputDir, '.illustrate.state.json');
+    this.statePath = join(outputDir, '.imaginize.state.json');
 
     // Initialize state
     this.state = {
@@ -50,7 +50,7 @@ export class StateManager {
       // Version check
       if (this.state.version !== STATE_VERSION) {
         throw new Error(
-          `State version mismatch. Found ${this.state.version}, expected ${STATE_VERSION}. Run: npx illustrate --migrate`
+          `State version mismatch. Found ${this.state.version}, expected ${STATE_VERSION}. Run: npx imaginize --migrate`
         );
       }
 

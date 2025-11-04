@@ -16,6 +16,7 @@ build/
 .env.*.local
 
 # Configuration with API keys
+.imaginize.config
 .illustrate.config
 
 # IDE
@@ -36,7 +37,8 @@ Thumbs.db
 *.azw
 *.azw3
 
-# Output directories from illustrate
+# Output directories from imaginize
+imaginize_*/
 illustrate_*/
 
 # Logs

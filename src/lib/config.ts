@@ -1,6 +1,6 @@
 /**
- * Configuration management for illustrate
- * Loads config from .illustrate.config files and environment variables
+ * Configuration management for imaginize
+ * Loads config from .imaginize.config files and environment variables
  */
 
 import { cosmiconfig } from 'cosmiconfig';
@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: IllustrateConfig = {
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
   model: 'gpt-4o-mini',
-  outputPattern: 'illustrate_{name}',
+  outputPattern: 'imaginize_{name}',
   maxConcurrency: 3,
   imageSize: '1024x1024',
   imageQuality: 'standard',
@@ -29,19 +29,19 @@ const DEFAULT_CONFIG: IllustrateConfig = {
 
 /**
  * Load configuration from multiple sources with priority:
- * 1. Current directory .illustrate.config
- * 2. Home directory .illustrate.config
+ * 1. Current directory .imaginize.config
+ * 2. Home directory .imaginize.config
  * 3. Environment variables
  * 4. Default values
  */
 export async function loadConfig(): Promise<Required<IllustrateConfig>> {
-  const explorer = cosmiconfig('illustrate');
+  const explorer = cosmiconfig('imaginize');
 
   // Start with defaults
   let config = { ...DEFAULT_CONFIG };
 
   // Load from home directory
-  const homeConfigPath = join(homedir(), '.illustrate.config');
+  const homeConfigPath = join(homedir(), '.imaginize.config');
   if (existsSync(homeConfigPath)) {
     try {
       const result = await explorer.load(homeConfigPath);
@@ -99,7 +99,7 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   // Validate required fields
   if (!config.apiKey) {
     throw new Error(
-      'API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .illustrate.config'
+      'API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .imaginize.config'
     );
   }
 
@@ -111,7 +111,7 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
  */
 export function getSampleConfig(): string {
   return `# illustrate configuration file v2.0
-# Place this file as .illustrate.config in your home directory or project directory
+# Place this file as .imaginize.config in your home directory or project directory
 
 # Text analysis (primary endpoint)
 baseUrl: "https://openrouter.ai/api/v1"  # or "https://api.openai.com/v1"
@@ -140,7 +140,7 @@ maxRetries: 1
 retryTimeout: 5000
 
 # Output settings
-outputPattern: "illustrate_{name}"
+outputPattern: "imaginize_{name}"
 imageSize: "1024x1024"  # Options: 1024x1024, 1024x1792, 1792x1024
 imageQuality: "standard"  # Options: standard, hd
 `;

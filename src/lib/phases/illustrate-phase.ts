@@ -33,7 +33,7 @@ export class IllustratePhase extends BasePhase {
     const state = stateManager.getState();
     if (state.phases.analyze.status !== 'completed') {
       throw new Error(
-        'Cannot generate images: Contents.md not found. Run: npx illustrate --text'
+        'Cannot generate images: Contents.md not found. Run: npx imaginize --text'
       );
     }
 
@@ -443,7 +443,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
   /**
    * Generate image using best available API
-   * Tries gpt-image-1 first, falls back to dall-e-3
+   * Supports: gpt-image-1, Gemini Imagen, dall-e-3
    */
   private async generateImage(
     imageOpenai: any,
@@ -454,40 +454,68 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const size = config.imageSize || '1024x1024';
     const { progressTracker } = this.context;
 
-    // Try gpt-image-1 first (newer, better model)
-    try {
-      // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
-      const qualityMap: Record<string, string> = {
-        'standard': 'medium',
-        'hd': 'high',
-      };
-      const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
+    // Determine which model to use
+    const imageModel = typeof model === 'string' ? model : model?.model || 'dall-e-3';
 
-      const response = await imageOpenai.images.generate({
-        model: 'gpt-image-1',
-        prompt: prompt,
-        n: 1,
-        size: size,
-        quality: quality,
-      });
+    // Try gpt-image-1 first (if configured)
+    if (imageModel === 'gpt-image-1') {
+      try {
+        // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
+        const qualityMap: Record<string, string> = {
+          'standard': 'medium',
+          'hd': 'high',
+        };
+        const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
 
-      const url = response.data?.[0]?.url;
-      if (url) {
-        await progressTracker.log('Using gpt-image-1', 'info');
-        return url;
+        const response = await imageOpenai.images.generate({
+          model: 'gpt-image-1',
+          prompt: prompt,
+          n: 1,
+          size: size,
+          quality: quality,
+        });
+
+        const url = response.data?.[0]?.url;
+        if (url) {
+          await progressTracker.log('Using gpt-image-1', 'info');
+          return url;
+        }
+
+        // No URL returned - fall back
+        await progressTracker.log(
+          'gpt-image-1 returned no URL, falling back to dall-e-3',
+          'warning'
+        );
+      } catch (error: any) {
+        await progressTracker.log(
+          `gpt-image-1 failed (${error.message}), falling back to dall-e-3`,
+          'warning'
+        );
       }
+    }
 
-      // No URL returned - fall back
-      await progressTracker.log(
-        'gpt-image-1 returned no URL, falling back to dall-e-3',
-        'warning'
-      );
-    } catch (error: any) {
-      // If gpt-image-1 fails, fall back to dall-e-3
-      await progressTracker.log(
-        `gpt-image-1 failed (${error.message}), falling back to dall-e-3`,
-        'warning'
-      );
+    // Try Gemini Imagen (if configured)
+    if (imageModel.includes('imagen')) {
+      try {
+        const geminiApiKey = (config as any).geminiApiKey;
+        if (!geminiApiKey) {
+          await progressTracker.log(
+            'Gemini API key not found, skipping Imagen',
+            'warning'
+          );
+        } else {
+          const url = await this.generateImagenImage(prompt, geminiApiKey);
+          if (url) {
+            await progressTracker.log(`Using Gemini ${imageModel}`, 'info');
+            return url;
+          }
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `Gemini Imagen failed (${error.message}), falling back to dall-e-3`,
+          'warning'
+        );
+      }
     }
 
     // Fallback to dall-e-3
@@ -501,7 +529,51 @@ Return ONLY the style guide text, no JSON or formatting.`;
       quality: quality,
     });
 
+    await progressTracker.log('Using dall-e-3', 'info');
     return response.data[0].url;
+  }
+
+  /**
+   * Generate image using Google Gemini Imagen
+   */
+  private async generateImagenImage(prompt: string, apiKey: string): Promise<string> {
+    const { progressTracker } = this.context;
+
+    // Use Imagen via Google AI API
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          instances: [
+            {
+              prompt: prompt,
+            },
+          ],
+          parameters: {
+            sampleCount: 1,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Imagen API error: ${response.status} ${errorText}`);
+    }
+
+    const data = (await response.json()) as any;
+
+    // Extract base64 image and convert to URL
+    if (data.predictions && data.predictions[0]?.bytesBase64Encoded) {
+      const base64 = data.predictions[0].bytesBase64Encoded;
+      return `data:image/png;base64,${base64}`;
+    }
+
+    throw new Error('No image data returned from Imagen');
   }
 
   /**

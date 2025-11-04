@@ -9,7 +9,7 @@ import { existsSync, rmSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 const TEST_BOOK = 'ImpossibleCreatures.epub';
-const OUTPUT_DIR = 'illustrate_ImpossibleCreatures';
+const OUTPUT_DIR = 'imaginize_ImpossibleCreatures';
 
 describe('illustrate v2.0 pipeline', () => {
   beforeAll(() => {
@@ -50,12 +50,12 @@ describe('illustrate v2.0 pipeline', () => {
     // Verify outputs exist
     expect(existsSync(OUTPUT_DIR)).toBe(true);
     expect(existsSync(join(OUTPUT_DIR, 'Contents.md'))).toBe(true);
-    expect(existsSync(join(OUTPUT_DIR, '.illustrate.state.json'))).toBe(true);
+    expect(existsSync(join(OUTPUT_DIR, '.imaginize.state.json'))).toBe(true);
     expect(existsSync(join(OUTPUT_DIR, 'progress.md'))).toBe(true);
 
     // Verify state
     const stateFile = readFileSync(
-      join(OUTPUT_DIR, '.illustrate.state.json'),
+      join(OUTPUT_DIR, '.imaginize.state.json'),
       'utf-8'
     );
     const state = JSON.parse(stateFile);
@@ -75,7 +75,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // Verify chapter 2 is now complete
     const stateFile = readFileSync(
-      join(OUTPUT_DIR, '.illustrate.state.json'),
+      join(OUTPUT_DIR, '.imaginize.state.json'),
       'utf-8'
     );
     const state = JSON.parse(stateFile);
@@ -100,7 +100,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // Verify state
     const stateFile = readFileSync(
-      join(OUTPUT_DIR, '.illustrate.state.json'),
+      join(OUTPUT_DIR, '.imaginize.state.json'),
       'utf-8'
     );
     const state = JSON.parse(stateFile);
@@ -124,7 +124,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // State should still be valid
     const stateFile = readFileSync(
-      join(OUTPUT_DIR, '.illustrate.state.json'),
+      join(OUTPUT_DIR, '.imaginize.state.json'),
       'utf-8'
     );
     const state = JSON.parse(stateFile);
@@ -137,7 +137,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // Get original timestamp
     const stateBefore = JSON.parse(
-      readFileSync(join(OUTPUT_DIR, '.illustrate.state.json'), 'utf-8')
+      readFileSync(join(OUTPUT_DIR, '.imaginize.state.json'), 'utf-8')
     );
     const originalTimestamp = stateBefore.lastUpdated;
 
@@ -149,7 +149,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // Verify state was updated
     const stateAfter = JSON.parse(
-      readFileSync(join(OUTPUT_DIR, '.illustrate.state.json'), 'utf-8')
+      readFileSync(join(OUTPUT_DIR, '.imaginize.state.json'), 'utf-8')
     );
 
     expect(stateAfter.lastUpdated).not.toBe(originalTimestamp);
@@ -160,7 +160,7 @@ describe('illustrate v2.0 pipeline', () => {
     console.log('\n🧪 Test 6: Verify state persistence\n');
 
     const state = JSON.parse(
-      readFileSync(join(OUTPUT_DIR, '.illustrate.state.json'), 'utf-8')
+      readFileSync(join(OUTPUT_DIR, '.imaginize.state.json'), 'utf-8')
     );
 
     // Verify all required fields exist
@@ -174,7 +174,7 @@ describe('illustrate v2.0 pipeline', () => {
     // Verify phase structure
     expect(state.phases.analyze).toBeDefined();
     expect(state.phases.extract).toBeDefined();
-    expect(state.phases.illustrate).toBeDefined();
+    expect(state.phases.imaginize).toBeDefined();
 
     console.log('\n📊 Final State Summary:');
     console.log(`   Book: ${state.bookTitle}`);
@@ -191,7 +191,7 @@ describe('CLI flags and options', () => {
   test('--init-config creates config file', () => {
     console.log('\n🧪 Test: --init-config\n');
 
-    const configFile = '.illustrate.config.test';
+    const configFile = '.imaginize.config.test';
 
     // Clean up if exists
     if (existsSync(configFile)) {
@@ -202,10 +202,10 @@ describe('CLI flags and options', () => {
     execSync('node bin/illustrate.js --init-config', { stdio: 'inherit' });
 
     // Should create default config
-    expect(existsSync('.illustrate.config')).toBe(true);
+    expect(existsSync('.imaginize.config')).toBe(true);
 
     // Clean up
-    rmSync('.illustrate.config');
+    rmSync('.imaginize.config');
   });
 
   test('--help shows usage', () => {

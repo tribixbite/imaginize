@@ -1,5 +1,5 @@
 /**
- * Progress tracking for illustrate operations
+ * Progress tracking for imaginize operations
  * Creates and updates progress.md file during processing
  */
 

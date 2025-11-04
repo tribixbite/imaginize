@@ -1,12 +1,12 @@
 {
-  "name": "illustrate",
+  "name": "imaginize",
   "version": "2.0.0",
   "type": "module",
   "description": "AI-powered book illustration guide generator v2 - Multi-provider support with granular phase control and state management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "illustrate": "./bin/illustrate.js"
+    "imaginize": "./bin/imaginize.js"
   },
   "scripts": {
     "build": "tsc",
@@ -35,12 +35,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/illustrate.git"
+    "url": "git+https://github.com/yourusername/imaginize.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/illustrate/issues"
+    "url": "https://github.com/yourusername/imaginize/issues"
   },
-  "homepage": "https://github.com/yourusername/illustrate#readme",
+  "homepage": "https://github.com/yourusername/imaginize#readme",
   "dependencies": {
     "adm-zip": "^0.5.10",
     "chalk": "^5.3.0",

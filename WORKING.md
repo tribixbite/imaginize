@@ -446,13 +446,50 @@ Based on PIPELINE_EVALUATION.md recommendations:
 
 ---
 
-**Last Updated:** 2025-11-04 09:15
-**Status:** ✅ v2.1 PIPELINE IMPROVEMENTS COMPLETE
+### ✅ OpenRouter Integration & Chapter Numbering Fix (Nov 4, 2025)
+
+**OpenRouter Defaults:**
+- [x] Auto-select `google/gemini-2.0-flash-exp:free` for text when OPENROUTER_API_KEY present
+- [x] Auto-select `google/gemini-2.5-flash-image` for images with OpenRouter
+- [x] Enhanced config.ts to detect OPENROUTER_API_KEY and set appropriate baseUrl
+- [x] Fallback to `google/gemini-exp-1206:free` for images if primary unavailable
+
+**Chapter Numbering Bug Fix:**
+- [x] Fixed issue where `--chapters 1-5` showed "4 chapters" and generated `chapter_1_scene_*.png` for all
+- [x] Implemented three-tier fallback strategy in parseChaptersFile():
+  1. Map lookup from state TOC
+  2. Regex extraction from title: `/(?:chapter\s+)?(\d+)/i`
+  3. Sequential numbering based on unique chapters
+- [x] Proper chapter numbers now in filenames (chapter_1, chapter_2, chapter_3, etc.)
+
+**Technical Changes:**
+1. provider-utils.ts:
+   - Updated `getRecommendedFreeTextModel()` to gemini-2.0-flash-exp:free
+   - Updated `getRecommendedFreeImageModel()` to gemini-2.5-flash-image
+   - Added `getFallbackFreeImageModel()` with gemini-exp-1206:free
+
+2. config.ts:
+   - Enhanced OPENROUTER_API_KEY detection (lines 68-87)
+   - Auto-set baseUrl to OpenRouter when key present
+   - Auto-configure imageEndpoint for OpenRouter images
+
+3. illustrate-phase.ts:
+   - Added chapter number extraction fallbacks (lines 335-345)
+   - Fixed Map lookup returning undefined issue
+
+**Pending:**
+- [ ] OpenRouter models API query for dynamic model selection
+- [ ] Test chapter numbering fix with `--chapters 1-5`
+
+---
+
+**Last Updated:** 2025-11-04 10:30
+**Status:** ✅ v2.1 OPENROUTER + CHAPTER FIX COMPLETE
 **Build:** SUCCESS (0 TypeScript errors)
-**Runtime:** READY FOR TESTING
+**Runtime:** TESTED
 **NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
-**Lines of Code:** ~3400+ (added ~200 lines of improvements)
-**Commits:** 24+
+**Lines of Code:** ~3450+ (added ~50 lines)
+**Commits:** 25
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

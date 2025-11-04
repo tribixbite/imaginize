@@ -649,6 +649,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
   /**
    * Generate image using OpenRouter (via chat completions API)
+   * Docs: https://openrouter.ai/docs/features/multimodal/image-generation
    */
   private async generateOpenRouterImage(
     openai: any,
@@ -658,7 +659,11 @@ Return ONLY the style guide text, no JSON or formatting.`;
   ): Promise<string> {
     const { progressTracker } = this.context;
 
-    // OpenRouter image models work through chat completions
+    // Parse size for aspect ratio (e.g., "1024x1024" -> "1:1")
+    const aspectRatio = size === '1024x1792' ? '9:16' :
+                       size === '1792x1024' ? '16:9' : '1:1';
+
+    // OpenRouter image models require modalities parameter
     const response = await openai.chat.completions.create({
       model: model,
       messages: [
@@ -667,30 +672,22 @@ Return ONLY the style guide text, no JSON or formatting.`;
           content: prompt,
         },
       ],
-      // OpenRouter-specific parameters for image generation
-      max_tokens: 1000,
+      modalities: ['image', 'text'], // Required for image generation
+      image_config: {
+        aspect_ratio: aspectRatio,
+      },
     });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('No response from OpenRouter');
-    }
-
-    // OpenRouter image models return base64-encoded images in the response
-    // Format: data:image/png;base64,{base64_string}
-    if (content.includes('data:image')) {
-      const match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-      if (match) {
-        return match[0];
+    // Images returned in message.images array
+    const images = response.choices[0]?.message?.images;
+    if (images && images.length > 0) {
+      const imageUrl = images[0]?.image_url?.url;
+      if (imageUrl) {
+        return imageUrl; // Returns data:image/png;base64,...
       }
     }
 
-    // Some models may return just the base64 string
-    if (content.match(/^[A-Za-z0-9+/=]+$/)) {
-      return `data:image/png;base64,${content}`;
-    }
-
-    throw new Error('No valid image data in OpenRouter response');
+    throw new Error('No image data in OpenRouter response');
   }
 
   /**

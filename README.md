@@ -1,11 +1,11 @@
-# illustrate
+# imaginize
 
 > AI-powered book illustration guide generator - automatically identifies key visual concepts from EPUB and PDF books
 
-[![npm version](https://badge.fury.io/js/illustrate.svg)](https://www.npmjs.com/package/illustrate)
+[![npm version](https://badge.fury.io/js/imaginize.svg)](https://www.npmjs.com/package/imaginize)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`illustrate` analyzes your books using AI to create comprehensive illustration guides. It identifies the most visually interesting moments and catalogs all important story elements (characters, places, items) with direct quotes for accurate reference.
+`imaginize` analyzes your books using AI to create comprehensive illustration guides. It identifies the most visually interesting moments and catalogs all important story elements (characters, places, items) with direct quotes for accurate reference.
 
 ## Features
 
@@ -21,13 +21,13 @@
 
 ```bash
 # Process a book file in current directory
-npx illustrate
+npx imaginize
 
 # Process a specific file
-npx illustrate --file mybook.epub
+npx imaginize --file mybook.epub
 
 # Generate a configuration file
-npx illustrate --init-config
+npx imaginize --init-config
 ```
 
 ## Installation
@@ -35,14 +35,14 @@ npx illustrate --init-config
 ### As a Global Tool
 
 ```bash
-npm install -g illustrate
-illustrate
+npm install -g imaginize
+imaginize
 ```
 
 ### Using npx (Recommended)
 
 ```bash
-npx illustrate
+npx imaginize
 ```
 
 ## Requirements
@@ -52,19 +52,19 @@ npx illustrate
 
 ## Configuration
 
-`illustrate` looks for configuration in these locations (in order of priority):
+`imaginize` looks for configuration in these locations (in order of priority):
 
-1. `.illustrate.config` in current directory
-2. `.illustrate.config` in home directory
+1. `.imaginize.config` in current directory
+2. `.imaginize.config` in home directory
 3. Environment variables
 
 ### Generate Config File
 
 ```bash
-npx illustrate --init-config
+npx imaginize --init-config
 ```
 
-This creates a `.illustrate.config` file:
+This creates a `.imaginize.config` file:
 
 ```yaml
 # Number of pages per image recommendation
@@ -87,7 +87,7 @@ imageSize: "1024x1024"
 imageQuality: "standard"
 
 # Output settings
-outputPattern: "illustrate_{name}"
+outputPattern: "imaginize_{name}"
 maxConcurrency: 3
 ```
 
@@ -101,7 +101,7 @@ export OPENAI_MODEL="gpt-4o"  # Optional
 
 ## Output
 
-`illustrate` creates a folder named `illustrate_BOOKNAME` containing:
+`imaginize` creates a folder named `imaginize_BOOKNAME` containing:
 
 ### 1. Contents.md
 
@@ -177,10 +177,10 @@ Real-time processing log with:
 
 ```bash
 # Process all EPUB/PDF files in current directory
-npx illustrate
+npx imaginize
 
 # Process specific file
-npx illustrate --file "The Great Gatsby.epub"
+npx imaginize --file "The Great Gatsby.epub"
 ```
 
 ### Advanced Configuration
@@ -188,16 +188,16 @@ npx illustrate --file "The Great Gatsby.epub"
 ```bash
 # Set API key via environment
 export OPENAI_API_KEY="sk-..."
-npx illustrate
+npx imaginize
 
 # Use custom OpenAI-compatible endpoint
 export OPENAI_BASE_URL="https://custom-endpoint.com/v1"
-npx illustrate
+npx imaginize
 ```
 
 ### With Image Generation
 
-Edit `.illustrate.config`:
+Edit `.imaginize.config`:
 
 ```yaml
 generateElementImages: true
@@ -221,12 +221,12 @@ imageQuality: "hd"
 | `imageModel` | string | `dall-e-3` | Model for image generation |
 | `imageSize` | string | `1024x1024` | Image dimensions |
 | `imageQuality` | string | `standard` | `standard` or `hd` |
-| `outputPattern` | string | `illustrate_{name}` | Output directory pattern |
+| `outputPattern` | string | `imaginize_{name}` | Output directory pattern |
 | `maxConcurrency` | number | `3` | Max concurrent API requests |
 
 ## API Costs
 
-`illustrate` makes API calls to OpenAI. Approximate costs:
+`imaginize` makes API calls to OpenAI. Approximate costs:
 
 - **Text Analysis (GPT-4o):** ~$0.50-2.00 per book (depending on length)
 - **Image Generation (DALL-E 3):** $0.040-0.080 per image
@@ -250,7 +250,7 @@ Set your OpenAI API key:
 ```bash
 export OPENAI_API_KEY="sk-..."
 # or
-npx illustrate --init-config  # then edit the config file
+npx imaginize --init-config  # then edit the config file
 ```
 
 ### "Failed to parse book"
@@ -271,8 +271,8 @@ maxConcurrency: 1  # Slower but safer
 
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/illustrate.git
-cd illustrate
+git clone https://github.com/tribixbite/imaginize.git
+cd imaginize
 npm install
 
 # Build
@@ -280,7 +280,7 @@ npm run build
 
 # Test locally
 npm link
-illustrate --help
+imaginize --help
 
 # Lint and format
 npm run lint
@@ -299,7 +299,7 @@ Contributions welcome! Please:
 
 ## License
 
-MIT © [Your Name]
+MIT
 
 ## Acknowledgments
 
@@ -320,9 +320,5 @@ MIT © [Your Name]
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/illustrate/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/illustrate/discussions)
-
----
-
-Made with ❤️ for book lovers and illustrators
+- **Issues:** [GitHub Issues](https://github.com/tribixbite/imaginize/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/tribixbite/imaginize/discussions)

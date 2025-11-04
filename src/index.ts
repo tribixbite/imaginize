@@ -1,5 +1,5 @@
 /**
- * illustrate v2.0 - AI-powered book illustration guide generator
+ * imaginize v2.0 - AI-powered book illustration guide generator
  * Main entry point with phase-based orchestration
  */
 
@@ -50,7 +50,7 @@ export async function main(): Promise<void> {
   const program = new Command();
 
   program
-    .name('illustrate')
+    .name('imaginize')
     .version('2.0.0')
     .description('AI-powered book illustration guide generator v2.0')
     // Phase selection
@@ -116,7 +116,7 @@ export async function main(): Promise<void> {
       }
     } else {
       spinner.start('Searching for book files...');
-      const bookFiles = await findBookFiles();
+      const bookFiles = await findBookFiles(config.outputPattern);
 
       if (bookFiles.length === 0) {
         spinner.fail('No book files found');
@@ -347,7 +347,7 @@ export async function main(): Promise<void> {
     console.error(chalk.red('\n❌ Error:'), error.message);
 
     if (error.message.includes('API key')) {
-      console.log(chalk.yellow('\n💡 Tip: Run "illustrate --init-config" to create a configuration file'));
+      console.log(chalk.yellow('\n💡 Tip: Run "imaginize --init-config" to create a configuration file'));
       console.log(chalk.yellow('   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable\n'));
     }
 

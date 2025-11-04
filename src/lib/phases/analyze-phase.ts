@@ -221,7 +221,7 @@ export class AnalyzePhase extends BasePhase {
    * Check if chapter is story content (not metadata/epigraph/appendix)
    */
   private isStoryContent(chapterTitle: string): boolean {
-    const nonStoryPattern = /epigraph|appendix|appendices|glossary|contents?|table of contents|copyright|dedication|acknowledgements?|about the author|prologue|epilogue|foreword|preface|introduction|bibliography|index|notes?$/i;
+    const nonStoryPattern = /^(also by|about this book|by the same author|other books by|books? by|epigraph|appendix|appendices|glossary|contents?|table of contents|copyright|dedication|acknowledgements?|about the author|prologue|epilogue|foreword|preface|introduction|bibliography|index|notes?)(\s|$|:)/i;
 
     return !nonStoryPattern.test(chapterTitle.trim());
   }

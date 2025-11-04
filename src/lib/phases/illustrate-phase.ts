@@ -497,7 +497,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
   /**
    * Generate image using best available API
-   * Supports: gpt-image-1, Gemini Imagen, dall-e-3
+   * Supports: OpenRouter image models, gpt-image-1, Gemini Imagen, dall-e-3
    */
   private async generateImage(
     imageOpenai: any,
@@ -511,7 +511,24 @@ Return ONLY the style guide text, no JSON or formatting.`;
     // Determine which model to use
     const imageModel = typeof model === 'string' ? model : model?.model || 'dall-e-3';
 
-    // Try gpt-image-1 first (if configured)
+    // Try OpenRouter image models (via chat completions)
+    if (imageModel.includes('google/') && imageModel.includes('image')) {
+      try {
+        await progressTracker.log(`Trying OpenRouter model: ${imageModel}`, 'info');
+        const url = await this.generateOpenRouterImage(imageOpenai, prompt, imageModel, size);
+        if (url) {
+          await progressTracker.log(`Using OpenRouter ${imageModel}`, 'info');
+          return url;
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `OpenRouter ${imageModel} failed (${error.message}), falling back`,
+          'warning'
+        );
+      }
+    }
+
+    // Try gpt-image-1 (if configured)
     if (imageModel === 'gpt-image-1') {
       try {
         // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
@@ -628,6 +645,52 @@ Return ONLY the style guide text, no JSON or formatting.`;
     }
 
     throw new Error('No image data returned from Imagen');
+  }
+
+  /**
+   * Generate image using OpenRouter (via chat completions API)
+   */
+  private async generateOpenRouterImage(
+    openai: any,
+    prompt: string,
+    model: string,
+    size: string
+  ): Promise<string> {
+    const { progressTracker } = this.context;
+
+    // OpenRouter image models work through chat completions
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      // OpenRouter-specific parameters for image generation
+      max_tokens: 1000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from OpenRouter');
+    }
+
+    // OpenRouter image models return base64-encoded images in the response
+    // Format: data:image/png;base64,{base64_string}
+    if (content.includes('data:image')) {
+      const match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+      if (match) {
+        return match[0];
+      }
+    }
+
+    // Some models may return just the base64 string
+    if (content.match(/^[A-Za-z0-9+/=]+$/)) {
+      return `data:image/png;base64,${content}`;
+    }
+
+    throw new Error('No valid image data in OpenRouter response');
   }
 
   /**

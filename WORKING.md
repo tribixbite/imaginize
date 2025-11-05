@@ -574,14 +574,40 @@ Successfully tested with chapters 9-13:
 
 ---
 
-**Last Updated:** 2025-11-05 09:46
-**Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES + RATE LIMITS)
+---
+
+### ✅ Chapter Numbering Bug Fixed (Nov 5, 2025)
+
+**Problem:**
+Multi-scene chapters had incorrect filenames. Scene 2 of Chapter 13 was saved as `chapter_2_scene_1.png` instead of `chapter_13_scene_2.png`.
+
+**Root Cause:**
+The `parseChaptersFile()` regex matched `### Scene 2` as a chapter header. Map lookup failed for "Scene 2", so it fell back to sequential numbering and assigned chapter number 2.
+
+**Solution:**
+Rewrote `parseChaptersFile()` in illustrate-phase.ts:320-371:
+- Split Chapters.md by chapter sections first
+- Extract chapter header once per section (ignoring "### Scene N" headers)
+- Parse all scenes within that section with same chapter number
+- Use regex negative lookahead: `/(?!Scene\s+\d+)/`
+
+**Test Results:**
+- Before: `chapter_2_scene_1.png` (wrong), `chapter_13_scene_1.png`
+- After: `chapter_13_scene_1.png` ✓, `chapter_13_scene_2.png` ✓
+
+**Missing 7th Image Investigation:**
+No actual missing image - state file concept count was incorrect. Chapter 13 had 2 scenes, not 3. All 6 images generated correctly.
+
+---
+
+**Last Updated:** 2025-11-05 13:02
+**Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES + RATE LIMITS + BUG FIXES)
 **Build:** SUCCESS (0 TypeScript errors)
 **Runtime:** TESTED & VERIFIED
 **OpenRouter:** ✅ 100% FREE text + image generation with automatic rate limit handling
 **NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
-**Lines of Code:** ~3520+ (added ~120 lines)
-**Commits:** 31
+**Lines of Code:** ~3540+ (added ~140 lines)
+**Commits:** 34
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

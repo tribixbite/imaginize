@@ -19,7 +19,7 @@ export async function retryWithBackoff<T>(
   const {
     maxRetries,
     initialTimeout,
-    maxTimeout = 60000, // 60 seconds max
+    maxTimeout = 120000, // 120 seconds max (for rate limits)
     onRetry,
   } = options;
 
@@ -37,13 +37,22 @@ export async function retryWithBackoff<T>(
         break;
       }
 
+      // Check if this is a rate limit error - use longer timeout
+      const isRateLimit = isRateLimitError(error);
+      let waitTime = timeout;
+
+      if (isRateLimit) {
+        // For rate limits, wait longer (60s for OpenRouter free tier)
+        waitTime = attempt === 0 ? 65000 : Math.min(timeout * 2, 120000);
+      }
+
       // Call retry callback if provided
       if (onRetry) {
         onRetry(attempt + 1, error);
       }
 
       // Wait with exponential backoff
-      await sleep(timeout);
+      await sleep(waitTime);
 
       // Double timeout for next attempt, capped at maxTimeout
       timeout = Math.min(timeout * 2, maxTimeout);
@@ -58,6 +67,28 @@ export async function retryWithBackoff<T>(
  */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Check if error is a rate limit error (429 status)
+ */
+export function isRateLimitError(error: any): boolean {
+  // Check for 429 status
+  if (error.status === 429 || (error as any).code === 429) {
+    return true;
+  }
+
+  // Check error message for rate limit indicators
+  const message = error.message?.toLowerCase() || '';
+  if (
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    message.includes('free-models-per-min')
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

@@ -23,7 +23,7 @@ const DEFAULT_CONFIG: IllustrateConfig = {
   imageQuality: 'standard',
   pagesPerAutoChapter: 50,
   tokenSafetyMargin: 0.9,
-  maxRetries: 1,
+  maxRetries: 10, // Increased for rate limit handling (OpenRouter free tier)
   retryTimeout: 5000,
 };
 

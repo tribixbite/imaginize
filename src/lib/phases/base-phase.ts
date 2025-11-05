@@ -13,7 +13,7 @@ import type {
 } from '../../types/config.js';
 import type { StateManager } from '../state-manager.js';
 import type { ProgressTracker } from '../progress-tracker.js';
-import { retryWithBackoff, formatRetryError } from '../retry-utils.js';
+import { retryWithBackoff, formatRetryError, isRateLimitError } from '../retry-utils.js';
 import { estimateTokens, createTokenEstimate } from '../token-counter.js';
 
 export interface PhaseContext {
@@ -166,7 +166,17 @@ export abstract class BasePhase {
       maxRetries: config.maxRetries,
       initialTimeout: config.retryTimeout,
       onRetry: async (attempt, error) => {
-        const message = `Retry ${attempt}/${config.maxRetries} for ${context}: ${error.message}`;
+        const isRateLimit = isRateLimitError(error);
+        let message: string;
+
+        if (isRateLimit) {
+          // For rate limits, show wait time more clearly
+          const waitTime = attempt === 1 ? 65 : Math.min(config.retryTimeout * Math.pow(2, attempt - 1) / 1000, 120);
+          message = `⏳ Rate limit hit for ${context}. Waiting ${waitTime}s before retry ${attempt}/${config.maxRetries}...`;
+        } else {
+          message = `Retry ${attempt}/${config.maxRetries} for ${context}: ${error.message}`;
+        }
+
         await progressTracker.log(message, 'warning');
       },
     }).catch((error) => {

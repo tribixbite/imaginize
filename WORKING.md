@@ -508,14 +508,50 @@ Based on PIPELINE_EVALUATION.md recommendations:
 
 ---
 
-**Last Updated:** 2025-11-04 17:50
-**Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES)
+---
+
+### ✅ Rate Limit Handling for OpenRouter Free Tier (Nov 5, 2025)
+
+**Problem Solved:**
+OpenRouter free tier has a 1 request/minute rate limit ("free-models-per-min" error). Tool previously failed immediately on 429 errors.
+
+**Implementation:**
+- [x] Enhanced `retryWithBackoff()` in retry-utils.ts to detect rate limits
+- [x] Created `isRateLimitError()` function checking for 429 status and "free-models-per-min" message
+- [x] Implemented automatic 65-second wait on first retry (slightly > 60s limit)
+- [x] Increased `maxRetries` from 1 to 10 for multiple rate limit encounters
+- [x] Increased `maxTimeout` from 60s to 120s for longer wait periods
+- [x] Added clear progress messages showing wait times: "⏳ Rate limit hit for analyze chapter 11. Waiting 65s before retry 1/10..."
+
+**Testing Results:**
+Successfully tested with chapters 9-13:
+- Chapter 9: Completed immediately
+- Chapter 10: Hit rate limit → waited 65s → hit again → waited 10s → Completed
+- Chapter 11: Hit rate limit → waited 65s → hit again → waited 10s → Completed
+- Process continues autonomously through all rate limits
+
+**Files Modified:**
+1. src/lib/retry-utils.ts:72-92 - Added isRateLimitError() detection
+2. src/lib/retry-utils.ts:15-63 - Enhanced retry logic with 65s waits
+3. src/lib/config.ts:26 - Changed maxRetries: 1 → 10
+4. src/lib/phases/base-phase.ts:159-190 - Added clear wait time messages
+
+**Outcome:**
+✅ Tool now fully compatible with OpenRouter free tier
+✅ Automatically waits through rate limits and completes all chapters
+✅ Background processing continues autonomously
+✅ Clear user feedback on wait times and retry attempts
+
+---
+
+**Last Updated:** 2025-11-05 00:57
+**Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES + RATE LIMITS)
 **Build:** SUCCESS (0 TypeScript errors)
 **Runtime:** TESTED & VERIFIED
-**OpenRouter:** ✅ 100% FREE text + image generation
+**OpenRouter:** ✅ 100% FREE text + image generation with automatic rate limit handling
 **NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
 **Lines of Code:** ~3520+ (added ~120 lines)
-**Commits:** 29
+**Commits:** 30
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

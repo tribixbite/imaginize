@@ -544,14 +544,44 @@ Successfully tested with chapters 9-13:
 
 ---
 
-**Last Updated:** 2025-11-05 00:57
+---
+
+### ✅ OpenRouter Image Generation Verified (Nov 5, 2025)
+
+**Success Metrics:**
+- ✅ Generated 6 images using google/gemini-2.5-flash-image (OpenRouter)
+- ✅ No rate limit failures during parallel batch processing
+- ✅ Image sizes: 1.4-1.7 MB per image
+- ✅ Processing time: ~30 seconds for 6 images (parallel batches of 3)
+- ✅ Cost: $0.00 (100% free with OpenRouter)
+
+**Images Generated:**
+- chapter_9_scene_1.png (The Beginning)
+- chapter_10_scene_1.png (The Beginning, Elsewhere)
+- chapter_11_scene_1.png (Arrival)
+- chapter_12_scene_1.png (Arrival, Elsewhere)
+- chapter_13_scene_1.png (Frank Aureate - scene 1)
+- chapter_2_scene_1.png (Frank Aureate - scene 2)
+
+**Configuration:**
+- pagesPerImage: 5 (increased from 10 for more visual concepts)
+- Parallel batching: 3 images per batch
+- Rate limit handling: Working correctly (no failures observed)
+
+**Quality Comparison Available:**
+- DALL-E images: chapters 9-13 (4 images, 1.8-2.3 MB, from previous test)
+- OpenRouter/Gemini images: chapters 9-13 (6 images, 1.4-1.7 MB, this test)
+
+---
+
+**Last Updated:** 2025-11-05 09:46
 **Status:** ✅ v2.1 OPENROUTER FULLY WORKING (TEXT + IMAGES + RATE LIMITS)
 **Build:** SUCCESS (0 TypeScript errors)
 **Runtime:** TESTED & VERIFIED
 **OpenRouter:** ✅ 100% FREE text + image generation with automatic rate limit handling
 **NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.1.0 after testing)
 **Lines of Code:** ~3520+ (added ~120 lines)
-**Commits:** 30
+**Commits:** 31
 **Version:** 2.1.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize

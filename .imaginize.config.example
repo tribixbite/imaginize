@@ -20,7 +20,7 @@
 outputPattern: "imaginize_{name}"        # Output directory pattern
 
 # Processing Settings
-pagesPerImage: 10                        # Generate 1 image per N pages
+pagesPerImage: 10                        # Target: 1 image per N pages (AI suggestion, not strict limit)
 extractElements: true                    # Extract story elements (characters, places, etc.)
 generateElementImages: false             # Generate images for story elements
 

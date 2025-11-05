@@ -319,7 +319,6 @@ Return ONLY the style guide text, no JSON or formatting.`;
    */
   private parseChaptersFile(content: string): ImageConcept[] {
     const concepts: ImageConcept[] = [];
-    const chapterRegex = /### (.+?)\n\n#### Scene \d+\n\n\*\*Pages:\*\* (.+?)\n\n\*\*Source Text:\*\*\n> (.+?)\n\n\*\*Visual Elements:\*\* (.+?)\n/gs;
 
     // Get chapter number mapping from state TOC
     const state = this.context.stateManager.getState();
@@ -327,9 +326,17 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const chapterTitleToNumber = new Map<string, number>();
     toc.forEach(ch => chapterTitleToNumber.set(ch.title, ch.number));
 
-    let match;
-    while ((match = chapterRegex.exec(content)) !== null) {
-      const chapterTitle = match[1];
+    // Split content by chapter headers (### Chapter Name)
+    const chapterSections = content.split(/(?=###\s+(?!Scene\s+\d+)[^\n]+)/);
+
+    for (const section of chapterSections) {
+      if (!section.trim()) continue;
+
+      // Extract chapter title from first ### header (not a Scene header)
+      const chapterHeaderMatch = section.match(/^###\s+(?!Scene\s+\d+)(.+?)$/m);
+      if (!chapterHeaderMatch) continue;
+
+      const chapterTitle = chapterHeaderMatch[1];
       let chapterNum = chapterTitleToNumber.get(chapterTitle);
 
       // Fallback: extract chapter number from title if Map lookup fails
@@ -339,18 +346,25 @@ Return ONLY the style guide text, no JSON or formatting.`;
         if (numMatch) {
           chapterNum = parseInt(numMatch[1], 10);
         } else {
-          // Last resort: use sequential numbering
-          chapterNum = concepts.filter(c => c.chapter !== chapterTitle).length + 1;
+          // Last resort: use sequential numbering based on unique chapters seen
+          const uniqueChapters = new Set(concepts.map(c => c.chapter));
+          chapterNum = uniqueChapters.size + 1;
         }
       }
 
-      concepts.push({
-        chapter: chapterTitle,
-        chapterNumber: chapterNum,
-        pageRange: match[2],
-        quote: match[3].replace(/\n> /g, ' '),
-        description: match[4],
-      });
+      // Now find all scenes within this chapter section
+      const sceneRegex = /#### Scene \d+\n\n\*\*Pages:\*\* (.+?)\n\n\*\*Source Text:\*\*\n> (.+?)\n\n\*\*Visual Elements:\*\* (.+?)(?=\n\n---|$)/gs;
+
+      let sceneMatch;
+      while ((sceneMatch = sceneRegex.exec(section)) !== null) {
+        concepts.push({
+          chapter: chapterTitle,
+          chapterNumber: chapterNum, // Use the same chapter number for all scenes
+          pageRange: sceneMatch[1],
+          quote: sceneMatch[2].replace(/\n> /g, ' '),
+          description: sceneMatch[3],
+        });
+      }
     }
 
     return concepts;

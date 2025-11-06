@@ -7,6 +7,7 @@ import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.
 import type { ImageConcept, ChapterContent } from '../../types/config.js';
 import { estimateTokens, createTokenEstimate, calculateSplits, resolveModelConfig } from '../token-counter.js';
 import { generateChaptersFile } from '../output-generator.js';
+import { isStoryContent } from '../provider-utils.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -218,15 +219,6 @@ export class AnalyzePhase extends BasePhase {
   }
 
   /**
-   * Check if chapter is story content (not metadata/epigraph/appendix)
-   */
-  private isStoryContent(chapterTitle: string): boolean {
-    const nonStoryPattern = /^(also by|about this book|by the same author|other books by|books? by|epigraph|appendix|appendices|glossary|contents?|table of contents|copyright|dedication|acknowledgements?|about the author|prologue|epilogue|foreword|preface|introduction|bibliography|index|notes?)(\s|$|:)/i;
-
-    return !nonStoryPattern.test(chapterTitle.trim());
-  }
-
-  /**
    * Analyze a single chapter to extract visual concepts
    */
   private async analyzeChapter(
@@ -236,7 +228,7 @@ export class AnalyzePhase extends BasePhase {
     const { config, openai, progressTracker } = this.context;
 
     // Filter non-story content
-    if (!this.isStoryContent(chapter.chapterTitle)) {
+    if (!isStoryContent(chapter.chapterTitle)) {
       await progressTracker.log(
         `Skipping non-story chapter: ${chapter.chapterTitle}`,
         'info'

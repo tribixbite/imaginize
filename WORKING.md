@@ -3,7 +3,22 @@
 ## Project Overview
 AI-powered book illustration guide generator that processes EPUB and PDF files to identify key visual concepts and story elements. Auto-selects next unprocessed epub for streamlined batch processing.
 
-## ✅ Latest Verification (2025-11-04)
+## ✅ Latest Verification (2025-11-06)
+
+### Story Chapter Mapping - FULLY WORKING
+- `--chapters 1-5` now refers to first 5 STORY chapters, not EPUB chapter numbers
+- Automatically filters out front matter (copyright, contents, dedication, epigraph, etc.)
+- Displays clear mapping:
+  ```
+  📋 Processing 5 story chapters:
+     Story Ch 1 → EPUB Ch 9: The Beginning
+     Story Ch 2 → EPUB Ch 10: The Beginning, Elsewhere
+     Story Ch 3 → EPUB Ch 11: Arrival
+     Story Ch 4 → EPUB Ch 12: Arrival, Elsewhere
+     Story Ch 5 → EPUB Ch 13: Frank Aureate
+  ```
+- Implementation: src/lib/provider-utils.ts:188-229 (isStoryContent + mapStoryChaptersToEpub)
+- Test verified: `--chapters 1-5` processes EPUB chapters 9-13 (story content only) ✓
 
 ### OpenRouter Integration - FULLY WORKING
 - Text analysis: `google/gemini-2.0-flash-exp:free` (auto-selected when OPENROUTER_API_KEY present)

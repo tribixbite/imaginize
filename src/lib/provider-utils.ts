@@ -186,6 +186,84 @@ export async function prepareConfiguration(
 }
 
 /**
+ * Check if chapter is story content (not metadata/epigraph/appendix)
+ */
+export function isStoryContent(chapterTitle: string): boolean {
+  const title = chapterTitle.trim().toLowerCase();
+
+  // Common non-story patterns
+  const nonStoryPatterns = [
+    /^also by/i,
+    /^about (this|the) book/i,
+    /^by the same author/i,
+    /^other books by/i,
+    /^books? by/i,
+    /^epigraph/i,
+    /^appendix/i,
+    /^appendices/i,
+    /^glossary/i,
+    /^contents?$/i,
+    /^table of contents/i,
+    /^copyright/i,
+    /^dedication/i,
+    /^acknowledgements?/i,
+    /^about the author/i,
+    /^prologue/i,
+    /^epilogue/i,
+    /^foreword/i,
+    /^preface/i,
+    /^introduction/i,
+    /^bibliography/i,
+    /^index$/i,
+    /^notes?$/i,
+  ];
+
+  // Check if any pattern matches
+  for (const pattern of nonStoryPatterns) {
+    if (pattern.test(title)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Map story chapter numbers (1, 2, 3...) to EPUB chapter numbers
+ * Filters out non-story chapters (copyright, contents, dedication, etc.)
+ *
+ * @param storyChapterNums Story chapter numbers (e.g., [1, 2, 3])
+ * @param allChapters All chapters from the book with titles
+ * @returns EPUB chapter numbers for the selected story chapters
+ */
+export function mapStoryChaptersToEpub(
+  storyChapterNums: number[],
+  allChapters: Array<{ chapterNumber: number; chapterTitle: string }>
+): number[] {
+  // Build list of story chapters only
+  const storyChapters = allChapters
+    .filter((ch) => isStoryContent(ch.chapterTitle))
+    .sort((a, b) => a.chapterNumber - b.chapterNumber);
+
+  // Map story chapter numbers to EPUB chapter numbers
+  const epubNumbers: number[] = [];
+
+  for (const storyNum of storyChapterNums) {
+    const storyIndex = storyNum - 1; // Convert to 0-based index
+
+    if (storyIndex < 0 || storyIndex >= storyChapters.length) {
+      throw new Error(
+        `Story chapter ${storyNum} out of range. Book has ${storyChapters.length} story chapters (excluding front matter).`
+      );
+    }
+
+    epubNumbers.push(storyChapters[storyIndex].chapterNumber);
+  }
+
+  return epubNumbers;
+}
+
+/**
  * Parse chapter selection string into array of chapter numbers
  * Supports: "1,2,5", "1-5", "1-3,7,10-12"
  */

@@ -19,7 +19,7 @@ import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
 import type { IllustrateConfig } from './types/config.js';
-import { prepareConfiguration, parseChapterSelection, parseElementSelection } from './lib/provider-utils.js';
+import { prepareConfiguration, parseChapterSelection, mapStoryChaptersToEpub, parseElementSelection } from './lib/provider-utils.js';
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
 import { IllustratePhase } from './lib/phases/illustrate-phase.js';
@@ -218,14 +218,28 @@ export async function main(): Promise<void> {
     // Filter chapters if requested
     let chaptersToProcess = chapters;
     if (options.chapters) {
-      const selectedNums = parseChapterSelection(options.chapters);
-      chaptersToProcess = chapters.filter((c) => selectedNums.includes(c.chapterNumber));
+      // Parse as story chapter numbers (1, 2, 3... = first story chapters)
+      const storyChapterNums = parseChapterSelection(options.chapters);
+
+      // Map story chapter numbers to EPUB chapter numbers
+      const epubChapterNums = mapStoryChaptersToEpub(
+        storyChapterNums,
+        chapters.map((c) => ({ chapterNumber: c.chapterNumber, chapterTitle: c.chapterTitle }))
+      );
+
+      chaptersToProcess = chapters.filter((c) => epubChapterNums.includes(c.chapterNumber));
 
       if (chaptersToProcess.length === 0) {
         throw new Error(`No chapters found matching: ${options.chapters}`);
       }
 
-      console.log(chalk.cyan(`📋 Processing ${chaptersToProcess.length} selected chapters\n`));
+      // Show mapping information
+      console.log(chalk.cyan(`📋 Processing ${chaptersToProcess.length} story chapters:`));
+      chaptersToProcess.forEach((ch, idx) => {
+        const storyNum = storyChapterNums[idx];
+        console.log(chalk.gray(`   Story Ch ${storyNum} → EPUB Ch ${ch.chapterNumber}: ${ch.chapterTitle}`));
+      });
+      console.log('');
     }
 
     // Prepare API configuration

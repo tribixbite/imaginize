@@ -1,5 +1,18 @@
 # imaginize - Development Status
 
+## 🎉 v2.1.0 Published to npm (2025-11-06)
+
+**Published:** https://www.npmjs.com/package/imaginize
+**Install:** `npx imaginize@latest`
+
+### What's New in v2.1.0
+
+- ✅ **Story Chapter Mapping** - `--chapters 1-5` refers to story chapters (skips front matter)
+- ✅ **OpenRouter Free Tier** - Full support with auto rate limiting (1 req/min)
+- ✅ **Multi-Scene Chapters** - Correct chapter numbering for complex scenes
+- ✅ **Comprehensive CLI** - All flags documented in README
+- ✅ **Production Tested** - 131 images generated successfully for full book
+
 ## Project Overview
 AI-powered book illustration guide generator that processes EPUB and PDF files to identify key visual concepts and story elements. Auto-selects next unprocessed epub for streamlined batch processing.
 

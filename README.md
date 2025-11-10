@@ -10,12 +10,14 @@
 ## Features
 
 - 📚 **Multiple Format Support** - Works with EPUB and PDF files
-- 🤖 **AI-Powered Analysis** - Uses GPT-4o to identify key visual concepts
+- 🤖 **Multi-Provider AI** - OpenAI, OpenRouter (with free tier), or custom endpoints
+- 📖 **Smart Chapter Selection** - Automatic story chapter mapping (skips front matter)
 - 📝 **Smart Quote Extraction** - Direct quotes with page numbers for every concept
 - 🎭 **Element Cataloging** - Comprehensive lists of characters, creatures, places, items
-- 🎨 **Optional Image Generation** - Generate AI images for story elements
+- 🎨 **Image Generation** - Generate illustrations with DALL-E or Gemini
 - ⚙️ **Highly Configurable** - Customize pages per image, models, and more
 - 📊 **Progress Tracking** - Real-time progress.md file with detailed logs
+- 🔄 **Automatic Rate Limiting** - Handles OpenRouter free tier (1 req/min) automatically
 
 ## Quick Start
 
@@ -48,7 +50,7 @@ npx imaginize
 ## Requirements
 
 - Node.js 18.0.0 or higher
-- OpenAI API key (for GPT analysis)
+- API key: OpenAI **or** OpenRouter (OpenRouter offers free tier)
 
 ## Configuration
 
@@ -207,6 +209,113 @@ imageQuality: "hd"
 ```
 
 **Note:** Image generation requires additional API credits and significantly increases processing time.
+
+## CLI Options
+
+### Phase Selection
+
+- `--text` - Generate Chapters.md with visual scenes (analyze phase)
+- `--elements` - Generate Elements.md with story elements (extract phase)
+- `--images` - Generate images and update Chapters.md (illustrate phase)
+
+**Default:** If no phase is specified, `--text` is assumed.
+
+**Example:**
+```bash
+# Analyze text only
+npx imaginize --text
+
+# Analyze and generate images in one go
+npx imaginize --text --images
+
+# Just generate images from existing Chapters.md
+npx imaginize --images
+```
+
+### Chapter Selection
+
+- `--chapters <range>` - Process specific story chapters (e.g., "1-5,10")
+
+**Story Chapter Mapping:** Chapter numbers refer to **story chapters**, automatically skipping front matter (copyright, dedication, epigraph, etc.).
+
+**Examples:**
+```bash
+# Process first 5 story chapters
+npx imaginize --chapters 1-5
+
+# Process chapters 1-3 and chapter 10
+npx imaginize --chapters 1-3,10
+
+# Generate images for chapters 5-10 only
+npx imaginize --images --chapters 5-10
+```
+
+**Output:**
+```
+📋 Processing 5 story chapters:
+   Story Ch 1 → EPUB Ch 9: The Beginning
+   Story Ch 2 → EPUB Ch 10: Arrival
+   ...
+```
+
+### Element Filtering
+
+- `--elements-filter <filter>` - Filter elements (e.g., "character:*,place:castle")
+
+**Examples:**
+```bash
+# Extract all characters only
+npx imaginize --elements --elements-filter "character:*"
+
+# Extract specific place
+npx imaginize --elements --elements-filter "place:castle"
+```
+
+### Control Options
+
+- `--continue` - Continue from saved progress
+- `--force` - Force regeneration even if output exists
+- `--migrate` - Migrate old state file to new schema
+- `--limit <n>` - Limit number of items processed (for testing)
+
+### Configuration Override
+
+- `--model <name>` - Override text model (e.g., "gpt-4o", "google/gemini-2.0-flash-exp:free")
+- `--api-key <key>` - Override API key
+- `--image-key <key>` - Separate API key for image generation
+
+### Output Options
+
+- `--output-dir <dir>` - Override output directory
+- `--verbose` - Verbose logging
+- `--quiet` - Minimal output
+
+### Utilities
+
+- `--init-config` - Generate sample .imaginize.config file
+- `--estimate` - Estimate costs without executing
+- `-f, --file <path>` - Specific book file to process
+
+## OpenRouter Support
+
+`imaginize` supports OpenRouter for **free** text analysis and image generation:
+
+```bash
+# Set OpenRouter API key
+export OPENROUTER_API_KEY="sk-or-v1-..."
+
+# Run with free models (auto-selected)
+npx imaginize --text --images
+
+# Or specify models explicitly
+npx imaginize --model "google/gemini-2.0-flash-exp:free"
+```
+
+**Free Models:**
+- Text: `google/gemini-2.0-flash-exp:free` (128K context, $0.00)
+- Images: `google/gemini-2.5-flash-image` ($0.00, 1 request/min)
+
+**Rate Limiting:** Automatic 65-second wait handling for OpenRouter free tier (1 request/minute). The tool will automatically retry and continue processing.
 
 ## Configuration Options
 

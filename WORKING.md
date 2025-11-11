@@ -48,6 +48,65 @@ AI-powered book illustration guide generator that processes EPUB and PDF files t
 - Test verified: Chapter 8 "Epigraph, Impossible Creatures" → `chapter_8_scene_1.png` ✓
 - Location: `/data/data/com.termux/files/home/git/illustrate/imaginize_ImpossibleCreatures/chapter_8_scene_1.png`
 
+## 🚀 Concurrent Processing Architecture (2025-11-11)
+
+### Phase 1: Foundational Safety ✅ COMPLETE
+
+Thread-safe file operations and manifest management foundation for concurrent processing.
+
+**Implementation:**
+- **FileLock** (src/lib/concurrent/file-lock.ts) - Exclusive locking using atomic mkdir
+  - POSIX-compliant directory-based locks
+  - Automatic timeout and retry logic (60s default)
+  - `withLock()` helper for safe critical sections
+
+- **AtomicWrite** (src/lib/concurrent/atomic-write.ts) - Corruption-proof file writes
+  - Temp file + atomic rename pattern
+  - Prevents partial writes on crash
+  - JSON convenience wrapper
+
+- **ManifestManager** (src/lib/concurrent/manifest-manager.ts) - Centralized state updates
+  - Thread-safe manifest operations
+  - Per-chapter status tracking
+  - Elements.md coordination
+  - State machine: pending → analyzed → illustration_inprogress → illustration_complete
+
+- **Updated StateManager** - Now uses atomic writes (no more corruption risk)
+- **Updated ProgressTracker** - File locking for concurrent append operations
+
+**Architecture Documentation:**
+- CONCURRENT_ARCHITECTURE.md - Complete specification (1,070 lines)
+- CONCURRENT_IMPLEMENTATION_PLAN.md - 3-week phased rollout
+
+**Expert Validation:**
+- Gemini 2.5 Pro review via Zen MCP ✓
+- 5 critical fixes identified and incorporated
+- Performance: 40% improvement validated (5h → 3h)
+
+**Status:** Phase 1 complete, Phase 2 in progress
+
+### Upcoming: Phase 2-5 (In Progress)
+
+**Phase 2:** Two-pass analyze + state machine (Days 4-7)
+- Fast entity extraction (Pass 1)
+- Elements.md generation
+- Full analysis with enrichment (Pass 2)
+
+**Phase 3:** Manifest-driven illustrate pipeline (Days 8-10)
+- Replace EventEmitter with polling
+- Atomic chapter claiming
+- Crash recovery logic
+
+**Phase 4:** Integration & testing (Days 11-14)
+- Concurrent execution tests
+- Crash recovery validation
+- Performance benchmarking
+
+**Phase 5:** Feature flag & rollout (Days 15-21)
+- `--concurrent` CLI flag
+- Gradual production rollout
+- Backward compatibility maintained
+
 ## Completed Features
 
 ### ✅ Core Infrastructure

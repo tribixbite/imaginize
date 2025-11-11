@@ -49,3 +49,6 @@ logs/
 tmp/
 temp/
 .cache/
+
+# Test artifacts
+.test-locks/

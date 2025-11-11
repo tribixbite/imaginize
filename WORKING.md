@@ -140,13 +140,46 @@ npx imaginize --text --images --concurrent --file book.epub
 - Elements.md enrichment for consistent visuals
 - 40% faster total time (5h → 3h)
 
-### Upcoming: Phase 4-5 (Future)
+### Phase 4: Testing & Validation ✅ IN PROGRESS
 
-**Phase 4:** Integration & testing
-- Concurrent execution validation
-- Crash recovery tests
-- Performance benchmarking
-- Edge case handling
+Comprehensive unit tests for all concurrent utilities.
+
+**Unit Test Coverage (35 tests, 100% pass):**
+
+- **file-lock.test.ts** (9 tests, 17 assertions)
+  - Lock acquisition and release ✓
+  - Concurrent access prevention ✓
+  - withLock pattern correctness ✓
+  - Error recovery and cleanup ✓
+  - Sequential and concurrent operations ✓
+
+- **atomic-write.test.ts** (10 tests, 16 assertions)
+  - Atomic write pattern validation ✓
+  - Temp file cleanup on success/error ✓
+  - Binary data handling ✓
+  - JSON formatting ✓
+  - Concurrent writes to different files ✓
+
+- **manifest-manager.test.ts** (16 tests, 32 assertions)
+  - Manifest initialization and loading ✓
+  - Thread-safe updates with locking ✓
+  - Chapter status management ✓
+  - Elements.md coordination ✓
+  - Concurrent update serialization ✓
+  - waitForElementsReady timeout handling ✓
+
+**Test Results:**
+```
+35 pass, 0 fail, 65 expect() calls
+Runtime: ~3.6s (bun test)
+```
+
+**Remaining Phase 4 Tasks:**
+- Manual integration testing with real books
+- Crash recovery validation
+- Performance benchmarking (sequential vs concurrent)
+
+### Upcoming: Phase 5 (Future)
 
 **Phase 5:** Production rollout
 - Stability testing

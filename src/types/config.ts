@@ -193,6 +193,7 @@ export interface CommandOptions {
   continue?: boolean;
   force?: boolean;
   migrate?: boolean;
+  concurrent?: boolean;
 
   // Config override
   model?: string;

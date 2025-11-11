@@ -23,6 +23,8 @@ import { prepareConfiguration, parseChapterSelection, mapStoryChaptersToEpub, pa
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
 import { IllustratePhase } from './lib/phases/illustrate-phase.js';
+import { AnalyzePhaseV2 } from './lib/phases/analyze-phase-v2.js';
+import { IllustratePhaseV2 } from './lib/phases/illustrate-phase-v2.js';
 import { generateContentsFile } from './lib/output-generator.js';
 import type { CommandOptions, ChapterContent } from './types/config.js';
 
@@ -65,6 +67,7 @@ export async function main(): Promise<void> {
     .option('--continue', 'Continue from saved progress')
     .option('--force', 'Force regeneration even if exists')
     .option('--migrate', 'Migrate old state to new schema')
+    .option('--concurrent', 'Use concurrent processing architecture (experimental)')
     // Config override
     .option('--model <name>', 'Override model (e.g., "gpt-4o")')
     .option('--api-key <key>', 'Override API key')
@@ -287,9 +290,18 @@ export async function main(): Promise<void> {
     console.log(chalk.cyan.bold('\n🚀 Starting processing...\n'));
 
     try {
+      // Use v2 phases if --concurrent flag is set
+      const useConcurrent = options.concurrent || false;
+
+      if (useConcurrent) {
+        console.log(chalk.yellow('⚡ Concurrent processing enabled (experimental)\n'));
+      }
+
       if (needsText) {
         console.log(chalk.cyan('📝 Phase: Analyze (--text)\n'));
-        const analyzePhase = new AnalyzePhase(context);
+        const analyzePhase = useConcurrent
+          ? new AnalyzePhaseV2(context)
+          : new AnalyzePhase(context);
         await analyzePhase.execute();
         console.log('');
       }
@@ -303,7 +315,9 @@ export async function main(): Promise<void> {
 
       if (needsImages) {
         console.log(chalk.cyan('🎨 Phase: Illustrate (--images)\n'));
-        const illustratePhase = new IllustratePhase(context);
+        const illustratePhase = useConcurrent
+          ? new IllustratePhaseV2(context)
+          : new IllustratePhase(context);
         await illustratePhase.execute();
         console.log('');
       }

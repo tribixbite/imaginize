@@ -1,20 +1,26 @@
 /**
  * Progress tracking for imaginize operations
  * Creates and updates progress.md file during processing
+ *
+ * Thread-safe: Uses file locking for concurrent append operations
  */
 
-import { writeFile, appendFile } from 'fs/promises';
+import { writeFile, appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
+import { FileLock } from './concurrent/file-lock.js';
+import { atomicWrite } from './concurrent/atomic-write.js';
 
 export class ProgressTracker {
   private outputDir: string;
   private progressFile: string;
   private startTime: number;
+  private lock: FileLock;
 
   constructor(outputDir: string) {
     this.outputDir = outputDir;
     this.progressFile = join(outputDir, 'progress.md');
     this.startTime = Date.now();
+    this.lock = new FileLock(this.progressFile);
   }
 
   /**
@@ -36,7 +42,9 @@ export class ProgressTracker {
   }
 
   /**
-   * Log a progress message
+   * Log a progress message with file locking
+   *
+   * Thread-safe: Uses lock to prevent interleaved entries from concurrent processes
    */
   async log(message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info'): Promise<void> {
     const timestamp = new Date().toISOString();
@@ -48,7 +56,26 @@ export class ProgressTracker {
     }[level];
 
     const entry = `**[${timestamp}]** ${emoji} ${message}\n\n`;
-    await appendFile(this.progressFile, entry);
+
+    // Atomic append with file locking
+    await this.lock.withLock(async () => {
+      // Read current content
+      let current = '';
+      try {
+        current = await readFile(this.progressFile, 'utf-8');
+      } catch (error: any) {
+        // File doesn't exist yet - will be created by initialize()
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+
+      // Append new entry
+      const updated = current + entry;
+
+      // Atomic write
+      await atomicWrite(this.progressFile, updated);
+    });
   }
 
   /**
@@ -111,6 +138,8 @@ export class ProgressTracker {
 
   /**
    * Finalize progress report with summary
+   *
+   * Thread-safe: Uses lock for final summary append
    */
   async finalize(
     totalConcepts: number,
@@ -135,7 +164,12 @@ export class ProgressTracker {
 ✅ Processing complete! Check Contents.md and Elements.md for results.
 `;
 
-    await appendFile(this.progressFile, summary);
+    // Atomic append with lock
+    await this.lock.withLock(async () => {
+      const current = await readFile(this.progressFile, 'utf-8');
+      await atomicWrite(this.progressFile, current + summary);
+    });
+
     await this.log('All processing complete!', 'success');
   }
 }

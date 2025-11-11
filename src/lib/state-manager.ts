@@ -7,6 +7,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import type { IllustrateState, PhaseStatus, PhaseState, ChapterState } from '../types/config.js';
+import { atomicWriteJSON } from './concurrent/atomic-write.js';
 
 const STATE_VERSION = '2.0.0';
 
@@ -61,11 +62,13 @@ export class StateManager {
   }
 
   /**
-   * Save current state to disk
+   * Save current state to disk using atomic write
+   *
+   * Uses temp file + rename pattern to prevent corruption if process crashes mid-write.
    */
   async save(): Promise<void> {
     this.state.lastUpdated = new Date().toISOString();
-    await writeFile(this.statePath, JSON.stringify(this.state, null, 2));
+    await atomicWriteJSON(this.statePath, this.state);
   }
 
   /**

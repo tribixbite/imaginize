@@ -358,15 +358,17 @@ export class AnalyzePhaseV2 extends BasePhase {
       : 1;
     const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
-    // Base prompt (same as v1)
+    // Base prompt with explicit quote length requirements
     let basePrompt = `You are analyzing a book chapter to identify visually rich scenes for illustration.
 
 **Task:** Identify the ${numImages} most visually compelling and narratively important scenes in this chapter.
 
 For each scene, provide:
 1. A vivid visual description (2-3 sentences) suitable for image generation
-2. A representative quote from the text
+2. A substantial quote from the text (MINIMUM 3-8 sentences, 50-150 words) that captures the scene's atmosphere and key details
 3. Your reasoning for why this scene is visually and narratively significant
+
+**IMPORTANT:** The quote must be substantial enough to serve as a standalone reference for illustration. Include enough context to understand character actions, setting details, and mood.
 
 **Chapter:** ${chapter.chapterTitle}
 
@@ -377,7 +379,7 @@ Return your response as a JSON array with this structure:
 [
   {
     "description": "Detailed visual description of the scene",
-    "quote": "Exact quote from the text",
+    "quote": "Substantial quote from the text (3-8 sentences minimum)",
     "reasoning": "Why this scene is visually and narratively important"
   }
 ]`;
@@ -430,6 +432,39 @@ Return your response as a JSON array with this structure:
       } else {
         throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
       }
+    }
+
+    // Enrich concepts with chapter metadata (pages, chapter info)
+    concepts = concepts.map((concept) => ({
+      ...concept,
+      chapter: chapter.chapterTitle,
+      chapterNumber: chapter.chapterNumber,
+      pageRange: chapter.pageRange,
+    }));
+
+    // Enrich concepts with full entity descriptions for standalone use
+    if (this.elementsLookup.isLoaded()) {
+      concepts = concepts.map((concept) => {
+        // Find entities mentioned in the visual description
+        const mentions = this.elementsLookup.findMentions(concept.description);
+
+        if (mentions.length > 0) {
+          // Append full entity descriptions to make the description standalone
+          let enrichedDescription = concept.description;
+          enrichedDescription += '\n\nCHARACTER DETAILS:';
+
+          for (const entity of mentions) {
+            enrichedDescription += `\n- ${entity.name} (${entity.type}): ${entity.description}`;
+          }
+
+          return {
+            ...concept,
+            description: enrichedDescription,
+          };
+        }
+
+        return concept;
+      });
     }
 
     return concepts;

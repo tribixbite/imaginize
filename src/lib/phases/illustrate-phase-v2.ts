@@ -300,7 +300,13 @@ Return ONLY the style guide text, no JSON or formatting.`;
       }
 
       // Download and save
-      const filename = `chapter_${chapterNum}_scene_${sceneNum + 1}.png`;
+      // Sanitize chapter title for filename (lowercase, replace spaces with underscores, remove special chars)
+      const sanitizedTitle = chapter.chapterTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50); // Limit length
+      const filename = `chapter_${chapterNum}_${sanitizedTitle}_scene_${sceneNum + 1}.png`;
       const filepath = join(outputDir, filename);
 
       const response = await fetch(imageUrl);

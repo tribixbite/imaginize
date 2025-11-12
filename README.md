@@ -16,6 +16,7 @@
 - 🎭 **Visual Character Descriptions** - Physical appearance, clothing, and distinguishing features for illustration
 - 🔗 **Character Cross-Referencing** - Automatic entity matching with full visual details in every scene
 - 🎨 **Image Generation** - Generate illustrations with DALL-E or Gemini
+- ✨ **Visual Consistency** - Automatic style extraction and character tracking across all images (v2.4.0+)
 - ⚡ **Parallel Processing** - Up to 50% faster with concurrent chapter analysis (paid tier)
 - ⚙️ **Highly Configurable** - Customize pages per image, models, and more
 - 📊 **Progress Tracking** - Real-time progress.md file with detailed logs
@@ -182,6 +183,78 @@ Real-time processing log with:
 - Error tracking
 - Processing statistics
 - Duration and completion summary
+
+## Visual Consistency (v2.4.0+)
+
+When generating images with `--images`, imaginize automatically maintains visual consistency across your entire book through:
+
+### Automatic Style Extraction
+
+After generating the first 3 images (configurable), GPT-4 Vision analyzes them to extract:
+- **Art style** - Digital painting, watercolor, etc.
+- **Color palette** - Dominant colors as hex codes
+- **Lighting** - Natural daylight, dramatic shadows, etc.
+- **Mood** - Whimsical, dark, mysterious, etc.
+- **Composition** - Shot types, framing patterns
+
+This style guide is saved to `data/style-guide.json` and applied to all subsequent images.
+
+### Character Appearance Tracking
+
+Characters are automatically tracked across all images:
+- **First Appearance** - Visual features extracted from Elements.md (hair, eyes, clothing, build)
+- **Consistency** - Character descriptions included in every prompt they appear in
+- **Registry** - All appearances saved to `data/character-registry.json` with consistency scores
+
+### Enhanced Prompts
+
+Every image prompt after bootstrap automatically includes:
+```
+[Original scene description]
+
+VISUAL STYLE GUIDE (maintain consistency):
+- Art Style: Digital illustration with soft brush strokes
+- Color Palette: #3A5F7D, #C9A961, #8B6F47, #E8D5B7, #5A7D8F
+- Lighting: Natural lighting with balanced exposure
+- Mood: Whimsical and adventurous
+- Composition: Medium shots with characters centered
+
+CHARACTER APPEARANCES (maintain visual consistency):
+Christopher - Appearance Reference:
+  • Hair: Dark, messy
+  • Eyes: Brown, curious
+  • Clothing: Navy wool overcoat, casual underneath
+  • IMPORTANT: Maintain visual consistency with previous 5 appearance(s)
+
+IMPORTANT - Maintain Consistency:
+- Maintain the established visual style (art: Digital illustration...)
+- Use the defined color palette
+- Match the lighting and mood characteristics
+- Ensure character appearances match their previous depictions
+```
+
+### Configuration
+
+```yaml
+# Enable/disable visual consistency system
+enableStyleConsistency: true
+
+# Number of images to analyze for style guide (default: 3)
+styleBootstrapCount: 3
+
+# Track character appearances across images
+trackCharacterAppearances: true
+
+# Minimum consistency score for warnings (0-1, default: 0.7)
+consistencyThreshold: 0.7
+```
+
+### Output Files
+
+- `data/style-guide.json` - Extracted visual style from bootstrap images
+- `data/character-registry.json` - Character appearance tracking with visual features
+
+**Note:** Visual consistency requires GPT-4 Vision for style analysis (uses your OpenAI API key). If analysis fails, falls back to text-based style guide.
 
 ## Usage Examples
 

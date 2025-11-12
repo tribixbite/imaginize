@@ -5,6 +5,43 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-11-12
+
+### Added
+- **Visual Style Consistency**: Automatic style extraction from first N images (default: 3) using GPT-4 Vision
+- **Character Appearance Tracking**: First appearance registration with visual features from Elements.md
+- **Enhanced Image Prompts**: All prompts automatically enriched with style guide and character references
+- **Style Guide Generation**: Extracts art style, color palette, lighting, mood, and composition patterns
+- **Character Registry**: Tracks all character appearances with consistency scores across the book
+- **Bootstrap Phase**: Analyzes first N images to create style guide, then applies to all subsequent images
+- **Configuration Options**:
+  - `enableStyleConsistency` (default: true) - Enable/disable visual consistency system
+  - `styleBootstrapCount` (default: 3) - Number of images for style analysis
+  - `trackCharacterAppearances` (default: true) - Enable character tracking
+  - `consistencyThreshold` (default: 0.7) - Minimum consistency score for warnings
+
+### Improved
+- **Image Generation Quality**: Professional, cohesive visual identity across entire book
+- **Character Recognition**: Same character appears consistently across all scenes
+- **Prompt Enrichment**: Comprehensive style and character details in every image prompt
+- **Visual Coherence**: Color palettes, lighting, and art style maintained throughout
+
+### Technical
+- Added `src/lib/visual-style/` module with 5 new files:
+  - `types.ts` - TypeScript interfaces for style guide and character tracking
+  - `style-guide.ts` - Style guide utilities (create, save, load, format)
+  - `character-registry.ts` - CharacterRegistry class for tracking appearances
+  - `style-analyzer.ts` - GPT-4 Vision integration for style extraction
+  - `prompt-enhancer.ts` - Prompt enrichment with style and character references
+- Modified `illustrate-phase-v2.ts` with visual consistency integration:
+  - Bootstrap phase logic (checkBootstrapPhase, performBootstrap)
+  - Enhanced prompt generation (buildEnrichedPrompt with visual style)
+  - Character appearance registration (registerCharacterAppearances)
+  - Elements.md integration for character descriptions
+- Data outputs: `data/style-guide.json`, `data/character-registry.json`
+- Fallback handling for GPT-4 Vision API failures
+- Fully backward compatible (can be disabled via config)
+
 ## [2.3.0] - 2025-11-12
 
 ### Added

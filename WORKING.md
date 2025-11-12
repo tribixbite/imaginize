@@ -905,18 +905,54 @@ CHARACTER DETAILS:
 
 ---
 
+### ✅ Visual Character Descriptions (Nov 12, 2025)
+
+Implemented comprehensive visual descriptions for all entities:
+
+**Problem:** Entity extraction was capturing functional roles instead of visual appearance:
+- BEFORE: "Christopher: main character waiting for his grandfather"
+- BEFORE: "Mal Arvorian: the protagonist who can fly"
+
+**Solution:** Enhanced entity extraction prompt + improved name matching
+
+**1. Visual Extraction Prompt:**
+- Explicit requirements: "VISUAL appearance (age, clothing, physical features)"
+- Physical appearance: hair, eyes, build, age
+- Clothing descriptions: colors, style, notable items
+- Distinguishing features: expressions, posture, traits
+- Creature details: size, color, teeth, claws, fur
+
+**2. Improved Name Matching:**
+- Multi-word name support (Mal matches "Mal Arvorian")
+- First/last name partial matching
+- Duplicate prevention with Set tracking
+- Special character handling
+
+**Results:**
+- Christopher: "A young boy with a tall, gangly build, wearing a long navy wool overcoat. He has a soft expression that brightens around animals..."
+- Mal Arvorian: "A young girl with outstretched arms, flying joyfully. She has a thick, oversized coat with rolled-up sleeves, and her hair is tousled by the wind..."
+- Black Doglike Creature: "A large, menacing creature with long teeth resembling a forearm and powerful claws capable of tearing apart an oak tree."
+- Unicorns: "A herd of elegant unicorns, each with shimmering white coats and spiraled horns..."
+
+**Impact:**
+- CHARACTER DETAILS now suitable for standalone image generation
+- Mal Arvorian now correctly matched in Chapter 10
+- All descriptions are visual and illustration-ready
+
+---
+
 **Last Updated:** 2025-11-12
-**Status:** ✅ CONCURRENT PROCESSING + QUALITY IMPROVEMENTS COMPLETE
+**Status:** ✅ CONCURRENT PROCESSING + VISUAL DESCRIPTIONS COMPLETE
 **Concurrent Architecture:** ✅ Two-pass analysis + manifest-driven coordination
-**Content Quality:** ✅ Enhanced quotes + character cross-referencing + improved filenames
+**Content Quality:** ✅ Visual entity descriptions + enhanced quotes + character cross-referencing
 **Build:** SUCCESS (0 TypeScript errors)
-**Tests:** 35 unit tests (100% pass) + integration tests (72 images total)
+**Tests:** 35 unit tests (100% pass) + integration tests (75+ images total)
 **Performance:** 40% faster (5h → 3h) with --concurrent flag
 **OpenRouter:** ✅ 100% FREE text + image generation with automatic rate limit handling
-**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.2.0 after validation)
-**Lines of Code:** ~3750+ lines
-**Commits:** 37
-**Version:** 2.2.0 (pending)
+**NPM:** PUBLISHED (imaginize@2.0.0, will publish 2.3.0 after validation)
+**Lines of Code:** ~3800+ lines
+**Commits:** 39
+**Version:** 2.3.0 (pending)
 **Package Name:** imaginize
 **NPM URL:** https://www.npmjs.com/package/imaginize
 **GitHub URL:** https://github.com/tribixbite/imaginize

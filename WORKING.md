@@ -3,23 +3,32 @@
 ## 🚀 v2.3.0 Ready for Publication (2025-11-12)
 
 **Status:** All features complete, tests passing, documentation updated
+
 **Major Features:**
 - Visual character descriptions in Elements.md
 - Parallel chapter analysis (up to 50% faster)
 - Enhanced quote quality (3-8 sentences)
 - Character cross-referencing in every scene
 - Chapter titles in image filenames
+- Performance metrics logging
 
 **Publication Checklist:**
 - ✅ package.json updated to 2.3.0
 - ✅ CHANGELOG.md complete with all improvements
 - ✅ README.md updated with v2.3.0 features
 - ✅ RELEASE_NOTES_v2.3.0.md created
+- ✅ PUBLISH_v2.3.0.md guide created
+- ✅ Performance metrics added
 - ✅ Build succeeds (0 errors)
 - ✅ Tests pass (35 unit tests)
 - ✅ Git status clean
 - ⏳ Awaiting: `npm publish` (requires npm credentials)
 - ⏳ Awaiting: GitHub release tag creation
+
+**Recent Improvements (Post-Feature Complete):**
+- Added timing metrics for Pass 1 and Pass 2 analysis
+- Performance logging shows: total time, avg time per chapter, batch size
+- Enhanced documentation with publication guide and release notes
 
 ## 🎉 v2.1.0 Published to npm (2025-11-06)
 

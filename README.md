@@ -12,9 +12,11 @@
 - 📚 **Multiple Format Support** - Works with EPUB and PDF files
 - 🤖 **Multi-Provider AI** - OpenAI, OpenRouter (with free tier), or custom endpoints
 - 📖 **Smart Chapter Selection** - Automatic story chapter mapping (skips front matter)
-- 📝 **Smart Quote Extraction** - Direct quotes with page numbers for every concept
-- 🎭 **Element Cataloging** - Comprehensive lists of characters, creatures, places, items
+- 📝 **Enhanced Quote Extraction** - Substantial quotes (3-8 sentences) with full context for standalone reference
+- 🎭 **Visual Character Descriptions** - Physical appearance, clothing, and distinguishing features for illustration
+- 🔗 **Character Cross-Referencing** - Automatic entity matching with full visual details in every scene
 - 🎨 **Image Generation** - Generate illustrations with DALL-E or Gemini
+- ⚡ **Parallel Processing** - Up to 50% faster with concurrent chapter analysis (paid tier)
 - ⚙️ **Highly Configurable** - Customize pages per image, models, and more
 - 📊 **Progress Tracking** - Real-time progress.md file with detailed logs
 - 🔄 **Automatic Rate Limiting** - Handles OpenRouter free tier (1 req/min) automatically
@@ -134,24 +136,28 @@ the visual scale and grandeur of the fantasy world.
 
 ### 2. Elements.md
 
-Comprehensive catalog of:
-- **Characters** - Main and supporting characters
-- **Creatures** - Fantasy beings, animals
-- **Places** - Locations, landmarks
+Comprehensive catalog with **visual descriptions** suitable for illustration:
+- **Characters** - Physical appearance, clothing, expressions, age
+- **Creatures** - Size, color, features (teeth, claws, fur), distinguishing traits
+- **Places** - Visual atmosphere and notable features
 - **Items** - Important objects, artifacts
 - **Objects** - Notable things
 
 Each entry includes:
+- **Visual description** extracted from the text (not functional roles)
 - Multiple direct quotes with page numbers
-- Consolidated description
 - Optional AI-generated image (if enabled)
 
 Example:
 ```markdown
 #### Aria Nightshade
 
-**Description:** A young elven ranger with silver hair and emerald eyes,
-skilled with bow and blade.
+**Type:** character
+
+**Description:** A young elven ranger with silver hair and emerald eyes. She moves with
+practiced grace and wears dark leather armor. Skilled with bow and blade, her posture
+conveys alertness and confidence. Her silver hair catches moonlight, and her emerald
+eyes remain focused and intense.
 
 **Reference Quotes:**
 
@@ -163,6 +169,10 @@ skilled with bow and blade.
    > The ranger moved through the forest with practiced grace, her leather
    > armor barely making a sound.
 ```
+
+**Note:** v2.3.0+ captures visual appearance automatically, ensuring descriptions are
+illustration-ready rather than functional ("the protagonist" → "a young boy with
+determined expression, dressed casually").
 
 ### 3. progress.md
 
@@ -296,33 +306,43 @@ npx imaginize --elements --elements-filter "place:castle"
 - `--estimate` - Estimate costs without executing
 - `-f, --file <path>` - Specific book file to process
 
-### Concurrent Processing (Experimental)
+### Concurrent Processing
 
 - `--concurrent` - Enable concurrent processing architecture
 
-**Performance:** ~40% faster processing (5h → 3h for large books)
+**Performance:**
+- Free tier: ~40% faster (5h → 3h for large books)
+- Paid tier: ~50% additional speedup with parallel batch processing (3h → 1.5-2h)
 
 The concurrent mode uses a two-pass analysis approach:
-1. **Pass 1:** Fast entity extraction → Generate Elements.md
-2. **Pass 2:** Full chapter analysis with entity enrichment
+1. **Pass 1:** Fast entity extraction → Generate Elements.md with visual character descriptions
+2. **Pass 2:** Parallel chapter analysis (batch size: 1 for free tier, 3 for paid tier) with entity enrichment
 3. **Concurrent illustration:** Images generate as chapters complete
 
 **Features:**
-- Manifest-driven coordination for crash recovery
-- Atomic file operations prevent corruption
-- Thread-safe state management
-- Automatic recovery of stuck chapters (30min timeout)
+- **Parallel Chapter Analysis:** Process multiple chapters simultaneously (paid tier)
+- **Visual Character Descriptions:** Physical appearance automatically extracted for illustration-ready prompts
+- **Character Cross-Referencing:** Full visual details included in every scene
+- **Manifest-driven coordination:** Automatic crash recovery
+- **Atomic file operations:** Corruption-proof state management
+- **Smart rate limiting:** Auto-detection and handling (2s delays between batches)
+- **Automatic recovery:** Stuck chapters timeout after 30 minutes
 
 **Example:**
 ```bash
-# Enable concurrent processing (experimental)
+# Enable concurrent processing with all v2.3.0 features
 npx imaginize --text --images --concurrent
 
 # Default sequential processing (stable)
 npx imaginize --text --images
 ```
 
-**Note:** Concurrent mode is currently experimental. Use `--concurrent` to opt-in. The default sequential mode remains stable and recommended for production use.
+**What's New in v2.3.0:**
+- Visual character descriptions in Elements.md (physical appearance, not roles)
+- Enhanced quotes (3-8 sentences with full context)
+- Chapter titles in image filenames
+- Parallel batch processing for paid tier APIs
+- Multi-word entity name matching (e.g., "Mal" → "Mal Arvorian")
 
 ## OpenRouter Support
 

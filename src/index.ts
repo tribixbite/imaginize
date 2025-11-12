@@ -17,6 +17,7 @@ import { parseEpub, sanitizeFilename } from './lib/epub-parser.js';
 import { parsePdf } from './lib/pdf-parser.js';
 import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
+import { DashboardServer } from './lib/dashboard/server.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
 import type { IllustrateConfig } from './types/config.js';
 import { prepareConfiguration, parseChapterSelection, mapStoryChaptersToEpub, parseElementSelection } from './lib/provider-utils.js';
@@ -79,7 +80,11 @@ export async function main(): Promise<void> {
     // Utilities
     .option('--init-config', 'Generate sample .imaginize.config file')
     .option('--estimate', 'Estimate costs without executing')
-    .option('-f, --file <path>', 'Specific book file to process');
+    .option('-f, --file <path>', 'Specific book file to process')
+    // Dashboard
+    .option('--dashboard', 'Start web dashboard for real-time progress monitoring')
+    .option('--dashboard-port <port>', 'Dashboard server port (default: 3000)', parseInt)
+    .option('--dashboard-host <host>', 'Dashboard server host (default: localhost)');
 
   program.parse();
   const options = program.opts<CommandOptions>();
@@ -158,6 +163,7 @@ export async function main(): Promise<void> {
     // Check for existing state
     let stateManager: StateManager;
     let progressTracker: ProgressTracker;
+    let dashboardServer: DashboardServer | null = null;
     let shouldContinue = false;
 
     if (existsSync(outputDir)) {
@@ -200,6 +206,16 @@ export async function main(): Promise<void> {
       stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
       progressTracker = new ProgressTracker(outputDir);
       await progressTracker.initialize(metadata.title, chapters.length);
+    }
+
+    // Start dashboard if requested
+    if (options.dashboard) {
+      dashboardServer = new DashboardServer(progressTracker, {
+        port: options.dashboardPort || 3000,
+        host: options.dashboardHost || 'localhost',
+      });
+
+      await dashboardServer.start();
     }
 
     // Update TOC in state
@@ -369,6 +385,11 @@ export async function main(): Promise<void> {
       console.log(chalk.yellow(`\n💡 Check ${outputDir}/progress.md for details`));
       console.log(chalk.yellow(`   State saved - use --continue to resume\n`));
       process.exit(1);
+    } finally {
+      // Stop dashboard server if it was started
+      if (dashboardServer) {
+        await dashboardServer.stop();
+      }
     }
 
   } catch (error: any) {

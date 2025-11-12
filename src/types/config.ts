@@ -236,6 +236,11 @@ export interface CommandOptions {
   initConfig?: boolean;
   estimate?: boolean;
   file?: string;
+
+  // Dashboard
+  dashboard?: boolean;
+  dashboardPort?: number;
+  dashboardHost?: string;
 }
 
 /** Token estimation result */

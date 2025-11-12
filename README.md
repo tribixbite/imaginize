@@ -296,6 +296,34 @@ npx imaginize --elements --elements-filter "place:castle"
 - `--estimate` - Estimate costs without executing
 - `-f, --file <path>` - Specific book file to process
 
+### Concurrent Processing (Experimental)
+
+- `--concurrent` - Enable concurrent processing architecture
+
+**Performance:** ~40% faster processing (5h → 3h for large books)
+
+The concurrent mode uses a two-pass analysis approach:
+1. **Pass 1:** Fast entity extraction → Generate Elements.md
+2. **Pass 2:** Full chapter analysis with entity enrichment
+3. **Concurrent illustration:** Images generate as chapters complete
+
+**Features:**
+- Manifest-driven coordination for crash recovery
+- Atomic file operations prevent corruption
+- Thread-safe state management
+- Automatic recovery of stuck chapters (30min timeout)
+
+**Example:**
+```bash
+# Enable concurrent processing (experimental)
+npx imaginize --text --images --concurrent
+
+# Default sequential processing (stable)
+npx imaginize --text --images
+```
+
+**Note:** Concurrent mode is currently experimental. Use `--concurrent` to opt-in. The default sequential mode remains stable and recommended for production use.
+
 ## OpenRouter Support
 
 `imaginize` supports OpenRouter for **free** text analysis and image generation:

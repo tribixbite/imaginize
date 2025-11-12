@@ -245,9 +245,10 @@ export class AnalyzePhaseV2 extends BasePhase {
    *
    * Goal: Analyze each chapter fully with entity context
    * Strategy: Load Elements.md, enrich prompts with entity details
+   * Performance: Process chapters in parallel batches (respecting rate limits)
    */
   private async executePass2(): Promise<void> {
-    const { chapters, config, openai, stateManager, progressTracker } = this.context;
+    const { chapters, config, progressTracker } = this.context;
 
     await progressTracker.log('PASS 2: Full analysis with Elements.md enrichment...', 'info');
 
@@ -267,60 +268,39 @@ export class AnalyzePhaseV2 extends BasePhase {
     }
 
     const modelConfig = resolveModelConfig(config.model, config);
-    let totalTokensUsed = 0;
+    const chaptersToProcess = this.planData!.chaptersToProcess;
 
-    for (const chapterNum of this.planData!.chaptersToProcess) {
-      const chapter = chapters.find(c => c.chapterNumber === chapterNum)!;
+    // Determine batch size based on rate limits
+    // For OpenRouter free tier (1 req/min), use batch size 1
+    // For paid tiers or OpenAI, use batch size 3
+    const modelStr = typeof config.model === 'string' ? config.model : config.model?.name || '';
+    const batchSize = modelStr.includes('free') ? 1 : 3;
 
-      await progressTracker.startChapter(chapter.chapterNumber, chapter.chapterTitle);
+    await progressTracker.log(
+      `Processing ${chaptersToProcess.length} chapters in batches of ${batchSize}`,
+      'info'
+    );
 
-      // Mark chapter as in progress (old state manager)
-      stateManager.updateChapter('analyze', chapterNum, 'in_progress');
-      await stateManager.save();
+    // Process chapters in parallel batches
+    for (let i = 0; i < chaptersToProcess.length; i += batchSize) {
+      const batchNums = chaptersToProcess.slice(i, Math.min(i + batchSize, chaptersToProcess.length));
+      const batchChapters = batchNums.map(num => chapters.find(c => c.chapterNumber === num)!);
 
-      try {
-        // Analyze chapter with retry
-        const concepts = await this.executeWithRetry(
-          async () => await this.analyzeChapterFull(chapter, modelConfig),
-          `analyze chapter ${chapterNum}`
-        );
+      await progressTracker.log(
+        `Processing batch ${Math.floor(i / batchSize) + 1}: chapters ${batchNums.join(', ')}`,
+        'info'
+      );
 
-        this.conceptsByChapter.set(chapter.chapterTitle, concepts);
+      // Process batch in parallel
+      await Promise.all(
+        batchChapters.map(chapter => this.analyzeChapterWithTracking(chapter, modelConfig))
+      );
 
-        // Estimate tokens used
-        const tokensUsed = estimateTokens(chapter.content) + concepts.length * 200;
-        totalTokensUsed += tokensUsed;
-
-        // Update old state manager
-        stateManager.updateChapter('analyze', chapterNum, 'completed', {
-          concepts: concepts.length,
-          tokensUsed,
-        });
-        stateManager.updateTokenStats(tokensUsed);
-        await stateManager.save();
-
-        // Update new manifest manager (for concurrent coordination)
-        await this.manifestManager.updateChapter(chapterNum, 'analyzed', {
-          analyzed_at: new Date().toISOString(),
-          concepts: concepts.length,
-        });
-
-        await progressTracker.completeChapter(
-          chapter.chapterNumber,
-          chapter.chapterTitle,
-          concepts.length
-        );
-      } catch (error: any) {
-        stateManager.updateChapter('analyze', chapterNum, 'failed', {
-          error: error.message,
-        });
-        await stateManager.save();
-
-        await this.manifestManager.updateChapter(chapterNum, 'error', {
-          error: error.message,
-        });
-
-        throw error;
+      // Add delay between batches to respect rate limits (if batch size > 1)
+      if (batchSize > 1 && i + batchSize < chaptersToProcess.length) {
+        const delayMs = 2000; // 2 second delay between batches
+        await progressTracker.log(`Waiting ${delayMs / 1000}s before next batch...`, 'info');
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 
@@ -331,6 +311,68 @@ export class AnalyzePhaseV2 extends BasePhase {
       '✅ Pass 2 complete - All chapters analyzed',
       'success'
     );
+  }
+
+  /**
+   * Analyze single chapter with full progress tracking and error handling
+   */
+  private async analyzeChapterWithTracking(
+    chapter: ChapterContent,
+    modelConfig: any
+  ): Promise<void> {
+    const { stateManager, progressTracker } = this.context;
+    const chapterNum = chapter.chapterNumber;
+
+    await progressTracker.startChapter(chapter.chapterNumber, chapter.chapterTitle);
+
+    // Mark chapter as in progress (old state manager)
+    stateManager.updateChapter('analyze', chapterNum, 'in_progress');
+    await stateManager.save();
+
+    try {
+      // Analyze chapter with retry
+      const concepts = await this.executeWithRetry(
+        async () => await this.analyzeChapterFull(chapter, modelConfig),
+        `analyze chapter ${chapterNum}`
+      );
+
+      this.conceptsByChapter.set(chapter.chapterTitle, concepts);
+
+      // Estimate tokens used
+      const tokensUsed = estimateTokens(chapter.content) + concepts.length * 200;
+
+      // Update old state manager
+      stateManager.updateChapter('analyze', chapterNum, 'completed', {
+        concepts: concepts.length,
+        tokensUsed,
+      });
+      stateManager.updateTokenStats(tokensUsed);
+      await stateManager.save();
+
+      // Update new manifest manager (for concurrent coordination)
+      await this.manifestManager.updateChapter(chapterNum, 'analyzed', {
+        analyzed_at: new Date().toISOString(),
+        concepts: concepts.length,
+      });
+
+      await progressTracker.completeChapter(
+        chapter.chapterNumber,
+        chapter.chapterTitle,
+        concepts.length
+      );
+    } catch (error: any) {
+      stateManager.updateChapter('analyze', chapterNum, 'failed', {
+        error: error.message,
+      });
+      await stateManager.save();
+
+      await this.manifestManager.updateChapter(chapterNum, 'error', {
+        error: error.message,
+      });
+
+      // Re-throw to be handled by caller
+      throw error;
+    }
   }
 
   /**

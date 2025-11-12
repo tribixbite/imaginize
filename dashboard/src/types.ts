@@ -25,14 +25,14 @@ export interface ProgressEvent {
 }
 
 export interface ChapterStartEvent {
-  chapterNumber: number;
+  chapterNum: number;
   chapterTitle: string;
 }
 
 export interface ChapterCompleteEvent {
-  chapterNumber: number;
+  chapterNum: number;
   chapterTitle: string;
-  concepts: number;
+  conceptsFound: number;
 }
 
 export interface PhaseStartEvent {

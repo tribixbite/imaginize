@@ -68,9 +68,9 @@ export function useWebSocket(url: string): UseWebSocketReturn {
             case 'chapter-start':
               setChapters((prev) => {
                 const newMap = new Map(prev);
-                const chapter = newMap.get(message.data.chapterNumber);
+                const chapter = newMap.get(message.data.chapterNum);
                 if (chapter) {
-                  newMap.set(message.data.chapterNumber, {
+                  newMap.set(message.data.chapterNum, {
                     ...chapter,
                     title: message.data.chapterTitle,
                     status: 'in-progress',
@@ -82,7 +82,7 @@ export function useWebSocket(url: string): UseWebSocketReturn {
                 prev
                   ? {
                       ...prev,
-                      currentChapter: message.data.chapterNumber,
+                      currentChapter: message.data.chapterNum,
                     }
                   : null
               );
@@ -91,12 +91,12 @@ export function useWebSocket(url: string): UseWebSocketReturn {
             case 'chapter-complete':
               setChapters((prev) => {
                 const newMap = new Map(prev);
-                const chapter = newMap.get(message.data.chapterNumber);
+                const chapter = newMap.get(message.data.chapterNum);
                 if (chapter) {
-                  newMap.set(message.data.chapterNumber, {
+                  newMap.set(message.data.chapterNum, {
                     ...chapter,
                     status: 'completed',
-                    concepts: message.data.concepts,
+                    concepts: message.data.conceptsFound,
                   });
                 }
                 return newMap;

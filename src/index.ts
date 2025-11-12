@@ -202,11 +202,13 @@ export async function main(): Promise<void> {
       progressTracker = new ProgressTracker(outputDir);
     } else {
       // Create new output directory and state
-      await mkdir(outputDir, { recursive: true });
+      await mkdir(outputDir, { recursive: true});
       stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
       progressTracker = new ProgressTracker(outputDir);
-      await progressTracker.initialize(metadata.title, chapters.length);
     }
+
+    // Always initialize progress tracker for dashboard support
+    await progressTracker.initialize(metadata.title, chapters.length);
 
     // Start dashboard if requested
     if (options.dashboard) {
@@ -315,6 +317,7 @@ export async function main(): Promise<void> {
 
       if (needsText) {
         console.log(chalk.cyan('📝 Phase: Analyze (--text)\n'));
+        progressTracker.setPhase('analyze');
         const analyzePhase = useConcurrent
           ? new AnalyzePhaseV2(context)
           : new AnalyzePhase(context);
@@ -324,6 +327,7 @@ export async function main(): Promise<void> {
 
       if (needsElements) {
         console.log(chalk.cyan('🔍 Phase: Extract (--elements)\n'));
+        progressTracker.setPhase('extract');
         const extractPhase = new ExtractPhase(context);
         await extractPhase.execute();
         console.log('');
@@ -331,6 +335,7 @@ export async function main(): Promise<void> {
 
       if (needsImages) {
         console.log(chalk.cyan('🎨 Phase: Illustrate (--images)\n'));
+        progressTracker.setPhase('illustrate');
         const illustratePhase = useConcurrent
           ? new IllustratePhaseV2(context)
           : new IllustratePhase(context);
@@ -360,6 +365,7 @@ export async function main(): Promise<void> {
       }
 
       // Success summary
+      progressTracker.setPhase('complete');
       console.log(chalk.green.bold('✨ Processing complete!\n'));
       console.log(chalk.white(`Output directory: ${chalk.cyan(outputDir)}`));
       console.log(chalk.white(`- progress.md: Processing log`));

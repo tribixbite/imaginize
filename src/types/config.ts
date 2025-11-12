@@ -76,6 +76,33 @@ export interface IllustrateConfig {
 
   /** Limit number of items to process (for testing) */
   limit?: number;
+
+  /**
+   * Enable visual style consistency system (v2.4.0+)
+   * Extracts style guide from first N images and applies to all subsequent images
+   * @default true
+   */
+  enableStyleConsistency?: boolean;
+
+  /**
+   * Number of initial images to analyze for style guide extraction
+   * @default 3
+   */
+  styleBootstrapCount?: number;
+
+  /**
+   * Minimum consistency score before warning user (0-1)
+   * Images scoring below this threshold will trigger consistency alerts
+   * @default 0.7
+   */
+  consistencyThreshold?: number;
+
+  /**
+   * Enable character appearance tracking across images
+   * Ensures characters look the same in all scenes
+   * @default true
+   */
+  trackCharacterAppearances?: boolean;
 }
 
 export interface BookMetadata {

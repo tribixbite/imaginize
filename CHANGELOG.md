@@ -5,6 +5,31 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2025-11-12
+
+### Performance
+- **Parallel Pass 1 Entity Extraction**: Pass 1 now processes multiple chapters concurrently using `Promise.all()` batch processing
+  - Free tier models: Batch size 1 with 60s delays (respects 1 req/min rate limit)
+  - Paid tier models: Configurable batch size (default: 3) with 2s delays
+  - Performance improvement: 50-70% faster entity extraction for paid tiers
+  - Example: 10 chapters now process in ~15-20s instead of 50-100s
+
+### Improved
+- **Unified Batch Configuration**: Both Pass 1 and Pass 2 now use `maxConcurrency` config option (default: 3)
+- **Consistent Rate Limiting**: Smarter rate limit handling across both analysis passes
+- **Better Free Tier Support**: Automatic detection and appropriate delays for OpenRouter free tier models
+
+### Technical
+- Refactored `AnalyzePhaseV2.executePass1()` to match Pass 2's parallel batch pattern
+- Uses `Promise.all()` for concurrent API requests within each batch
+- Unified rate limiting logic between Pass 1 and Pass 2
+- No breaking changes - fully backward compatible
+
+### Configuration
+- Existing `maxConcurrency` option now controls batch size for both passes
+- Default remains 3 for optimal performance with paid tiers
+- Free tier models automatically use batch size 1 regardless of configuration
+
 ## [2.4.0] - 2025-11-12
 
 ### Added

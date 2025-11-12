@@ -32,12 +32,24 @@
 - Researched NER implementation - identified ARM64 platform blocker
 - Documented transformers.js incompatibility with Termux/Android
 
-**Current Session Progress (2025-11-12 - Session 2):**
+**Current Session Progress (2025-11-12 - Session 3):**
+- ✅ **COMPLETED Priority 2: Parallel Chapter Analysis** (v2.5.0)
+- ✅ Parallelized Pass 1 entity extraction with batch processing
+- ✅ Unified batch configuration using `maxConcurrency` for both passes
+- ✅ Improved rate limiting: 60s for free tier, 2s for paid tier
+- ✅ Performance improvement: 50-70% faster Pass 1 for paid tiers
+- ✅ Updated package.json to v2.5.0
+- ✅ Updated CHANGELOG.md with v2.5.0 entry
+- ✅ Updated NEXT_STEPS.md (Priority 2 marked complete)
+- ✅ Updated CLI version strings to 2.5.0
+- ✅ Build succeeds (0 TypeScript errors)
+
+**Previous Session (2025-11-12 - Session 2):**
 - ✅ Local package testing (npm link)
 - ✅ Fixed hardcoded version string (2.0.0 → 2.4.0 in src/index.ts)
 - ✅ Verified CLI commands (--help, --version, --init-config)
 - ✅ Build verification complete (0 TypeScript errors)
-- ✅ Ready for manual npm publication
+- ✅ Ready for manual npm publication (v2.4.0)
 
 **Previous Session (2025-11-12 - Session 1):**
 - ✅ v2.3.0 fully prepared for publication

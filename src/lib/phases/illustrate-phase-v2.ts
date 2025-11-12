@@ -439,8 +439,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
       });
 
       // Check multiple possible response formats
-      const imageUrl = response.choices[0]?.message?.image_url ||
-                      response.choices[0]?.message?.content?.[0]?.image_url ||
+      const imageUrl = response.choices[0]?.message?.images?.[0]?.image_url?.url ||
+                      response.choices[0]?.message?.image_url ||
                       response.data?.[0]?.url;
 
       if (!imageUrl) {

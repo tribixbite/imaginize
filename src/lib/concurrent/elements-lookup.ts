@@ -176,17 +176,48 @@ export class ElementsLookup {
    */
   findMentions(text: string): Element[] {
     const found: Element[] = [];
-    const textLower = text.toLowerCase();
+    const foundKeys = new Set<string>(); // Track to avoid duplicates
 
     for (const [key, element] of this.elements) {
-      // Check if entity name appears in text (word boundary matching)
-      const regex = new RegExp(`\\b${key}\\b`, 'i');
-      if (regex.test(text)) {
-        found.push(element);
+      // Check full name match (word boundary)
+      const fullNameRegex = new RegExp(`\\b${this.escapeRegex(key)}\\b`, 'i');
+      if (fullNameRegex.test(text)) {
+        if (!foundKeys.has(key)) {
+          found.push(element);
+          foundKeys.add(key);
+        }
+        continue;
+      }
+
+      // For multi-word names (e.g., "Mal Arvorian"), also match individual words
+      const nameParts = key.split(/\s+/);
+      if (nameParts.length > 1) {
+        // Check if any significant name part appears (skip common words like "the", "a")
+        const significantParts = nameParts.filter(part =>
+          part.length > 2 && !['the', 'a', 'an', 'of'].includes(part)
+        );
+
+        for (const part of significantParts) {
+          const partRegex = new RegExp(`\\b${this.escapeRegex(part)}\\b`, 'i');
+          if (partRegex.test(text)) {
+            if (!foundKeys.has(key)) {
+              found.push(element);
+              foundKeys.add(key);
+            }
+            break;
+          }
+        }
       }
     }
 
     return found;
+  }
+
+  /**
+   * Escape regex special characters in entity names
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**

@@ -13,7 +13,7 @@ import type OpenAI from 'openai';
 export interface ExtractedEntity {
   name: string;
   type: 'character' | 'creature' | 'place' | 'object';
-  context: string; // Brief context where entity was mentioned
+  context: string; // VISUAL description for characters/creatures, or brief context for places/objects
 }
 
 /**
@@ -49,16 +49,25 @@ export async function extractEntitiesFast(
   // This is just for entity identification - we'll analyze fully in Pass 2
   const truncated = chapterContent.substring(0, 8000);
 
-  const prompt = `Extract key entities from this book chapter. List ONLY:
-- Main characters (people)
-- Creatures/monsters/animals
-- Important places/locations
-- Significant objects
+  const prompt = `Extract key entities from this book chapter with VISUAL descriptions suitable for illustration.
+
+For each entity, provide:
+- **Characters/Creatures**: VISUAL appearance (age, clothing, physical features, distinguishing traits)
+- **Places/Objects**: Brief descriptive context
 
 Return as JSON array with format:
 [
-  {"name": "Entity Name", "type": "character|creature|place|object", "context": "brief mention"}
+  {"name": "Entity Name", "type": "character|creature|place|object", "context": "VISUAL description or brief mention"}
 ]
+
+**CRITICAL for characters/creatures:** Extract actual visual details from the text:
+- Physical appearance (hair, eyes, build, age)
+- Clothing descriptions (colors, style, notable items)
+- Distinguishing features (scars, expressions, posture)
+- For creatures: size, color, features (teeth, claws, fur, etc.)
+
+Example GOOD context for character: "A young boy with determined expression, dressed casually, quick and clever"
+Example BAD context for character: "the protagonist" or "main character"
 
 Be selective - only extract entities that appear to be important to the story.
 

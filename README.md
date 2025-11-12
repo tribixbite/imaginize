@@ -20,6 +20,7 @@
 - ⚡ **Parallel Processing** - Up to 50% faster with concurrent chapter analysis (paid tier)
 - ⚙️ **Highly Configurable** - Customize pages per image, models, and more
 - 📊 **Progress Tracking** - Real-time progress.md file with detailed logs
+- 📈 **Real-Time Dashboard** - Optional web dashboard for live progress monitoring (v2.6.0+)
 - 🔄 **Automatic Rate Limiting** - Handles OpenRouter free tier (1 req/min) automatically
 
 ## Quick Start
@@ -256,6 +257,71 @@ consistencyThreshold: 0.7
 
 **Note:** Visual consistency requires GPT-4 Vision for style analysis (uses your OpenAI API key). If analysis fails, falls back to text-based style guide.
 
+## Real-Time Dashboard (v2.6.0+)
+
+Monitor your book processing in real-time with the optional web dashboard. Perfect for long-running operations to track progress, view ETA, and ensure everything is running smoothly.
+
+### Starting the Dashboard
+
+```bash
+# Enable dashboard (starts on http://localhost:3000)
+npx imaginize --dashboard --concurrent --text --images --file mybook.epub
+
+# Custom port
+npx imaginize --dashboard --dashboard-port 8080 --text --file mybook.epub
+
+# Custom host (e.g., for remote access)
+npx imaginize --dashboard --dashboard-host 0.0.0.0 --dashboard-port 3000 --text --file mybook.epub
+```
+
+### Features
+
+- **Live Progress Updates** - Real-time WebSocket connection shows current chapter, phase, and progress percentage
+- **ETA Calculation** - Intelligent time estimation based on completed chapters
+- **Event Stream** - All progress events displayed as they happen (chapter start/complete, image generation, etc.)
+- **REST API** - `/api/state` and `/api/health` endpoints for integration
+- **Statistics** - Total chapters, completed chapters, concepts found, images generated, elapsed time
+
+### Dashboard Data
+
+The dashboard displays:
+- **Book Title** - Current book being processed
+- **Current Phase** - initialized, extract, illustrate, etc.
+- **Current Chapter** - Which chapter is being analyzed
+- **Progress Stats:**
+  - Total chapters / Completed chapters
+  - Total concepts found
+  - Total elements extracted
+  - Images generated
+  - Elapsed time
+  - Estimated time remaining (ETA)
+
+### Technical Details
+
+- **Backend:** Express server with WebSocket support
+- **Port:** Default 3000 (configurable with `--dashboard-port`)
+- **Host:** Default localhost (configurable with `--dashboard-host`)
+- **Events:** Subscribes to ProgressTracker events and broadcasts to connected clients
+- **API Endpoints:**
+  - `GET /api/state` - Current progress state
+  - `GET /api/health` - Server health and connection count
+
+### Testing
+
+Run the backend integration test to verify event flow:
+
+```bash
+node test-dashboard-backend.js
+```
+
+This tests:
+- ProgressTracker EventEmitter → WebSocket flow
+- All 7 event types (initial-state, progress, stats, chapter-start, chapter-complete, phase-start, image-complete)
+- REST API endpoints functionality
+- WebSocket connection and message broadcasting
+
+**Note:** Dashboard backend is fully functional (Phase 1 complete). Frontend UI is planned for Phase 2.
+
 ## Usage Examples
 
 ### Basic Usage
@@ -372,6 +438,12 @@ npx imaginize --elements --elements-filter "place:castle"
 - `--output-dir <dir>` - Override output directory
 - `--verbose` - Verbose logging
 - `--quiet` - Minimal output
+
+### Dashboard Options
+
+- `--dashboard` - Start web dashboard for real-time progress monitoring
+- `--dashboard-port <port>` - Dashboard server port (default: 3000)
+- `--dashboard-host <host>` - Dashboard server host (default: localhost)
 
 ### Utilities
 

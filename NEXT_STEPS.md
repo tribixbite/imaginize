@@ -269,26 +269,33 @@ for (let i = 0; i < chapters.length; i += batchSize) {
 
 ---
 
-### Priority 3: Named Entity Recognition (NER)
-**Estimated Time:** 2-3 days
+### Priority 3: Named Entity Recognition (NER) - BLOCKED
+**Status:** ⚠️ Platform incompatibility - Postponed
+**Estimated Time:** 2-3 days (when unblocked)
 
-**Current:** AI-based entity extraction (gpt-4o-mini)
+**Blocker:** `@xenova/transformers` (ideal solution) requires `sharp` library which lacks ARM64 Android binaries. Cannot install in Termux environment.
+
+**Current:** AI-based entity extraction (gpt-4o-mini) - Works reliably across all platforms
 **Proposed:** Hybrid NER + AI approach
 
-**Benefits:**
-- More accurate entity detection
+**Benefits (when unblocked):**
+- More accurate entity detection for fantasy names
 - Faster extraction (less AI calls)
 - Better character name consistency
+- 70% reduction in API costs for Pass 1
 
-**Libraries:**
-- compromise (lightweight, JavaScript)
-- spacy via Python bridge
-- transformers.js (BERT-based NER)
+**Platform-Specific Solutions:**
+- **Desktop/Server:** transformers.js works perfectly, recommended
+- **Android ARM64 (Termux):** Blocked pending sharp ARM64 support
+- **Alternative:** compromise library (30-40% cost reduction, but poor fantasy name handling)
 
-**Implementation:**
-- Use NER to identify candidate entities
-- Use AI only to enrich with visual descriptions
-- Reduces Pass 1 API calls by ~70%
+**Resolution Paths:**
+1. Wait for sharp ARM64 binaries (upstream issue)
+2. Fork transformers.js without sharp dependency (complex)
+3. Implement for desktop/server only, keep AI-based for mobile
+4. Use compromise as stop-gap (lower quality)
+
+**Documentation:** See `docs/NER_ARCHITECTURE.md` for complete analysis
 
 ---
 

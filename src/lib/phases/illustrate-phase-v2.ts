@@ -22,6 +22,16 @@ import type { ImageConcept } from '../../types/config.js';
 import { createManifestManager } from '../concurrent/manifest-manager.js';
 import { createElementsLookup } from '../concurrent/elements-lookup.js';
 import fetch from 'node-fetch';
+import {
+  type VisualStyleGuide,
+  CharacterRegistry,
+  analyzeStyleFromImages,
+  enhanceImagePrompt,
+  loadStyleGuide,
+  saveStyleGuide,
+  createCharacterRegistry,
+  extractCharacterNames,
+} from '../visual-style/index.js';
 
 /**
  * Sleep helper for polling
@@ -43,7 +53,10 @@ function sleep(ms: number): Promise<void> {
 export class IllustratePhaseV2 extends BasePhase {
   private manifestManager: ReturnType<typeof createManifestManager>;
   private elementsLookup: ReturnType<typeof createElementsLookup>;
-  private styleGuide: string = '';
+  private styleGuide: string = ''; // Legacy text-based style guide (fallback)
+  private visualStyleGuide: VisualStyleGuide | null = null; // New: Visual style from image analysis
+  private characterRegistry: CharacterRegistry | null = null; // New: Character appearance tracking
+  private bootstrapImages: string[] = []; // New: First N images for style analysis
   private pollInterval = 10000; // Poll every 10 seconds
   private stuckTimeout = 30 * 60 * 1000; // 30 minutes
 
@@ -52,6 +65,11 @@ export class IllustratePhaseV2 extends BasePhase {
 
     this.manifestManager = createManifestManager(context.outputDir);
     this.elementsLookup = createElementsLookup(context.outputDir);
+
+    // Initialize character registry if tracking enabled
+    if (context.config.trackCharacterAppearances !== false) {
+      this.characterRegistry = createCharacterRegistry(context.outputDir);
+    }
   }
 
   /**
@@ -80,7 +98,7 @@ export class IllustratePhaseV2 extends BasePhase {
    * Sub-phase 2: Prepare - Load Elements.md and generate style guide
    */
   protected async prepare(): Promise<SubPhaseResult> {
-    const { imageOpenai, progressTracker, chapters, stateManager } = this.context;
+    const { imageOpenai, progressTracker, chapters, stateManager, config, outputDir } = this.context;
 
     if (!imageOpenai) {
       await progressTracker.log(
@@ -105,7 +123,22 @@ export class IllustratePhaseV2 extends BasePhase {
       );
     }
 
-    // Generate style guide
+    // Try loading existing visual style guide (from previous run or bootstrap)
+    if (config.enableStyleConsistency !== false) {
+      try {
+        this.visualStyleGuide = await loadStyleGuide(outputDir);
+        if (this.visualStyleGuide) {
+          await progressTracker.log(
+            `Loaded existing visual style guide (consistency: ${(this.visualStyleGuide.consistencyScore * 100).toFixed(0)}%)`,
+            'success'
+          );
+        }
+      } catch {
+        // No existing style guide - will be created during bootstrap phase
+      }
+    }
+
+    // Generate text-based style guide (legacy fallback)
     await progressTracker.log('Generating book-wide visual style guide...', 'info');
     this.styleGuide = await this.generateStyleGuide(chapters, stateManager);
     await progressTracker.log(`Style guide created: "${this.styleGuide}"`, 'success');
@@ -319,6 +352,17 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
       await progressTracker.log(`✅ Saved: ${filename}`, 'success');
 
+      // Add to bootstrap collection (if still collecting)
+      if (this.bootstrapImages.length < (config.styleBootstrapCount || 3)) {
+        this.bootstrapImages.push(filepath);
+        await this.checkBootstrapPhase();
+      }
+
+      // Register character appearances
+      if (config.trackCharacterAppearances !== false && this.characterRegistry) {
+        await this.registerCharacterAppearances(concept, filepath);
+      }
+
       // Update state manager (old system)
       stateManager.updateChapter('illustrate', chapterNum, 'completed', {
         imageUrl: `./${filename}`,
@@ -396,6 +440,25 @@ Return ONLY the style guide text, no JSON or formatting.`;
    * Build enriched prompt with Elements.md and style guide
    */
   private buildEnrichedPrompt(concept: ImageConcept): string {
+    // Use new visual style system if available
+    if (this.visualStyleGuide || this.characterRegistry) {
+      const enhanced = enhanceImagePrompt(
+        concept,
+        this.visualStyleGuide,
+        this.characterRegistry
+      );
+
+      let prompt = enhanced.fullPrompt;
+
+      // Enrich with Elements.md if available
+      if (this.elementsLookup.isLoaded()) {
+        prompt = this.elementsLookup.enrichPrompt(prompt);
+      }
+
+      return prompt;
+    }
+
+    // Fallback to legacy text-based style guide
     let prompt = concept.description;
 
     // Add style guide
@@ -471,6 +534,142 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
       return response.data[0].url!;
     }
+  }
+
+  /**
+   * Check if we should run bootstrap phase (after first N images)
+   */
+  private async checkBootstrapPhase(): Promise<void> {
+    const { config } = this.context;
+    const bootstrapCount = config.styleBootstrapCount || 3;
+
+    // Check if we have enough images for bootstrap
+    if (this.bootstrapImages.length === bootstrapCount && !this.visualStyleGuide) {
+      await this.performBootstrap();
+    }
+  }
+
+  /**
+   * Perform bootstrap: Analyze first N images to extract visual style
+   */
+  private async performBootstrap(): Promise<void> {
+    const { openai, progressTracker, outputDir, config } = this.context;
+
+    if (config.enableStyleConsistency === false) {
+      return;
+    }
+
+    await progressTracker.log(
+      `Bootstrap phase: Analyzing first ${this.bootstrapImages.length} images for style guide...`,
+      'info'
+    );
+
+    try {
+      this.visualStyleGuide = await analyzeStyleFromImages(
+        this.bootstrapImages,
+        openai,
+        async (msg) => await progressTracker.log(msg, 'info')
+      );
+
+      await saveStyleGuide(outputDir, this.visualStyleGuide);
+      await progressTracker.log(
+        `✅ Style guide created (consistency: ${(this.visualStyleGuide.consistencyScore * 100).toFixed(0)}%)`,
+        'success'
+      );
+    } catch (error: any) {
+      await progressTracker.log(
+        `⚠️  Style analysis failed: ${error.message} - continuing with text-based style guide`,
+        'warning'
+      );
+    }
+  }
+
+  /**
+   * Register character appearances after image generation
+   */
+  private async registerCharacterAppearances(
+    concept: ImageConcept,
+    imagePath: string
+  ): Promise<void> {
+    if (!this.characterRegistry) {
+      return;
+    }
+
+    const { progressTracker } = this.context;
+
+    // Extract character names from description
+    const charactersInScene = extractCharacterNames(concept.description);
+
+    if (charactersInScene.length === 0) {
+      return;
+    }
+
+    for (const charName of charactersInScene) {
+      try {
+        if (!this.characterRegistry.hasCharacter(charName)) {
+          // First appearance - register with description from Elements.md
+          const description = this.getCharacterDescriptionFromElements(charName);
+          if (description) {
+            await this.characterRegistry.registerFirstAppearance(
+              charName,
+              concept.chapterNumber || 1,
+              1, // scene number (simplified)
+              imagePath,
+              description
+            );
+
+            await progressTracker.log(
+              `Registered first appearance: ${charName}`,
+              'info'
+            );
+          }
+        } else {
+          // Subsequent appearance - record
+          await this.characterRegistry.recordAppearance(
+            charName,
+            concept.chapterNumber || 1,
+            1, // scene number (simplified)
+            imagePath
+          );
+        }
+      } catch (error: any) {
+        // Non-fatal - continue with image generation
+        await progressTracker.log(
+          `Character registration failed for ${charName}: ${error.message}`,
+          'warning'
+        );
+      }
+    }
+
+    // Save registry after updates
+    await this.characterRegistry.save();
+  }
+
+  /**
+   * Get character description from Elements.md
+   */
+  private getCharacterDescriptionFromElements(characterName: string): string | null {
+    if (!this.elementsLookup.isLoaded()) {
+      return null;
+    }
+
+    // Try exact lookup first (case-insensitive)
+    const exactMatch = this.elementsLookup.lookup(characterName);
+    if (exactMatch) {
+      return exactMatch.description || null;
+    }
+
+    // Look for partial match in character entities
+    const allCharacters = this.elementsLookup.getElementsByType('character');
+    for (const character of allCharacters) {
+      // Check if character name contains our search term
+      // e.g., "Christopher" matches "Christopher Chant"
+      if (character.name.toLowerCase().includes(characterName.toLowerCase())) {
+        return character.description || null;
+      }
+    }
+
+    return null;
   }
 
   /**

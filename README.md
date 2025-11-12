@@ -276,51 +276,90 @@ npx imaginize --dashboard --dashboard-host 0.0.0.0 --dashboard-port 3000 --text 
 
 ### Features
 
-- **Live Progress Updates** - Real-time WebSocket connection shows current chapter, phase, and progress percentage
+- **React-Based UI** - Modern, responsive dark-themed interface with real-time updates
+- **Live Progress Updates** - WebSocket-driven updates showing current chapter, phase, and progress percentage
+- **Visual Pipeline** - See processing phases (Initialize → Analyze → Extract → Illustrate → Complete)
+- **Chapter Grid** - Visual grid showing status of all chapters (pending, in-progress, completed, error)
+- **Log Stream** - Real-time color-coded log viewer with auto-scroll
 - **ETA Calculation** - Intelligent time estimation based on completed chapters
-- **Event Stream** - All progress events displayed as they happen (chapter start/complete, image generation, etc.)
 - **REST API** - `/api/state` and `/api/health` endpoints for integration
+- **Auto-Reconnection** - Automatic WebSocket reconnection with exponential backoff
 - **Statistics** - Total chapters, completed chapters, concepts found, images generated, elapsed time
 
-### Dashboard Data
+### Dashboard UI Components
 
-The dashboard displays:
-- **Book Title** - Current book being processed
-- **Current Phase** - initialized, extract, illustrate, etc.
-- **Current Chapter** - Which chapter is being analyzed
-- **Progress Stats:**
-  - Total chapters / Completed chapters
-  - Total concepts found
-  - Total elements extracted
-  - Images generated
-  - Elapsed time
-  - Estimated time remaining (ETA)
+The dashboard displays real-time information through five main components:
+
+1. **Overall Progress Bar**
+   - Animated gradient progress bar (0-100%)
+   - Book title with current phase badge
+   - Stats grid: chapters completed, concepts found, elapsed time, ETA
+   - Images generated counter
+
+2. **Pipeline Visualization**
+   - Visual flow of 5 phases with circular indicators
+   - Animated pulse on active phase
+   - Color-coded status (green=completed, blue=active, gray=pending)
+   - Phase icons and labels
+
+3. **Chapter Grid**
+   - Responsive grid (4-10 columns based on screen size)
+   - Color-coded chapter cards (gray=pending, blue=in-progress, green=completed, red=error)
+   - Hover tooltips with chapter titles
+   - Status legend
+
+4. **Log Stream**
+   - Real-time scrolling log viewer with monospace font
+   - Color-coded by level (green=success, yellow=warning, red=error, gray=info)
+   - Auto-scroll (stops when user scrolls up)
+   - Shows last 100 log entries
+   - Timestamps in local time
+
+5. **Connection Status Indicator**
+   - Green pulsing dot when connected
+   - Red dot when disconnected
+   - Automatic reconnection (max 10 attempts)
 
 ### Technical Details
 
-- **Backend:** Express server with WebSocket support
-- **Port:** Default 3000 (configurable with `--dashboard-port`)
-- **Host:** Default localhost (configurable with `--dashboard-host`)
-- **Events:** Subscribes to ProgressTracker events and broadcasts to connected clients
-- **API Endpoints:**
-  - `GET /api/state` - Current progress state
-  - `GET /api/health` - Server health and connection count
+**Backend:**
+- Express server with WebSocket (ws) support
+- Port: Default 3000 (configurable with `--dashboard-port`)
+- Host: Default localhost (configurable with `--dashboard-host`)
+- Events: Subscribes to ProgressTracker events and broadcasts to connected clients
+- API Endpoints:
+  - `GET /api/state` - Current progress state (JSON)
+  - `GET /api/health` - Server health and connection count (JSON)
+
+**Frontend:**
+- React 18 with TypeScript
+- Vite build system (203 kB JS, 16 kB CSS gzipped)
+- Tailwind CSS v4 with dark theme (#111827 background)
+- WebSocket client with automatic reconnection
+- Responsive design (mobile-first, 4-10 column grid)
+- Built to dist/dashboard/ and served by Express
 
 ### Testing
 
-Run the backend integration test to verify event flow:
-
+**Backend Test** (Phase 1 validation):
 ```bash
 node test-dashboard-backend.js
 ```
+Tests ProgressTracker EventEmitter → WebSocket flow, all 7 event types, and REST API endpoints.
 
-This tests:
-- ProgressTracker EventEmitter → WebSocket flow
-- All 7 event types (initial-state, progress, stats, chapter-start, chapter-complete, phase-start, image-complete)
-- REST API endpoints functionality
-- WebSocket connection and message broadcasting
+**Integration Test** (End-to-end validation):
+```bash
+node test-dashboard-integration.js
+```
+Tests complete dashboard system with live book processing:
+- Dashboard server startup
+- WebSocket client connection and message handling
+- REST API endpoints (`/api/state`, `/api/health`)
+- All 7 event types received correctly
+- Initial state population (bookTitle, totalChapters, stats)
+- Real-time updates during processing
 
-**Note:** Dashboard backend is fully functional (Phase 1 complete). Frontend UI is planned for Phase 2.
+**Status:** Dashboard fully functional (Phases 1-3 complete). Backend infrastructure, React frontend UI, and integration testing all complete.
 
 ## Usage Examples
 

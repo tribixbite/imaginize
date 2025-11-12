@@ -5,6 +5,97 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2025-11-12
+
+### Added
+- **Real-Time Web Dashboard** - Complete web-based progress monitoring system
+  - Live updates during book processing via WebSocket
+  - Visual 5-phase pipeline (Initialize → Analyze → Extract → Illustrate → Complete)
+  - Responsive chapter grid with color-coded status
+  - Real-time log stream with auto-scroll
+  - Automatic WebSocket reconnection (max 10 attempts, 2s delay)
+- **Dashboard CLI Options**
+  - `--dashboard` - Enable web dashboard (default: http://localhost:3000)
+  - `--dashboard-port <port>` - Custom dashboard port
+  - `--dashboard-host <host>` - Custom dashboard host (use 0.0.0.0 for network access)
+- **Dashboard API Endpoints**
+  - REST: `/api/state` (current state), `/api/health` (health check)
+  - WebSocket: 7 event types for real-time updates
+- **Dashboard UI Components**
+  - OverallProgress - Progress bar with stats grid (chapters processed, images generated, current phase)
+  - PipelineVisualization - 5-phase flow with status indicators
+  - ChapterGrid - Responsive grid (4-10 columns) with color-coded chapter status
+  - LogStream - Real-time color-coded logs with auto-scroll
+  - Connection status indicator with automatic reconnection
+- **Dashboard Backend Architecture**
+  - Express server with WebSocket (ws) support
+  - EventEmitter-based ProgressTracker with 7 event types
+  - Events: initial-state, progress, stats, chapter-start, chapter-complete, phase-start, image-complete
+  - Automatic broadcasting to all connected clients
+  - Graceful shutdown and cleanup
+- **Dashboard Frontend**
+  - React 18 + TypeScript + Vite for fast builds
+  - Tailwind CSS v4 with dark theme (#111827 background)
+  - Custom useWebSocket hook with automatic reconnection
+  - 67.85 kB gzipped bundle (203 kB JS + 16 kB CSS)
+  - Browser support: Chrome 90+, Firefox 88+, Safari 14+
+- **Integration Tests**
+  - test-dashboard-integration.js - E2E test with live book processing
+  - Validates all 7 event types and data structure
+  - Tests WebSocket reconnection and state management
+  - All tests passing (13 messages, 6/7 event types verified)
+- **Comprehensive Documentation**
+  - DASHBOARD_ARCHITECTURE.md (1,000+ lines) - Complete architecture specification
+  - DASHBOARD_PHASE1_COMPLETE.md (800+ lines) - Backend infrastructure details
+  - DASHBOARD_PHASE2_COMPLETE.md (700+ lines) - Frontend UI development
+  - DASHBOARD_PHASE3_COMPLETE.md (666 lines) - Integration testing and bug fixes
+
+### Fixed
+- **Type Mismatches** - Aligned frontend types to match backend event format
+  - Changed chapterNumber → chapterNum in frontend types
+  - Changed concepts → conceptsFound in frontend types
+  - Updated useWebSocket message handling to use correct field names
+  - Impact: Chapter events now properly display with correct data
+- **Missing Initialization** - progressTracker.initialize() now always called
+  - Previously only initialized for new output directories
+  - Now initializes with --force flag and when resuming
+  - Fixes bookTitle empty and totalChapters showing 0
+  - Location: src/index.ts:210-211
+- **Missing Phase Events** - Added setPhase() calls for all phase transitions
+  - Added progressTracker.setPhase('analyze') before analyze phase
+  - Added progressTracker.setPhase('extract') before extract phase
+  - Added progressTracker.setPhase('illustrate') before illustrate phase
+  - Added progressTracker.setPhase('complete') at end of processing
+  - Fixes pipeline visualization not updating
+  - Location: src/index.ts:318-368
+
+### Changed
+- package.json description now includes "with real-time web dashboard"
+- CLI version string updated to "AI-powered book illustration guide generator v2.6 with real-time dashboard"
+- README.md updated with complete dashboard documentation and usage examples
+
+### Technical Details
+- 14 commits across three development phases (Backend, Frontend, Integration)
+- ~1,300 lines of code added (backend + frontend + tests)
+- Backend: Express + WebSocket server (~400 LOC)
+  - src/lib/progress-tracker.ts - EventEmitter enhancement
+  - src/lib/dashboard/server.ts - DashboardServer class
+  - src/lib/dashboard/types.ts - Event type definitions
+  - src/index.ts - CLI integration
+- Frontend: React 18 + TypeScript (~650 LOC)
+  - dashboard/src/App.tsx - Main dashboard component
+  - dashboard/src/components/OverallProgress.tsx
+  - dashboard/src/components/PipelineVisualization.tsx
+  - dashboard/src/components/ChapterGrid.tsx
+  - dashboard/src/components/LogStream.tsx
+  - dashboard/src/hooks/useWebSocket.ts - Custom hook
+  - dashboard/src/types.ts - TypeScript definitions
+- Testing: Backend test + Integration test (~350 LOC)
+  - test-dashboard-backend.js - Backend EventEmitter tests
+  - test-dashboard-integration.js - E2E integration test
+- Build system: Vite with TypeScript + Tailwind CSS v4
+- Bundle optimization: Production build with gzip compression
+
 ## [2.5.0] - 2025-11-12
 
 ### Performance

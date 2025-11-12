@@ -161,6 +161,7 @@ export class AnalyzePhaseV2 extends BasePhase {
   private async executePass1(): Promise<void> {
     const { chapters, openai, progressTracker } = this.context;
 
+    const startTime = Date.now();
     await progressTracker.log('PASS 1: Extracting entities from all chapters...', 'info');
 
     // Update manifest status
@@ -234,8 +235,14 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Update manifest: Elements.md is now complete
     await this.manifestManager.updateElementsStatus('complete');
 
+    // Calculate and log performance metrics
+    const endTime = Date.now();
+    const totalSeconds = (endTime - startTime) / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
     await progressTracker.log(
-      '✅ Pass 1 complete - Elements.md ready for enrichment',
+      `✅ Pass 1 complete - Elements.md ready (${mergedEntities.length} entities extracted in ${minutes}m ${seconds}s)`,
       'success'
     );
   }
@@ -250,6 +257,7 @@ export class AnalyzePhaseV2 extends BasePhase {
   private async executePass2(): Promise<void> {
     const { chapters, config, progressTracker } = this.context;
 
+    const startTime = Date.now();
     await progressTracker.log('PASS 2: Full analysis with Elements.md enrichment...', 'info');
 
     // Load Elements.md for enrichment
@@ -307,8 +315,15 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Mark analyze phase as complete
     await this.manifestManager.markAnalyzeComplete();
 
+    // Calculate and log performance metrics
+    const endTime = Date.now();
+    const totalSeconds = (endTime - startTime) / 1000;
+    const avgSecondsPerChapter = totalSeconds / chaptersToProcess.length;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
     await progressTracker.log(
-      '✅ Pass 2 complete - All chapters analyzed',
+      `✅ Pass 2 complete - ${chaptersToProcess.length} chapters analyzed in ${minutes}m ${seconds}s (avg ${avgSecondsPerChapter.toFixed(1)}s/chapter, batch size: ${batchSize})`,
       'success'
     );
   }

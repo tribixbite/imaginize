@@ -157,9 +157,10 @@ export class AnalyzePhaseV2 extends BasePhase {
    *
    * Goal: Build Elements.md as quickly as possible
    * Strategy: Use fast model (gpt-4o-mini) with minimal prompts
+   * Performance: Process chapters in parallel batches (respecting rate limits)
    */
   private async executePass1(): Promise<void> {
-    const { chapters, openai, progressTracker } = this.context;
+    const { chapters, openai, progressTracker, config } = this.context;
 
     const startTime = Date.now();
     await progressTracker.log('PASS 1: Extracting entities from all chapters...', 'info');
@@ -167,49 +168,81 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Update manifest status
     await this.manifestManager.updateElementsStatus('inprogress');
 
+    // Determine batch size based on rate limits
+    // gpt-4o-mini is fast and cheap, can handle higher concurrency
+    // For OpenRouter free tier (1 req/min), use batch size 1
+    // For paid tiers or OpenAI, use configured maxConcurrency (default: 3)
+    const modelStr = typeof config.model === 'string' ? config.model : config.model?.name || '';
+    const isFreeModel = modelStr.includes('free');
+    const batchSize = isFreeModel ? 1 : (config.maxConcurrency || 3);
+
+    const chaptersToProcess = this.planData!.chaptersToProcess.filter(num => {
+      const chapter = chapters.find(c => c.chapterNumber === num)!;
+      return isStoryContent(chapter.chapterTitle);
+    });
+
+    await progressTracker.log(
+      `Processing ${chaptersToProcess.length} chapters in batches of ${batchSize}`,
+      'info'
+    );
+
     const entityResults: EntityExtractionResult[] = [];
 
-    for (const chapterNum of this.planData!.chaptersToProcess) {
-      const chapter = chapters.find(c => c.chapterNumber === chapterNum)!;
-
-      // Skip non-story chapters
-      if (!isStoryContent(chapter.chapterTitle)) {
-        await progressTracker.log(
-          `Pass 1: Skipping non-story chapter ${chapterNum}`,
-          'info'
-        );
-        continue;
-      }
+    // Process chapters in parallel batches
+    for (let i = 0; i < chaptersToProcess.length; i += batchSize) {
+      const batchNums = chaptersToProcess.slice(i, Math.min(i + batchSize, chaptersToProcess.length));
+      const batchChapters = batchNums.map(num => chapters.find(c => c.chapterNumber === num)!);
 
       await progressTracker.log(
-        `Pass 1: Extracting entities from Chapter ${chapterNum}: ${chapter.chapterTitle}`,
+        `Pass 1: Processing batch ${Math.floor(i / batchSize) + 1}: chapters ${batchNums.join(', ')}`,
         'info'
       );
 
-      try {
-        const result = await this.executeWithRetry(
-          async () =>
-            await extractEntitiesFast(
-              chapter.content,
-              chapter.chapterNumber,
-              chapter.chapterTitle,
-              openai,
-              'gpt-4o-mini' // Fast, cheap model for entity extraction
-            ),
-          `extract entities from chapter ${chapterNum}`
-        );
+      // Process batch in parallel
+      const batchResults = await Promise.all(
+        batchChapters.map(async chapter => {
+          await progressTracker.log(
+            `Pass 1: Extracting entities from Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
+            'info'
+          );
 
-        entityResults.push(result);
+          try {
+            const result = await this.executeWithRetry(
+              async () =>
+                await extractEntitiesFast(
+                  chapter.content,
+                  chapter.chapterNumber,
+                  chapter.chapterTitle,
+                  openai,
+                  'gpt-4o-mini' // Fast, cheap model for entity extraction
+                ),
+              `extract entities from chapter ${chapter.chapterNumber}`
+            );
 
-        await progressTracker.log(
-          `Pass 1: Found ${result.entities.length} entities in Chapter ${chapterNum}`,
-          'success'
-        );
-      } catch (error: any) {
-        await progressTracker.log(
-          `Pass 1: Failed to extract entities from Chapter ${chapterNum}: ${error.message}`,
-          'warning'
-        );
+            await progressTracker.log(
+              `Pass 1: Found ${result.entities.length} entities in Chapter ${chapter.chapterNumber}`,
+              'success'
+            );
+
+            return result;
+          } catch (error: any) {
+            await progressTracker.log(
+              `Pass 1: Failed to extract entities from Chapter ${chapter.chapterNumber}: ${error.message}`,
+              'warning'
+            );
+            return null;
+          }
+        })
+      );
+
+      // Collect successful results
+      entityResults.push(...batchResults.filter(r => r !== null) as EntityExtractionResult[]);
+
+      // Add delay between batches to respect rate limits (if not last batch)
+      if (i + batchSize < chaptersToProcess.length) {
+        const delayMs = isFreeModel ? 60000 : 2000; // 1 min for free tier, 2s for paid
+        await progressTracker.log(`Waiting ${delayMs / 1000}s before next batch...`, 'info');
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 
@@ -280,12 +313,13 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Determine batch size based on rate limits
     // For OpenRouter free tier (1 req/min), use batch size 1
-    // For paid tiers or OpenAI, use batch size 3
+    // For paid tiers or OpenAI, use configured maxConcurrency (default: 3)
     const modelStr = typeof config.model === 'string' ? config.model : config.model?.name || '';
-    const batchSize = modelStr.includes('free') ? 1 : 3;
+    const isFreeModel = modelStr.includes('free');
+    const batchSize = isFreeModel ? 1 : (config.maxConcurrency || 3);
 
     await progressTracker.log(
-      `Processing ${chaptersToProcess.length} chapters in batches of ${batchSize}`,
+      `Pass 2: Processing ${chaptersToProcess.length} chapters in batches of ${batchSize}`,
       'info'
     );
 
@@ -304,10 +338,10 @@ export class AnalyzePhaseV2 extends BasePhase {
         batchChapters.map(chapter => this.analyzeChapterWithTracking(chapter, modelConfig))
       );
 
-      // Add delay between batches to respect rate limits (if batch size > 1)
-      if (batchSize > 1 && i + batchSize < chaptersToProcess.length) {
-        const delayMs = 2000; // 2 second delay between batches
-        await progressTracker.log(`Waiting ${delayMs / 1000}s before next batch...`, 'info');
+      // Add delay between batches to respect rate limits (if not last batch)
+      if (i + batchSize < chaptersToProcess.length) {
+        const delayMs = isFreeModel ? 60000 : 2000; // 1 min for free tier, 2s for paid
+        await progressTracker.log(`Pass 2: Waiting ${delayMs / 1000}s before next batch...`, 'info');
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }

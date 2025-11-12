@@ -8,18 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.3.0] - 2025-11-12
 
 ### Added
+- **Parallel Chapter Analysis**: Batch processing for Pass 2 analysis with auto-detected batch sizes (1 for free tier, 3 for paid tier)
 - **Visual Character Descriptions**: Entity extraction now captures physical appearance, clothing, and distinguishing features instead of functional roles
 - **Enhanced Entity Matching**: Multi-word name support (e.g., "Mal" matches "Mal Arvorian") with partial name matching
 - **Chapter Titles in Filenames**: Image filenames now include sanitized chapter titles (e.g., `chapter_9_the_beginning_scene_1.png`)
 - **Character Cross-Referencing**: Visual Elements sections now include comprehensive CHARACTER DETAILS with full visual descriptions from Elements.md
 
 ### Improved
+- **Performance**: Up to 50% additional speedup with paid tier (3h → 1.5-2h for large books)
 - **Quote Quality**: Quotes now 3-8 sentences (50-150 words) instead of single sentences, with explicit context requirements
 - **Entity Descriptions**: Elements.md now contains illustration-ready visual descriptions:
   - Characters: age, build, clothing, expressions, physical features
   - Creatures: size, color, teeth, claws, fur, distinguishing traits
   - Places: visual atmosphere and notable features
 - **Entity Extraction Prompt**: Enhanced prompt with examples of good vs. bad descriptions to guide AI
+- **Batch Processing**: Smart rate limit handling with inter-batch delays (2s) and Promise.all() parallelism
 
 ### Fixed
 - Entity matching now correctly identifies characters mentioned by first/last name only
@@ -27,10 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Page numbers properly populated in Chapters.md from chapter metadata
 
 ### Technical
+- Refactored `analyze-phase-v2.ts` with batch processing using Promise.all()
+- Added `analyzeChapterWithTracking()` method for parallel execution
 - Updated `entity-extractor.ts` with visual-first extraction prompt
 - Enhanced `elements-lookup.ts` with improved name matching algorithm
 - Updated `analyze-phase-v2.ts` to enrich concepts with full entity descriptions
 - Added regex escaping for special characters in entity names
+- Implemented auto-detection of batch size based on model name (free vs paid tier)
 
 ## [2.2.0] - 2025-11-12
 

@@ -1,5 +1,5 @@
 /**
- * imaginize v2.0 - AI-powered book illustration guide generator
+ * imaginize v2.4 - AI-powered book illustration guide generator
  * Main entry point with phase-based orchestration
  */
 
@@ -53,8 +53,8 @@ export async function main(): Promise<void> {
 
   program
     .name('imaginize')
-    .version('2.0.0')
-    .description('AI-powered book illustration guide generator v2.0')
+    .version('2.4.0')
+    .description('AI-powered book illustration guide generator v2.4')
     // Phase selection
     .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')

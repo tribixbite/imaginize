@@ -1,8 +1,8 @@
 {
   "name": "imaginize",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "type": "module",
-  "description": "AI-powered book illustration guide generator - Visual style consistency, parallel batch processing, character tracking, and optimized performance with free OpenRouter support",
+  "description": "AI-powered book illustration guide generator with real-time web dashboard - Visual style consistency, parallel batch processing, character tracking, and optimized performance with free OpenRouter support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {

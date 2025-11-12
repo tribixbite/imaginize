@@ -54,8 +54,8 @@ export async function main(): Promise<void> {
 
   program
     .name('imaginize')
-    .version('2.5.0')
-    .description('AI-powered book illustration guide generator v2.5')
+    .version('2.6.0')
+    .description('AI-powered book illustration guide generator v2.6 with real-time dashboard')
     // Phase selection
     .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')

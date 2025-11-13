@@ -3812,3 +3812,223 @@ interface ParseResult {
 8. ⏳ Optional: Create complex fixtures and error handling tests
 
 ---
+
+## Session: E2E Testing Phase 1 - Setup & Infrastructure
+**Date:** November 13, 2025 (Post Integration Tests - Priority 2 Enhancement)
+**Focus:** Set up E2E testing infrastructure for GitHub Pages demo
+**Status:** ✅ Phase 1 Complete
+
+### Overview
+
+Implemented Phase 1 (Setup & Infrastructure) of the E2E testing plan for the imaginize GitHub Pages demo using Playwright. This establishes the foundation for comprehensive end-to-end testing covering the complete user journey.
+
+### Work Completed
+
+**1. Planning & Documentation**
+- Created `docs/E2E_TESTING_PLAN.md` (704 lines) - Comprehensive 5-phase implementation plan
+- Documented test strategy, browser coverage, mocking approach
+- Estimated 24 hours total (3 days) across 5 phases
+- Planned 50+ E2E tests across 8 test suites
+
+**2. Infrastructure Setup**
+- Installed @playwright/test (v1.56.1)
+- Installed @axe-core/playwright (v4.11.0) for accessibility testing
+- Created `demo/playwright.config.ts` - Multi-browser configuration
+- Set up directory structure: `demo/e2e/{tests,fixtures,helpers}/`
+- Added 5 npm scripts to package.json
+
+**3. Test Fixtures**
+- Copied integration test fixtures to E2E directory
+  - `sample.epub` (2.0 KB) - Valid EPUB 3.0 with 2 chapters
+  - `sample.pdf` (1.8 KB) - Valid PDF 1.7 with 3 pages
+- Created `demo/e2e/fixtures/README.md` - Fixture documentation
+
+**4. Helper Utilities**
+- **mock-api.ts** (137 lines) - Mock OpenAI API responses
+  - Chat completions mocking (returns mock scene/element analysis)
+  - Image generation mocking (returns minimal 1x1 PNG)
+  - Error scenario mocking (401, 429, 500 errors)
+- **test-data.ts** (151 lines) - Test constants and utilities
+  - Test API key constant
+  - File metadata (epub, pdf)
+  - Storage keys
+  - Processing phases
+  - Selectors for all UI elements
+  - Timeout constants
+
+**5. Initial Test Suite**
+- **01-initial-load.spec.ts** (169 lines) - 8 E2E tests
+  1. Page loads successfully (title, status checks)
+  2. Critical sections render (file upload, API key input, footer)
+  3. No console errors on load
+  4. Dark mode applies based on system preference
+  5. GitHub link present with correct URL
+  6. Responsive on mobile viewport (375x667)
+  7. No network errors during load
+  8. Color scheme adapts to light/dark preference
+
+**6. Browser Configuration**
+- Desktop Chrome (latest Chromium)
+- Desktop Firefox (latest)
+- Desktop Safari (WebKit)
+- Mobile Chrome (Pixel 5 viewport)
+- Mobile Safari (iPhone 12 viewport)
+
+**7. Documentation**
+- Created `demo/e2e/README.md` (266 lines)
+  - E2E testing overview and usage guide
+  - Running tests locally and in CI
+  - Test coverage breakdown
+  - Mocking strategy
+  - Development workflow
+  - Known limitations
+  - CI/CD integration plan
+
+### Test Results
+
+**Status**: Cannot run locally on Termux/Android (expected)
+- Playwright requires browser binaries
+- Not available for Android platform
+- Tests will run in GitHub Actions CI/CD
+
+**Expected Behavior**:
+- Tests designed for CI/CD on Linux runners
+- Will run automatically on PRs affecting demo files
+- Will gate GitHub Pages deployments
+
+### npm Scripts Added
+
+```bash
+npm run test:e2e         # Run all E2E tests
+npm run test:e2e:ui      # Open Playwright UI
+npm run test:e2e:report  # View test report
+npm run test:e2e:debug   # Debug mode
+npm run test:e2e:headed  # Run with visible browser
+```
+
+### Technical Details
+
+**Playwright Configuration**:
+- Test directory: `demo/e2e/tests/`
+- Parallel execution enabled
+- Retries: 2 attempts on CI
+- Workers: 1 on CI, unlimited locally
+- Reporters: HTML, JSON, GitHub (CI only)
+- Screenshots on failure
+- Videos on failure
+- Traces on first retry
+
+**Mocking Strategy**:
+- Mock all OpenAI API calls to avoid costs
+- Return realistic mock data for testing
+- Support error scenarios (auth, rate limit, network)
+- Enable testing without valid API keys
+
+**Browser Support**:
+- 5 browser/device combinations
+- Desktop + Mobile coverage
+- Cross-browser compatibility validation
+
+### Files Created/Modified
+
+**New Files** (10 total):
+1. `docs/E2E_TESTING_PLAN.md` - Implementation plan
+2. `demo/playwright.config.ts` - Playwright configuration
+3. `demo/e2e/README.md` - E2E testing documentation
+4. `demo/e2e/fixtures/README.md` - Fixture documentation
+5. `demo/e2e/fixtures/sample.epub` - EPUB test fixture
+6. `demo/e2e/fixtures/sample.pdf` - PDF test fixture
+7. `demo/e2e/helpers/mock-api.ts` - API mocking utilities
+8. `demo/e2e/helpers/test-data.ts` - Test constants
+9. `demo/e2e/tests/01-initial-load.spec.ts` - Initial load tests
+10. `demo/package.json` - Added E2E scripts
+
+**Modified Files**:
+- `demo/package.json` - Added test:e2e scripts
+- `demo/package-lock.json` - Playwright dependencies
+
+### Known Limitations
+
+1. **Platform Compatibility**: Cannot run on Termux/Android
+   - Playwright requires browser binaries
+   - Binaries not available for Android platform
+   - Tests will run in CI/CD only
+
+2. **API Mocking**: Cannot test actual OpenAI integration
+   - All API calls mocked to avoid costs
+   - Real API integration tested manually only
+
+3. **Safari Testing**: Requires macOS runner
+   - GitHub Actions limitation
+   - WebKit tested, but not full Safari
+
+4. **Timeout Limits**: Cannot test very long books
+   - Tests have 30-60 second timeouts
+   - Cannot process 100-chapter books in E2E
+
+### Implementation Progress
+
+**Phase 1: Setup & Infrastructure** ✅ COMPLETE (Day 1, 4 hours estimated)
+- [x] Install Playwright and dependencies
+- [x] Configure Playwright with multi-browser support
+- [x] Create test fixtures (EPUB/PDF)
+- [x] Create helper utilities (mocking, test data)
+- [x] Implement initial test suite (8 tests)
+- [x] Update package.json with E2E scripts
+- [x] Create comprehensive documentation
+
+**Remaining Phases** (Planned):
+- Phase 2: Core User Flow Tests (Day 1-2, 8 hours) - File upload, API key, processing flow
+- Phase 3: Error Scenarios & Edge Cases (Day 2-3, 6 hours) - Error handling, mobile, accessibility
+- Phase 4: CI/CD Integration (Day 3-4, 4 hours) - GitHub Actions workflow
+- Phase 5: Documentation & Polish (Day 4, 2 hours) - Final documentation updates
+
+### Commits This Session
+
+1. **340aa89** - `docs: add E2E testing implementation plan (Priority 2)`
+   - Created comprehensive 5-phase implementation plan
+   - Documented test strategy and browser coverage
+   - 704 lines of planning documentation
+
+2. **b170230** - `test(demo): implement E2E testing Phase 1 - Setup & Infrastructure`
+   - Set up Playwright configuration
+   - Created test fixtures and helpers
+   - Implemented 8 initial E2E tests
+   - Added E2E scripts to package.json
+   - 916 insertions across 10 files
+
+### Next Steps
+
+1. ✅ Phase 1 complete
+2. ⏳ Implement Phase 2: Core User Flow Tests
+   - File upload tests (9 tests)
+   - API key management tests (8 tests)
+   - Processing flow tests (10 tests)
+   - Results view tests (8 tests)
+3. ⏳ Optional: Continue with Phases 3-5
+4. ⏳ Optional: Add GitHub Actions workflow for E2E tests
+
+### Impact
+
+**Benefits Achieved**:
+- ✅ E2E testing infrastructure in place
+- ✅ Mock API strategy prevents costs
+- ✅ Multi-browser testing configured
+- ✅ Foundation for comprehensive E2E coverage
+- ✅ Ready for CI/CD integration
+
+**Test Suite Status**:
+- Unit tests: 85 tests (demo only)
+- Integration tests: 34 tests (EPUB/PDF parsers)
+- E2E tests: 8 tests **← NEW** (Phase 1 complete)
+- Total project tests: 527 + 85 + 8 = 620 tests
+
+---
+
+**Last Updated**: November 13, 2025 (E2E Phase 1 Complete)
+**Status**: ✅ **PHASE 1 COMPLETE - E2E INFRASTRUCTURE READY**
+**Test Count**: 8 E2E tests (1 suite)
+**Browser Coverage**: 5 configurations (Chrome, Firefox, Safari, Mobile Chrome, Mobile Safari)
+**Commits This Session**: 2 (E2E plan + Phase 1 implementation)
+
+🎉 **E2E TESTING FOUNDATION ESTABLISHED - READY FOR PHASE 2** 🎉

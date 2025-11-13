@@ -326,7 +326,7 @@ imaginize --text --clear-errors book.epub
 ---
 
 ### 9. Multi-Book Series Support
-**Status**: ✅ COMPLETE (Core implementation)
+**Status**: ✅ COMPLETE
 
 **Implemented**:
 - ✅ Series configuration system (`.imaginize.series.json`)
@@ -337,11 +337,13 @@ imaginize --text --clear-errors book.epub
 - ✅ Thread-safe series operations with file locking
 - ✅ Book status tracking (pending/in_progress/completed/error)
 - ✅ Series configuration in book config (`series.enabled`, `series.seriesRoot`, `series.bookId`)
+- ✅ Integration with analyze-phase-v2 (import/export hooks)
 - ✅ Technical specification (docs/specs/multi-book-series.md)
 
 **Files**:
 - `src/lib/concurrent/series-manager.ts` - Series configuration and book tracking
 - `src/lib/concurrent/series-elements.ts` - Cross-book element sharing
+- `src/lib/phases/analyze-phase-v2.ts` - Series import/export integration
 - `src/types/config.ts` - Series configuration types
 - `docs/specs/multi-book-series.md` - Complete specification
 
@@ -351,6 +353,8 @@ imaginize --text --clear-errors book.epub
 - **Provenance Tracking**: Records which book added which details
 - **Series Catalog**: Aggregated Elements.md with first appearance tracking
 - **Backward Compatible**: Single-book workflows unchanged
+- **Automatic Import/Export**: Elements automatically shared during analyze phase
+- **Status Tracking**: Books marked as in_progress → completed in series config
 
 **Example Configuration**:
 ```yaml
@@ -362,13 +366,18 @@ series:
   bookTitle: "Chamber of Secrets"
 ```
 
+**Workflow**:
+1. **Before Pass 1**: Import existing series elements to book
+2. **After Pass 1**: Export new elements to series catalog
+3. **After Pass 2**: Export enrichments to series catalog
+4. **Status Updates**: Mark book as in_progress → completed
+
 **Missing (Future Enhancements)**:
 - ❌ CLI commands (`series init`, `series add-book`, `series stats`)
-- ❌ Integration with analyze-phase-v2 (import/export hooks)
 - ❌ Visual style inheritance (depends on base style system)
 - ❌ Series dashboard view
 
-**Status**: Core infrastructure complete, CLI integration pending
+**Status**: Core implementation and phase integration complete
 
 ---
 

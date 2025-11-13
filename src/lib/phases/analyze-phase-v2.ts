@@ -24,6 +24,8 @@ import {
 import { createManifestManager } from '../concurrent/manifest-manager.js';
 import { createElementsLookup } from '../concurrent/elements-lookup.js';
 import { createElementsMemory } from '../concurrent/elements-memory.js';
+import { createSeriesManager } from '../concurrent/series-manager.js';
+import { createSeriesElementsManager } from '../concurrent/series-elements.js';
 import { TemplateLoader, DEFAULT_ANALYZE_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
 
 interface AnalyzePlanData {
@@ -54,6 +56,8 @@ export class AnalyzePhaseV2 extends BasePhase {
   private elementsLookup: ReturnType<typeof createElementsLookup>;
   private elementsMemory: ReturnType<typeof createElementsMemory>;
   private templateLoader: TemplateLoader;
+  private seriesManager: ReturnType<typeof createSeriesManager> | null = null;
+  private seriesElements: ReturnType<typeof createSeriesElementsManager> | null = null;
 
   constructor(context: PhaseContext) {
     super(context, 'analyze');
@@ -69,6 +73,13 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Initialize template loader
     this.templateLoader = new TemplateLoader();
+
+    // Initialize series managers if series mode enabled
+    if (context.config.series?.enabled && context.config.series?.seriesRoot) {
+      const seriesRoot = join(context.outputDir, context.config.series.seriesRoot);
+      this.seriesManager = createSeriesManager(seriesRoot);
+      this.seriesElements = createSeriesElementsManager(seriesRoot);
+    }
   }
 
   /**
@@ -142,6 +153,21 @@ export class AnalyzePhaseV2 extends BasePhase {
       'info'
     );
 
+    // Series mode: Mark book as in_progress
+    if (this.seriesManager && config.series?.enabled) {
+      try {
+        const bookId = config.series.bookId || 'unknown';
+        await this.seriesManager.updateBookStatus(bookId, 'in_progress');
+        await progressTracker.log('📚 Series: Book marked as in_progress', 'info');
+      } catch (error: any) {
+        // Don't fail the phase if series status update fails
+        await progressTracker.log(
+          `⚠️  Series status update failed: ${error.message}`,
+          'warning'
+        );
+      }
+    }
+
     return { success: true, data: this.planData };
   }
 
@@ -184,10 +210,43 @@ export class AnalyzePhaseV2 extends BasePhase {
    * Performance: Process chapters in parallel batches (respecting rate limits)
    */
   private async executePass1(): Promise<void> {
-    const { chapters, openai, progressTracker, config } = this.context;
+    const { chapters, openai, progressTracker, config, stateManager, outputDir } = this.context;
 
     const startTime = Date.now();
     await progressTracker.log('PASS 1: Extracting entities from all chapters...', 'info');
+
+    // Series mode: Import elements from series before extraction
+    if (this.seriesElements && config.series?.enabled) {
+      try {
+        await progressTracker.log('📚 Series mode: Importing elements from series...', 'info');
+
+        const bookId = config.series.bookId || 'unknown';
+        const bookTitle = stateManager.getState().bookTitle;
+
+        const importResult = await this.seriesElements.importToBook(
+          bookId,
+          bookTitle,
+          outputDir
+        );
+
+        if (importResult.imported > 0) {
+          await progressTracker.log(
+            `📚 Imported ${importResult.imported} element(s) from series: ${importResult.entities.slice(0, 3).join(', ')}${importResult.entities.length > 3 ? '...' : ''}`,
+            'success'
+          );
+        } else {
+          await progressTracker.log(
+            '📚 No existing series elements to import (first book or empty series)',
+            'info'
+          );
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `⚠️  Series import failed: ${error.message} - continuing without series elements`,
+          'warning'
+        );
+      }
+    }
 
     // Update manifest status
     await this.manifestManager.updateElementsStatus('inprogress');
@@ -291,6 +350,41 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Update manifest: Elements.md is now complete
     await this.manifestManager.updateElementsStatus('complete');
+
+    // Series mode: Export new elements to series catalog
+    if (this.seriesElements && config.series?.enabled) {
+      try {
+        await progressTracker.log('📚 Series mode: Exporting elements to series...', 'info');
+
+        const bookId = config.series.bookId || 'unknown';
+        const bookTitle = stateManager.getState().bookTitle;
+        const mergeStrategy = 'enrich'; // Default merge strategy
+
+        const exportResult = await this.seriesElements.exportFromBook(
+          bookId,
+          bookTitle,
+          outputDir,
+          mergeStrategy
+        );
+
+        if (exportResult.exported > 0) {
+          const stats: string[] = [];
+          if (exportResult.added > 0) stats.push(`${exportResult.added} new`);
+          if (exportResult.updated > 0) stats.push(`${exportResult.updated} updated`);
+          if (exportResult.enriched > 0) stats.push(`${exportResult.enriched} enriched`);
+
+          await progressTracker.log(
+            `📚 Exported ${exportResult.exported} element(s) to series (${stats.join(', ')})`,
+            'success'
+          );
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `⚠️  Series export failed: ${error.message} - book elements saved locally`,
+          'warning'
+        );
+      }
+    }
 
     // Calculate and log performance metrics
     const endTime = Date.now();
@@ -418,9 +512,39 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
     }
 
+    // Series mode: Export enrichments from Pass 2 to series
+    if (this.seriesElements && config.series?.enabled && finalMemoryStats.totalEnrichments > 0) {
+      try {
+        await progressTracker.log('📚 Series mode: Exporting Pass 2 enrichments to series...', 'info');
+
+        const { stateManager, outputDir } = this.context;
+        const bookId = config.series.bookId || 'unknown';
+        const bookTitle = stateManager.getState().bookTitle;
+        const mergeStrategy = 'enrich'; // Default merge strategy
+
+        const exportResult = await this.seriesElements.exportFromBook(
+          bookId,
+          bookTitle,
+          outputDir,
+          mergeStrategy
+        );
+
+        if (exportResult.enriched > 0) {
+          await progressTracker.log(
+            `📚 Exported ${exportResult.enriched} enrichment(s) to series catalog`,
+            'success'
+          );
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `⚠️  Series enrichment export failed: ${error.message}`,
+          'warning'
+        );
+      }
+    }
+
     // Error summary reporting
-    const { stateManager } = this.context;
-    const failedChaptersWithErrors = stateManager.getFailedChaptersWithErrors('analyze');
+    const failedChaptersWithErrors = this.context.stateManager.getFailedChaptersWithErrors('analyze');
     if (failedChaptersWithErrors.length > 0) {
       await progressTracker.log(
         `⚠️  ${failedChaptersWithErrors.length} chapter(s) failed during analysis:`,
@@ -435,6 +559,20 @@ export class AnalyzePhaseV2 extends BasePhase {
       `✅ Pass 2 complete - ${chaptersToProcess.length} chapters analyzed in ${minutes}m ${seconds}s (avg ${avgSecondsPerChapter.toFixed(1)}s/chapter, batch size: ${batchSize})`,
       'success'
     );
+
+    // Series mode: Mark book as completed
+    if (this.seriesManager && config.series?.enabled) {
+      try {
+        const bookId = config.series.bookId || 'unknown';
+        await this.seriesManager.updateBookStatus(bookId, 'completed');
+        await progressTracker.log('📚 Series: Book marked as completed', 'success');
+      } catch (error: any) {
+        await progressTracker.log(
+          `⚠️  Series completion status update failed: ${error.message}`,
+          'warning'
+        );
+      }
+    }
   }
 
   /**

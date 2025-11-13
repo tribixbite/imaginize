@@ -6,10 +6,13 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { execSync } from 'child_process';
 import { existsSync, rmSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 const TEST_BOOK = 'ImpossibleCreatures.epub';
 const OUTPUT_DIR = 'imaginize_ImpossibleCreatures';
+
+// Use full path to bun with explicit PATH so the bun wrapper can find grun
+const CLI_CMD = 'PATH=/data/data/com.termux/files/usr/bin:/data/data/com.termux/files/home/.bun/bin:$PATH /data/data/com.termux/files/home/.bun/bin/bun bin/imaginize.js';
 
 describe('illustrate v2.0 pipeline', () => {
   beforeAll(() => {
@@ -43,7 +46,7 @@ describe('illustrate v2.0 pipeline', () => {
     console.log('\n🧪 Test 1: Generate text for chapter 1\n');
 
     execSync(
-      `node bin/illustrate.js --text --chapters 1 --file ${TEST_BOOK}`,
+      `${CLI_CMD} --text --chapters 1 --file ${TEST_BOOK}`,
       { stdio: 'inherit' }
     );
 
@@ -69,7 +72,7 @@ describe('illustrate v2.0 pipeline', () => {
     console.log('\n🧪 Test 2: Generate text for chapter 2\n');
 
     execSync(
-      `node bin/illustrate.js --text --chapters 2 --file ${TEST_BOOK}`,
+      `${CLI_CMD} --text --chapters 2 --file ${TEST_BOOK}`,
       { stdio: 'inherit' }
     );
 
@@ -91,7 +94,7 @@ describe('illustrate v2.0 pipeline', () => {
   test('3. Extract story elements', async () => {
     console.log('\n🧪 Test 3: Extract story elements\n');
 
-    execSync(`node bin/illustrate.js --elements --file ${TEST_BOOK}`, {
+    execSync(`${CLI_CMD} --elements --file ${TEST_BOOK}`, {
       stdio: 'inherit',
     });
 
@@ -118,7 +121,7 @@ describe('illustrate v2.0 pipeline', () => {
     // Try to run with --continue (should skip completed chapters)
     // This test verifies that state is properly loaded and respected
     execSync(
-      `node bin/illustrate.js --continue --text --chapters 1 --file ${TEST_BOOK}`,
+      `${CLI_CMD} --continue --text --chapters 1 --file ${TEST_BOOK}`,
       { stdio: 'inherit' }
     );
 
@@ -143,7 +146,7 @@ describe('illustrate v2.0 pipeline', () => {
 
     // Force regenerate chapter 1
     execSync(
-      `node bin/illustrate.js --force --text --chapters 1 --file ${TEST_BOOK}`,
+      `${CLI_CMD} --force --text --chapters 1 --file ${TEST_BOOK}`,
       { stdio: 'inherit' }
     );
 
@@ -199,7 +202,7 @@ describe('CLI flags and options', () => {
     }
 
     // Run init-config
-    execSync('node bin/illustrate.js --init-config', { stdio: 'inherit' });
+    execSync(`${CLI_CMD} --init-config`, { stdio: 'inherit' });
 
     // Should create default config
     expect(existsSync('.imaginize.config')).toBe(true);
@@ -211,8 +214,8 @@ describe('CLI flags and options', () => {
   test('--help shows usage', () => {
     console.log('\n🧪 Test: --help\n');
 
-    const output = execSync('node bin/illustrate.js --help', {
-      encoding: 'utf-8',
+    const output = execSync(`${CLI_CMD} --help`, {
+      encoding: 'utf-8'
     });
 
     expect(output).toContain('--text');

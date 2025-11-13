@@ -2,9 +2,12 @@
  * Main application component for imaginize demo
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileUpload } from './components/FileUpload';
 import { APIKeyInput } from './components/APIKeyInput';
+import { ProcessingProgress } from './components/ProcessingProgress';
+import { ResultsView } from './components/ResultsView';
+import { useProcessing } from './hooks/useProcessing';
 import type { BookFile } from './types';
 
 function App() {
@@ -23,6 +26,9 @@ function App() {
   const [selectedFile, setSelectedFile] = useState<BookFile | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
 
+  // Processing state
+  const { state, result, activityLogs, error, startProcessing, cancelProcessing, reset, isProcessing } = useProcessing();
+
   // Toggle dark mode
   const toggleDarkMode = () => {
     const newMode = !darkMode;
@@ -37,9 +43,13 @@ function App() {
   };
 
   // Apply dark mode on mount
-  if (darkMode && typeof document !== 'undefined') {
-    document.documentElement.classList.add('dark');
-  }
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const handleFileSelected = (file: BookFile) => {
     setSelectedFile(file);
@@ -51,7 +61,7 @@ function App() {
     console.log('API key updated:', key ? 'Set' : 'Cleared');
   };
 
-  const handleStartProcessing = () => {
+  const handleStartProcessing = async () => {
     if (!selectedFile) {
       alert('Please select a file first');
       return;
@@ -68,11 +78,16 @@ function App() {
       hasApiKey: !!apiKey,
     });
 
-    // TODO: Implement processing pipeline
-    alert('Processing pipeline not yet implemented. Stay tuned!');
+    // Start processing
+    await startProcessing(selectedFile, apiKey);
   };
 
-  const canStartProcessing = selectedFile !== null && apiKey !== null && apiKey.trim().startsWith('sk-');
+  const handleReset = () => {
+    reset();
+    setSelectedFile(null);
+  };
+
+  const canStartProcessing = selectedFile !== null && apiKey !== null && apiKey.trim().startsWith('sk-') && !isProcessing;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -115,7 +130,37 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
+        {/* Error State */}
+        {error && state.phase === 'error' && (
+          <div className="mb-8 p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Processing Failed</h3>
+            <p className="text-red-700 dark:text-red-300">{error.message}</p>
+            <button
+              onClick={handleReset}
+              className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Processing View */}
+        {isProcessing && (
+          <ProcessingProgress
+            state={state}
+            activityLogs={activityLogs}
+            onCancel={cancelProcessing}
+          />
+        )}
+
+        {/* Results View */}
+        {state.phase === 'complete' && result && (
+          <ResultsView result={result} onReset={handleReset} />
+        )}
+
+        {/* Landing Page */}
+        {state.phase === 'idle' && (
+          <div className="space-y-8">
           {/* Hero Section */}
           <div className="text-center space-y-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
@@ -196,7 +241,8 @@ function App() {
               </div>
             </div>
           </section>
-        </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

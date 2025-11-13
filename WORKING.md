@@ -2622,3 +2622,104 @@ Chapter {{chapterNumber}}: {{chapterTitle}}
 **Documentation:** 12 comprehensive specifications
 **Commits:** 29+ session commits
 **Lines of Code:** ~8,400+ lines total (4,540+ added this session)
+
+---
+
+## 🎨 Session: Scene-Level Regeneration (2025-11-13)
+
+**Objective:** Implement scene-level regeneration to allow regenerating specific images without re-running analysis phase.
+
+**Implementation:**
+
+1. **Scene Selection System** (`src/lib/regenerate.ts` - 186 lines):
+   - `loadImageConcepts()`: Parse Chapters.md to extract ImageConcept objects
+   - `findScenesToRegenerate()`: Multi-mode scene selection
+   - `generateSceneId()` / `parseSceneId()`: Scene ID utilities
+   - Chapter-based map data structure
+   - JSON block parsing from markdown
+
+2. **Regeneration Phase** (`src/lib/phases/regenerate-phase.ts` - 130 lines):
+   - `RegeneratePhase` class for image generation
+   - Elements.md enrichment during regeneration
+   - OpenAI DALL-E 3 integration
+   - Image download and save logic
+   - Success/failure tracking
+
+3. **CLI Command** (modified `src/index.ts`):
+   - Added `regenerate` subcommand with 7 options:
+     - `--chapter <n>`: Regenerate all scenes in chapter
+     - `--scene <n>`: Regenerate specific scene
+     - `--scene-id <id>`: Regenerate by scene ID (e.g., "chapter_3_scene_2")
+     - `--all`: Regenerate all scenes
+     - `--list`: Preview available scenes
+     - `--dry-run`: Preview selection without generating
+     - `--output-dir <dir>`: Specify output directory
+
+**Selection Modes:**
+```bash
+# List all available scenes
+imaginize regenerate --list
+
+# Dry run to preview
+imaginize regenerate --chapter 3 --dry-run
+
+# Regenerate specific scene
+imaginize regenerate --chapter 3 --scene 2
+
+# Regenerate by scene ID
+imaginize regenerate --scene-id chapter_3_scene_2
+
+# Regenerate all scenes in chapter
+imaginize regenerate --chapter 3
+
+# Regenerate all scenes in book
+imaginize regenerate --all
+```
+
+**Technical Features:**
+- Reuses existing Chapters.md concepts (no re-analysis)
+- Elements.md enrichment automatically applied
+- Filename matching for existing images
+- Error handling per scene (continues on failure)
+- Progress reporting with colored output
+
+**Code Quality:**
+- ✅ TypeScript: 0 errors (fixed 2 null safety issues)
+- ✅ ESLint: 0 warnings
+- ✅ Build: Successful compilation
+
+**Checklist Impact:**
+- Full Granular Control: 97% → 99% complete
+- Scene-level regeneration: ✅ COMPLETE
+- Missing items reduced to 1
+
+**Commits:**
+1. 4d275bf - feat: add scene-level regeneration without re-analysis
+
+---
+
+**Session Highlights:**
+1. ✅ Comprehensive scene selection with 5 different modes
+2. ✅ Safe preview modes (--list, --dry-run)
+3. ✅ Reuses existing analysis data for efficiency
+4. ✅ Elements.md enrichment applied during regeneration
+5. ✅ Robust Chapters.md parser with JSON block support
+6. ✅ Perfect code quality (0 errors, 0 warnings)
+
+**Next Steps:**
+- Continue with next checklist priority (Token Tracking at 60% or Style Wizard at 0%)
+- Test scene regeneration with real books
+- Consider adding batch regeneration with parallelization
+
+---
+
+**Last Updated:** 2025-11-13
+**Status:** ✅ v2.7.0-RC.1 ENHANCED WITH SCENE REGENERATION
+**Version:** 2.7.0-rc.1
+**Build:** SUCCESS (0 TypeScript errors, 0 ESLint warnings)
+**Tests:** 37/43 pass (86.0%)
+**Checklist:** 73% complete (Full Granular Control: 99%)
+**Features:** ElementsMemory + Series + PDF Compilation + Custom Templates + Scene Regeneration
+**Documentation:** 12 comprehensive specifications
+**Commits:** 30+ session commits
+**Lines of Code:** ~8,874+ lines total (474+ added this session)

@@ -60,21 +60,31 @@ npm run preview
 
 The demo includes a comprehensive test suite using Vitest and React Testing Library:
 
-- **18 unit tests** covering core utilities and hooks
+- **85 total tests** across 6 test files
 - **100% passing** in CI/CD pipeline
 - Tests run automatically before deployment
 - Coverage includes:
-  - API key storage and management
-  - localStorage synchronization
-  - React hooks functionality
+  - **18 utility tests**: API key storage, localStorage synchronization, React hooks
+  - **67 component tests**: FileUpload (10), APIKeyInput (12), ProcessingProgress (25), ResultsView (20)
+  - File upload validation and drag-and-drop
+  - API key security and persistence
+  - Processing progress visualization
+  - Results display and downloads
 
 Run tests locally:
 ```bash
 npm test                # Run all tests once
 npm run test:watch      # Run tests in watch mode
-npm run test:coverage   # Run tests with coverage report
 npm run test:ui         # Open Vitest UI
 ```
+
+Test files:
+- `src/lib/storage.test.ts` - API key storage utilities (12 tests)
+- `src/hooks/useLocalStorage.test.ts` - React hooks (6 tests)
+- `src/components/APIKeyInput.test.tsx` - API key input component (12 tests)
+- `src/components/FileUpload.test.tsx` - File upload component (10 tests)
+- `src/components/ProcessingProgress.test.tsx` - Progress visualization (25 tests)
+- `src/components/ResultsView.test.tsx` - Results display (20 tests)
 
 ## API Key Security
 

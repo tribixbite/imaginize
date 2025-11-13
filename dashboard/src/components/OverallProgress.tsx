@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import type { ProgressStats } from '../types';
 
 interface OverallProgressProps {
@@ -6,24 +7,30 @@ interface OverallProgressProps {
   currentPhase: string;
 }
 
-export function OverallProgress({ bookTitle, stats, currentPhase }: OverallProgressProps) {
-  const progressPercent = stats.totalChapters > 0 
-    ? Math.round((stats.completedChapters / stats.totalChapters) * 100) 
-    : 0;
+// Helper function moved outside component to avoid recreation on each render
+const formatTime = (ms: number): string => {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
 
-  const formatTime = (ms: number): string => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  } else {
+    return `${seconds}s`;
+  }
+};
 
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    } else {
-      return `${seconds}s`;
-    }
-  };
+// Memoized component to prevent unnecessary re-renders
+export const OverallProgress = memo(function OverallProgress({ bookTitle, stats, currentPhase }: OverallProgressProps) {
+  // Memoize progress calculation
+  const progressPercent = useMemo(
+    () => stats.totalChapters > 0
+      ? Math.round((stats.completedChapters / stats.totalChapters) * 100)
+      : 0,
+    [stats.completedChapters, stats.totalChapters]
+  );
 
   return (
     <section className="bg-gray-800 rounded-lg p-6 shadow-lg" aria-labelledby="book-title">
@@ -98,4 +105,4 @@ export function OverallProgress({ bookTitle, stats, currentPhase }: OverallProgr
       </div>
     </section>
   );
-}
+});

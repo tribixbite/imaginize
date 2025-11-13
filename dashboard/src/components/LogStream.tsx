@@ -1,11 +1,39 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import type { ProgressEvent } from '../types';
 
 interface LogStreamProps {
   logs: ProgressEvent[];
 }
 
-export function LogStream({ logs }: LogStreamProps) {
+// Helper functions moved outside component to avoid recreation on each render
+const getLevelColor = (level: ProgressEvent['level']): string => {
+  switch (level) {
+    case 'success':
+      return 'text-green-400';
+    case 'warning':
+      return 'text-yellow-400';
+    case 'error':
+      return 'text-red-400';
+    default:
+      return 'text-gray-300';
+  }
+};
+
+const getLevelIcon = (level: ProgressEvent['level']): string => {
+  switch (level) {
+    case 'success':
+      return '✓';
+    case 'warning':
+      return '⚠';
+    case 'error':
+      return '✗';
+    default:
+      return '•';
+  }
+};
+
+// Memoized component to prevent unnecessary re-renders
+export const LogStream = memo(function LogStream({ logs }: LogStreamProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
 
@@ -20,32 +48,6 @@ export function LogStream({ logs }: LogStreamProps) {
       const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
       shouldAutoScrollRef.current = isAtBottom;
-    }
-  };
-
-  const getLevelColor = (level: ProgressEvent['level']): string => {
-    switch (level) {
-      case 'success':
-        return 'text-green-400';
-      case 'warning':
-        return 'text-yellow-400';
-      case 'error':
-        return 'text-red-400';
-      default:
-        return 'text-gray-300';
-    }
-  };
-
-  const getLevelIcon = (level: ProgressEvent['level']): string => {
-    switch (level) {
-      case 'success':
-        return '✓';
-      case 'warning':
-        return '⚠';
-      case 'error':
-        return '✗';
-      default:
-        return '•';
     }
   };
 
@@ -87,4 +89,4 @@ export function LogStream({ logs }: LogStreamProps) {
       </div>
     </section>
   );
-}
+});

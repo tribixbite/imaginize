@@ -1,37 +1,44 @@
+import { memo, useMemo } from 'react';
 import type { ChapterInfo } from '../types';
 
 interface ChapterGridProps {
   chapters: Map<number, ChapterInfo>;
 }
 
-export function ChapterGrid({ chapters }: ChapterGridProps) {
-  const getStatusColor = (status: ChapterInfo['status']): string => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-600 border-green-500';
-      case 'in-progress':
-        return 'bg-blue-600 border-blue-500 animate-pulse';
-      case 'error':
-        return 'bg-red-600 border-red-500';
-      default:
-        return 'bg-gray-700 border-gray-600';
-    }
-  };
+// Helper functions moved outside component to avoid recreation on each render
+const getStatusColor = (status: ChapterInfo['status']): string => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-600 border-green-500';
+    case 'in-progress':
+      return 'bg-blue-600 border-blue-500 animate-pulse';
+    case 'error':
+      return 'bg-red-600 border-red-500';
+    default:
+      return 'bg-gray-700 border-gray-600';
+  }
+};
 
-  const chaptersArray = Array.from(chapters.values()).sort((a, b) => a.number - b.number);
+const getStatusLabel = (status: ChapterInfo['status']): string => {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'in-progress':
+      return 'In Progress';
+    case 'error':
+      return 'Error';
+    default:
+      return 'Pending';
+  }
+};
 
-  const getStatusLabel = (status: ChapterInfo['status']): string => {
-    switch (status) {
-      case 'completed':
-        return 'Completed';
-      case 'in-progress':
-        return 'In Progress';
-      case 'error':
-        return 'Error';
-      default:
-        return 'Pending';
-    }
-  };
+// Memoized component to prevent unnecessary re-renders
+export const ChapterGrid = memo(function ChapterGrid({ chapters }: ChapterGridProps) {
+  // Memoize expensive array conversion and sorting
+  const chaptersArray = useMemo(
+    () => Array.from(chapters.values()).sort((a, b) => a.number - b.number),
+    [chapters]
+  );
 
   return (
     <section className="bg-gray-800 rounded-lg p-6 shadow-lg" aria-labelledby="chapters-heading">
@@ -94,4 +101,4 @@ export function ChapterGrid({ chapters }: ChapterGridProps) {
       </div>
     </section>
   );
-}
+});

@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { DashboardState, WebSocketMessage, ProgressEvent, ChapterInfo } from '../types';
 
+// Maximum number of logs to keep in memory (prevents memory leaks in long-running sessions)
+const MAX_LOGS = 1000;
+
 interface UseWebSocketReturn {
   state: DashboardState | null;
   chapters: Map<number, ChapterInfo>;
@@ -60,9 +63,8 @@ export function useWebSocket(url: string): UseWebSocketReturn {
               break;
 
             case 'progress':
-              setLogs((prev) => [...prev, message.data]);
-              // Keep only last 100 logs
-              setLogs((prev) => (prev.length > 100 ? prev.slice(-100) : prev));
+              // Add new log and keep only last MAX_LOGS entries (circular buffer)
+              setLogs((prev) => [...prev, message.data].slice(-MAX_LOGS));
               break;
 
             case 'chapter-start':

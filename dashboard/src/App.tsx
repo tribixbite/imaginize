@@ -8,7 +8,10 @@ import { LogStream } from './components/LogStream';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
-  const wsUrl = `ws://${window.location.hostname}:${window.location.port || 3000}`;
+  // Construct WebSocket URL based on current page protocol and host
+  // This works correctly behind proxies and on standard ports (80/443)
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}`;
   const { state, chapters, logs, isConnected, error } = useWebSocket(wsUrl);
   const { showToast } = useToast();
   const prevConnectedRef = useRef<boolean | null>(null);

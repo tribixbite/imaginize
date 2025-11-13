@@ -71,7 +71,7 @@ export const LogStream = memo(function LogStream({ logs }: LogStreamProps) {
         ) : (
           logs.map((log, index) => (
             <div
-              key={index}
+              key={`${log.timestamp}-${index}`}
               className={`flex gap-2 ${getLevelColor(log.level)}`}
               role="log"
               aria-label={`${log.level} message at ${new Date(log.timestamp).toLocaleTimeString()}`}

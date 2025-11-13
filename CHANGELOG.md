@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated NEXT_STEPS.md marking Priority 1 enhancement as complete
 - Created `docs/INTEGRATION_TESTS_PLAN.md` with implementation plan
 
-#### E2E Tests for GitHub Pages Demo (Phase 1-3)
+#### E2E Tests for GitHub Pages Demo (Phase 1-4)
 - **68 E2E Tests** - End-to-end testing for complete user journey in GitHub Pages demo
 - **Multi-Browser Testing** - Chrome, Firefox, Safari/WebKit, Mobile Chrome, Mobile Safari
 - **Mock API Integration** - All OpenAI API calls mocked to avoid costs and rate limits
@@ -112,16 +112,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `demo/e2e/fixtures/README.md` - Test fixture documentation
 - Updated WORKING.md with Phase 1-3 session documentation
 
+**Phase 4: CI/CD Integration**:
+- `.github/workflows/demo-e2e.yml` - Standalone E2E test workflow (69 lines)
+  - Runs on every PR and push to main affecting demo/**
+  - Installs Playwright browsers automatically
+  - Runs all 68 E2E tests across 5 browsers
+  - Uploads test reports (30-day retention)
+  - Uploads test results and traces (7-day retention)
+  - 10-minute timeout protection
+- `.github/workflows/deploy-demo.yml` - Pre-deployment E2E gate (40 lines added)
+  - E2E job runs after build, before deploy
+  - Deployment blocked if E2E tests fail
+  - Prevents broken UI from reaching production
+  - Test reports available in GitHub Actions artifacts
+- `demo/e2e/README.md` - CI/CD documentation (88 lines added)
+  - Comprehensive workflow documentation
+  - Instructions for viewing test reports
+  - Deployment safety mechanism explained
+
 **Implementation Status**:
 - Phase 1: ✅ Complete (Setup & Infrastructure)
 - Phase 2: ✅ Complete (Core User Flow Tests)
 - Phase 3: ✅ Complete (Error Scenarios & Edge Cases)
-- Phase 4-5: Planned (CI/CD integration, final documentation)
+- Phase 4: ✅ Complete (CI/CD Integration)
+- Phase 5: Planned (Documentation & Polish)
 
 ### Quality Metrics
 - **Test Coverage**: 680 tests total (527 main + 85 demo unit + 68 demo E2E)
 - **Integration Tests**: 34/34 passing (100%)
-- **E2E Tests**: 68/68 designed (will run in CI/CD, 340 browser test runs)
+- **E2E Tests**: 68/68 designed (integrated in CI/CD, 340 browser test runs)
 - **TypeScript Errors**: 0
 - **ESLint Warnings**: 0
 - **Security Vulnerabilities**: 0

@@ -37,9 +37,19 @@
   - Bundle size: 209.03 kB (64.78 kB gzipped) - +0.15 kB overhead
   - Phase 4 optional enhancement: Performance Optimization (complete)
 
+- ✅ **Toast Notifications** - Connection status feedback with auto-dismiss (2025-11-12)
+  - Created Toast component with 4 types (success, error, warning, info)
+  - Added ToastContext and ToastProvider for global toast management
+  - Integrated with WebSocket connection status changes
+  - Shows "Connected to dashboard" on reconnection (success, 3s)
+  - Shows "Connection lost. Reconnecting..." on disconnect (warning, 5s)
+  - Auto-dismiss with configurable duration + manual close button
+  - Slide-in animations and ARIA live regions for accessibility
+  - Bundle size: 211.20 kB (65.46 kB gzipped) - +0.68 kB overhead
+  - Phase 4 optional enhancement: Toast Notifications (complete)
+
 **Planned for v2.6.1:**
-- [ ] Toast notifications for connection events
-- [ ] Dashboard screenshots for README
+- [ ] Dashboard screenshots for README (requires GUI environment)
 
 ---
 

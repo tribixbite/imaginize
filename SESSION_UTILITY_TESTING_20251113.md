@@ -6,7 +6,7 @@ Comprehensive unit testing for core utility modules
 ## Accomplishments
 
 ### Unit Tests Added ✅
-**281 utility tests** across 6 test files (3,724 lines)
+**352 utility tests** across 8 test files (5,220 lines)
 
 #### 1. file-selector.test.ts (23 tests, 390 lines)
 - **findBookFiles function**:
@@ -124,17 +124,17 @@ Comprehensive unit testing for core utility modules
 
 ## Test Coverage Summary
 
-### Total: 485 Tests (100% Passing)
-- **Main project**: 400 tests
+### Total: 556 Tests (100% Passing)
+- **Main project**: 471 tests
   - Concurrent operations: 35 tests
   - Token counter: 44 tests
   - Retry utils: 40 tests
   - **File selector: 23 tests** ✨ NEW
   - **Config: 27 tests** ✨ NEW
   - **Provider utils: 81 tests** ✨ NEW
+  - **AI analyzer: 37 tests** ✨ NEW
+  - **Regenerate: 34 tests** ✨ NEW
 - **Demo app**: 85 tests (components + utilities)
-
-  - **Output generator: 35 tests** ✨ NEW
 ### Test Files
 **Main Project** (15 files):
 - src/test/concurrent/*.test.ts (35 tests)
@@ -143,6 +143,8 @@ Comprehensive unit testing for core utility modules
 - **src/test/file-selector.test.ts (23 tests)** ✨ NEW
 - **src/test/config.test.ts (27 tests)** ✨ NEW
 - **src/test/provider-utils.test.ts (81 tests)** ✨ NEW
+- **src/test/ai-analyzer.test.ts (37 tests)** ✨ NEW
+- **src/test/regenerate.test.ts (34 tests)** ✨ NEW
 
 **Demo App** (6 files):
 - src/lib/storage.test.ts (12 tests)
@@ -153,9 +155,10 @@ Comprehensive unit testing for core utility modules
 - src/components/ResultsView.test.tsx (20 tests)
 
 ## Code Statistics
-- **Test code added**: 3,724 lines
-- **Total main project**: 400 tests across 15 test files
-- **Test pass rate**: 100% (485/485)
+- **Test code added**: 5,220 lines
+- **Total main project**: 471 tests across 13 test files
+- **Test pass rate**: 100% (556/556)
+- **Bug fixes**: 1 (regenerate.ts chapter boundary parsing)
 
 ## Test Coverage Details
 
@@ -190,6 +193,28 @@ Comprehensive unit testing for core utility modules
 - ✅ Case-insensitive handling throughout
 - ✅ Error handling (invalid ranges, out-of-bounds)
 
+### ai-analyzer.test.ts Coverage
+- ✅ OpenAI API integration (chat completions, image generation)
+- ✅ Model configuration (string vs object format)
+- ✅ Response format handling (arrays vs wrapper objects)
+- ✅ Error handling (API errors, malformed JSON, missing content)
+- ✅ Batch processing with concurrency control
+- ✅ Text truncation for API limits
+- ✅ Default value handling for missing fields
+- ✅ Temperature and response format configuration
+
+### regenerate.test.ts Coverage
+- ✅ Markdown parsing with JSON blocks
+- ✅ Chapter and scene extraction
+- ✅ Scene filtering (all, by chapter, by scene, by ID)
+- ✅ Scene ID generation and parsing
+- ✅ Image filename sanitization
+- ✅ Special character handling
+- ✅ Long title truncation
+- ✅ Existing image file detection
+- ✅ Error handling (missing files, no matches)
+- ✅ Malformed JSON graceful degradation
+
 ## Key Testing Patterns
 
 ### File System Testing
@@ -213,7 +238,13 @@ Comprehensive unit testing for core utility modules
 ## Commits
 1. test: add comprehensive unit tests for file-selector and config utilities
 2. test: add comprehensive unit tests for provider-utils (81 tests)
-3. docs: update test coverage to 335 total tests
+3. test: add comprehensive unit tests for progress-tracker (51 tests)
+4. test: add comprehensive unit tests for state-manager (64 tests)
+5. test: add comprehensive unit tests for output-generator (35 tests)
+6. test: add comprehensive unit tests for ai-analyzer (37 tests)
+7. fix: save concept before chapter change in regenerate.ts
+8. test: add comprehensive unit tests for regenerate (34 tests)
+9. docs: update test coverage to 556 total tests
 
 ## Quality Metrics
 - TypeScript errors: 0
@@ -284,3 +315,85 @@ Comprehensive unit testing for core utility modules
   - Empty elements handling
   - All element types coverage
   - Type skipping when empty
+
+#### 7. ai-analyzer.test.ts (37 tests, 867 lines)
+- **analyzeChapter function**:
+  - Chapter analysis with visual concepts
+  - Response format handling (array vs wrapper object)
+  - Word count-based image calculation
+  - Model name extraction (string vs object config)
+  - Missing content in API response
+  - Empty choices array handling
+  - API error graceful degradation
+  - Malformed JSON response handling
+  - Concepts with missing fields (defaults to empty strings)
+  - System prompt configuration
+  - Temperature and response format settings
+- **extractElements function**:
+  - Story element extraction (characters, creatures, places, items, objects)
+  - Response wrapper object handling
+  - Text truncation to 50,000 characters
+  - Model name extraction (string vs object config)
+  - Missing content handling
+  - API error graceful degradation
+  - System prompt for element extraction
+  - Temperature 0.5 for consistent extraction
+- **generateImage function**:
+  - Image generation with URL return
+  - Image model from config (string and object)
+  - Default dall-e-3 fallback
+  - Size and quality parameter passing
+  - Missing URL in response handling
+  - Empty data array handling
+  - API error graceful degradation
+- **processChaptersInBatches function**:
+  - Batch processing with results
+  - Max concurrency limit enforcement
+  - Empty array handling
+  - Single item processing
+  - Items equal to batch size
+  - Processor error propagation
+  - Sequential batch processing
+  - Different return types support
+
+#### 8. regenerate.test.ts (34 tests, 629 lines)
+- **loadImageConcepts function**:
+  - Missing Chapters.md error handling
+  - Chapter and scene parsing from markdown
+  - JSON block parsing
+  - Multiple scenes in same chapter
+  - Malformed JSON graceful handling
+  - Chapters with no scenes
+  - Empty Chapters.md file
+  - Last concept EOF saving
+- **findScenesToRegenerate function**:
+  - All scenes selection with `all: true`
+  - Filter by chapter number
+  - Filter by scene number across chapters
+  - Specific scene by chapter and scene number
+  - Scene ID-based selection
+  - No matches error throwing
+  - Image filename generation
+  - Special characters in chapter title sanitization
+  - Long chapter title truncation (50 chars)
+  - Existing image file detection
+  - Undefined imageFilename when file missing
+  - Concept data inclusion in scene identifier
+  - Missing chapterNumber defaults to 0
+- **generateSceneId function**:
+  - Scene ID format generation (chapter_X_scene_Y)
+  - Single-digit numbers
+  - Multi-digit numbers
+  - Zero handling
+- **parseSceneId function**:
+  - Valid scene ID parsing
+  - Multi-digit number parsing
+  - Zero parsing
+  - Invalid format returns null
+  - Empty string returns null
+  - Malformed separators return null
+- **Integration tests**:
+  - generateSceneId/parseSceneId reversibility
+  - Round-trip multiple values
+
+**Bug fix in regenerate.ts**: Fixed parser to save current concept before changing chapters

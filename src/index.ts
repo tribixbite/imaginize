@@ -125,6 +125,126 @@ export async function main(): Promise<void> {
       }
     });
 
+  // Regenerate command - regenerate specific scenes without re-analysis
+  program
+    .command('regenerate')
+    .description('Regenerate specific scenes without re-running analysis')
+    .option('--output-dir <dir>', 'Output directory (default: ./imaginize_output)', './imaginize_output')
+    .option('--chapter <n>', 'Regenerate all scenes in chapter N', parseInt)
+    .option('--scene <n>', 'Regenerate scene N (within chapter or globally)', parseInt)
+    .option('--scene-id <id>', 'Regenerate scene by ID (e.g., "chapter_3_scene_2")')
+    .option('--all', 'Regenerate all scenes')
+    .option('--list', 'List all available scenes without regenerating')
+    .option('--dry-run', 'Show what would be regenerated without generating')
+    .action(async (cmdOptions) => {
+      try {
+        const { findScenesToRegenerate, loadImageConcepts } = await import('./lib/regenerate.js');
+
+        // List mode
+        if (cmdOptions.list) {
+          const conceptsByChapter = await loadImageConcepts(cmdOptions.outputDir);
+
+          console.log(chalk.cyan('\n📋 Available scenes:\n'));
+
+          for (const [chapterTitle, concepts] of conceptsByChapter.entries()) {
+            console.log(chalk.yellow(`\n  ${chapterTitle}`));
+
+            for (let i = 0; i < concepts.length; i++) {
+              const concept = concepts[i];
+              const chapterNum = concept.chapterNumber || 0;
+              const sceneNum = i + 1;
+              const sceneId = `chapter_${chapterNum}_scene_${sceneNum}`;
+
+              console.log(chalk.gray(`    Scene ${sceneNum} (${sceneId}):`));
+              console.log(chalk.gray(`      ${concept.description.substring(0, 80)}...`));
+            }
+          }
+
+          console.log();
+          process.exit(0);
+        }
+
+        // Find scenes to regenerate
+        const scenes = await findScenesToRegenerate(cmdOptions.outputDir, {
+          outputDir: cmdOptions.outputDir,
+          chapter: cmdOptions.chapter,
+          scene: cmdOptions.scene,
+          sceneId: cmdOptions.sceneId,
+          all: cmdOptions.all,
+        });
+
+        // Dry run mode
+        if (cmdOptions.dryRun) {
+          console.log(chalk.cyan(`\n🔍 Would regenerate ${scenes.length} scene(s):\n`));
+
+          for (const scene of scenes) {
+            console.log(chalk.yellow(`  Chapter ${scene.chapterNumber}: ${scene.chapterTitle}`));
+            console.log(chalk.gray(`    Scene ${scene.sceneNumber}: ${scene.concept.description.substring(0, 60)}...`));
+            if (scene.imageFilename) {
+              console.log(chalk.gray(`    Current image: ${scene.imageFilename}`));
+            } else {
+              console.log(chalk.gray(`    Current image: (not found)`));
+            }
+          }
+
+          console.log();
+          process.exit(0);
+        }
+
+        // Load configuration
+        const config = await loadConfig();
+
+        // Setup image generation client
+        let imageOpenai: OpenAI | null = null;
+
+        if (config.imageEndpoint) {
+          imageOpenai = new OpenAI({
+            apiKey: config.imageEndpoint.apiKey || config.apiKey,
+            baseURL: config.imageEndpoint.baseUrl,
+            timeout: 120000,
+            maxRetries: config.maxRetries || 1,
+          });
+        } else {
+          imageOpenai = new OpenAI({
+            apiKey: config.apiKey,
+            baseURL: config.baseUrl,
+            timeout: 120000,
+            maxRetries: config.maxRetries || 1,
+          });
+        }
+
+        if (!imageOpenai) {
+          console.error(chalk.red('\n❌ No image generation endpoint configured'));
+          process.exit(1);
+        }
+
+        // Execute regeneration
+        const { RegeneratePhase } = await import('./lib/phases/regenerate-phase.js');
+
+        const regeneratePhase = new RegeneratePhase({
+          outputDir: cmdOptions.outputDir,
+          config,
+          imageOpenai,
+          scenes,
+        });
+
+        const result = await regeneratePhase.execute();
+
+        console.log(chalk.cyan('\n📊 Regeneration Summary:'));
+        console.log(chalk.green(`  ✅ Generated: ${result.generated}`));
+        if (result.failed > 0) {
+          console.log(chalk.red(`  ❌ Failed: ${result.failed}`));
+        }
+        console.log();
+
+        process.exit(result.failed > 0 ? 1 : 0);
+
+      } catch (error: any) {
+        console.error(chalk.red(`\nError: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
   program.parse();
   const options = program.opts<CommandOptions>();
 

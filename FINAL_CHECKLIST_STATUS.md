@@ -197,7 +197,7 @@ imageEndpoint:
 ## 🚧 Partially Complete Items
 
 ### 7. Full Granular Control Over Processing
-**Status**: PARTIAL (97% complete)
+**Status**: PARTIAL (99% complete)
 
 **Implemented**:
 - ✅ Chapter selection (`--chapters 1-5`, `1,3,5`, `1-10,15-20`)
@@ -214,6 +214,7 @@ imageEndpoint:
 - ✅ Memory system to append descriptions of existing elements
 - ✅ Custom prompt templates per phase
 - ✅ Granular retry control with error handling
+- ✅ Scene-level regeneration without re-analysis
 
 **Memory System Features**:
 - Progressive entity enrichment during Pass 2 analysis
@@ -292,9 +293,44 @@ imaginize --text --clear-errors book.epub
 - `src/lib/phases/analyze-phase-v2.ts` - Retry-failed filtering and skip-failed mode
 - `src/lib/phases/illustrate-phase-v2.ts` - Retry-failed filtering and skip-failed mode
 
+**Scene-Level Regeneration** (✅ COMPLETE):
+- ✅ CLI command (`imaginize regenerate`)
+- ✅ Scene selection by chapter/scene number
+- ✅ Scene selection by scene ID
+- ✅ List available scenes (`--list`)
+- ✅ Dry run mode (`--dry-run`)
+- ✅ Regenerate all scenes (`--all`)
+- ✅ Elements.md enrichment during regeneration
+- ✅ No re-analysis required (uses existing Chapters.md)
+
+**CLI Usage**:
+```bash
+# List all available scenes
+imaginize regenerate --list
+
+# Regenerate specific scene by chapter and scene number
+imaginize regenerate --chapter 3 --scene 2
+
+# Regenerate scene by ID
+imaginize regenerate --scene-id chapter_3_scene_2
+
+# Regenerate all scenes in a chapter
+imaginize regenerate --chapter 5
+
+# Dry run (show what would be regenerated)
+imaginize regenerate --chapter 3 --dry-run
+
+# Regenerate all scenes
+imaginize regenerate --all
+```
+
+**Files**:
+- `src/lib/regenerate.ts` - Scene selection and Chapters.md parsing
+- `src/lib/phases/regenerate-phase.ts` - Image regeneration without analysis
+- `src/index.ts` - Regenerate CLI command
+
 **Missing**:
-- ❌ Interactive scene editing
-- ❌ Scene-level regeneration
+- ❌ Interactive scene editing (prompt editing before regeneration)
 - ❌ Template CLI commands (low priority - templates work via config)
 
 ---

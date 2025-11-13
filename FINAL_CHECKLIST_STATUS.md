@@ -197,7 +197,7 @@ imageEndpoint:
 ## 🚧 Partially Complete Items
 
 ### 7. Full Granular Control Over Processing
-**Status**: PARTIAL (93% complete)
+**Status**: PARTIAL (97% complete)
 
 **Implemented**:
 - ✅ Chapter selection (`--chapters 1-5`, `1,3,5`, `1-10,15-20`)
@@ -213,7 +213,7 @@ imageEndpoint:
 - ✅ Concurrency limits
 - ✅ Memory system to append descriptions of existing elements
 - ✅ Custom prompt templates per phase
-- 🚧 Granular retry control (infrastructure complete, phase integration pending)
+- ✅ Granular retry control with error handling
 
 **Memory System Features**:
 - Progressive entity enrichment during Pass 2 analysis
@@ -256,13 +256,14 @@ genre: "fantasy"
 - Integration in `src/lib/phases/extract-phase.ts`
 - Integration in `src/lib/phases/illustrate-phase-v2.ts`
 
-**Granular Retry Control** (🚧 INFRASTRUCTURE COMPLETE):
+**Granular Retry Control** (✅ COMPLETE):
 - ✅ Configuration options (retryControl)
-- ✅ State manager methods (getFailedChapters, markChapterFailed, clearChapterErrors)
+- ✅ State manager methods (getFailedChapters, getFailedChaptersWithErrors, markChapterFailed, clearChapterErrors)
 - ✅ CLI flags (--skip-failed, --retry-failed, --clear-errors)
 - ✅ Error tracking infrastructure (PhaseStatus 'failed', ChapterState error field)
-- ❌ Phase integration (analyze, illustrate error handling) - pending
-- ❌ Error summary reporting - pending
+- ✅ Analyze phase integration (retry-failed filtering, skip-failed mode)
+- ✅ Illustrate phase integration (retry-failed filtering, skip-failed mode)
+- ✅ Error summary reporting (detailed error lists at end of processing)
 
 **Configuration Example**:
 ```yaml
@@ -285,13 +286,14 @@ imaginize --text --clear-errors book.epub
 ```
 
 **Files**:
-- `src/types/config.ts` - Configuration types
+- `src/types/config.ts` - Configuration types and command options
 - `src/lib/state-manager.ts` - Error tracking methods (4 new methods)
 - `src/index.ts` - CLI flags and runtime config
+- `src/lib/phases/analyze-phase-v2.ts` - Retry-failed filtering and skip-failed mode
+- `src/lib/phases/illustrate-phase-v2.ts` - Retry-failed filtering and skip-failed mode
 
 **Missing**:
 - ❌ Interactive scene editing
-- 🚧 Granular retry control phase integration (infrastructure done)
 - ❌ Scene-level regeneration
 - ❌ Template CLI commands (low priority - templates work via config)
 

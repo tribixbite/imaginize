@@ -87,9 +87,23 @@ export class AnalyzePhaseV2 extends BasePhase {
     );
 
     // Determine which chapters need processing
-    const chaptersToProcess = chapters
+    let chaptersToProcess = chapters
       .map(c => c.chapterNumber)
       .filter(num => this.shouldProcessChapter(num));
+
+    // Retry control: Filter based on retry mode
+    if (config.retryControl?.retryFailed) {
+      // Only process chapters that previously failed
+      const failedChapters = stateManager.getFailedChapters('analyze');
+      chaptersToProcess = chaptersToProcess.filter(num => failedChapters.includes(num));
+
+      if (failedChapters.length > 0) {
+        await progressTracker.log(
+          `🔁 Retry mode: Processing ${chaptersToProcess.length} previously failed chapter(s): ${chaptersToProcess.join(', ')}`,
+          'info'
+        );
+      }
+    }
 
     if (chaptersToProcess.length === 0) {
       await progressTracker.log('All chapters already analyzed', 'info');
@@ -352,9 +366,30 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
 
       // Process batch in parallel
-      await Promise.all(
-        batchChapters.map(chapter => this.analyzeChapterWithTracking(chapter, modelConfig))
+      const batchPromises = batchChapters.map(chapter =>
+        this.analyzeChapterWithTracking(chapter, modelConfig)
       );
+
+      // Handle errors based on retry control mode
+      if (config.retryControl?.skipFailed) {
+        // Skip-failed mode: Continue even if chapters fail
+        const results = await Promise.allSettled(batchPromises);
+
+        for (let idx = 0; idx < results.length; idx++) {
+          const result = results[idx];
+          const chapter = batchChapters[idx];
+
+          if (result.status === 'rejected') {
+            await progressTracker.log(
+              `⚠️  Skipping failed chapter ${chapter.chapterNumber}: ${result.reason?.message || result.reason}`,
+              'warning'
+            );
+          }
+        }
+      } else {
+        // Normal mode: Abort on first error
+        await Promise.all(batchPromises);
+      }
 
       // Add delay between batches to respect rate limits (if not last batch)
       if (i + batchSize < chaptersToProcess.length) {
@@ -381,6 +416,19 @@ export class AnalyzePhaseV2 extends BasePhase {
         `🧠 Memory: Enriched ${finalMemoryStats.entitiesWithEnrichments}/${finalMemoryStats.totalEntities} entities with ${finalMemoryStats.totalEnrichments} new detail(s)`,
         'success'
       );
+    }
+
+    // Error summary reporting
+    const { stateManager } = this.context;
+    const failedChaptersWithErrors = stateManager.getFailedChaptersWithErrors('analyze');
+    if (failedChaptersWithErrors.length > 0) {
+      await progressTracker.log(
+        `⚠️  ${failedChaptersWithErrors.length} chapter(s) failed during analysis:`,
+        'warning'
+      );
+      for (const { chapterNumber, error } of failedChaptersWithErrors) {
+        await progressTracker.log(`   • Chapter ${chapterNumber}: ${error}`, 'warning');
+      }
     }
 
     await progressTracker.log(
@@ -458,9 +506,8 @@ export class AnalyzePhaseV2 extends BasePhase {
         concepts.length
       );
     } catch (error: any) {
-      stateManager.updateChapter('analyze', chapterNum, 'failed', {
-        error: error.message,
-      });
+      // Mark chapter as failed with error details
+      stateManager.markChapterFailed('analyze', chapterNum, error.message);
       await stateManager.save();
 
       await this.manifestManager.updateChapter(chapterNum, 'error', {

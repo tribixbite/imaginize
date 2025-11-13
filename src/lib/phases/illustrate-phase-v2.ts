@@ -217,19 +217,52 @@ Return ONLY the style guide text, no JSON or formatting.`;
       // Load manifest
       const manifest = await this.manifestManager.load();
 
-      // Find chapters ready to illustrate (status === 'analyzed')
-      const readyChapters = Object.entries(manifest.chapters)
-        .filter(([_, ch]) => ch.status === 'analyzed')
-        .map(([num, _]) => parseInt(num))
-        .sort((a, b) => a - b);
+      // Find chapters ready to illustrate
+      let readyChapters: number[] = [];
+
+      if (config.retryControl?.retryFailed) {
+        // Retry-failed mode: Only process chapters with error status
+        readyChapters = Object.entries(manifest.chapters)
+          .filter(([_, ch]) => ch.status === 'error')
+          .map(([num, _]) => parseInt(num))
+          .sort((a, b) => a - b);
+
+        if (readyChapters.length > 0) {
+          await progressTracker.log(
+            `🔁 Retry mode: Found ${readyChapters.length} failed chapter(s) to retry`,
+            'info'
+          );
+        }
+      } else {
+        // Normal mode: Process chapters with 'analyzed' status
+        readyChapters = Object.entries(manifest.chapters)
+          .filter(([_, ch]) => ch.status === 'analyzed')
+          .map(([num, _]) => parseInt(num))
+          .sort((a, b) => a - b);
+      }
 
       if (readyChapters.length === 0) {
         // No chapters ready - check if we're done
         if (manifest.analyze_complete) {
+          // Error summary reporting
+          const { stateManager } = this.context;
+          const failedChaptersWithErrors = stateManager.getFailedChaptersWithErrors('illustrate');
+
           await progressTracker.log(
             `✅ All chapters processed. Generated images for ${processedCount} chapters.`,
             'success'
           );
+
+          if (failedChaptersWithErrors.length > 0) {
+            await progressTracker.log(
+              `⚠️  ${failedChaptersWithErrors.length} chapter(s) failed during illustration:`,
+              'warning'
+            );
+            for (const { chapterNumber, error } of failedChaptersWithErrors) {
+              await progressTracker.log(`   • Chapter ${chapterNumber}: ${error}`, 'warning');
+            }
+          }
+
           break;
         }
 
@@ -254,15 +287,30 @@ Return ONLY the style guide text, no JSON or formatting.`;
         await this.processChapter(chapterNum);
         processedCount++;
       } catch (error: any) {
+        const { stateManager } = this.context;
+
         await progressTracker.log(
           `Error processing chapter ${chapterNum}: ${error.message}`,
           'error'
         );
 
-        // Mark chapter as error
+        // Mark chapter as failed in both state systems
+        stateManager.markChapterFailed('illustrate', chapterNum, error.message);
+        await stateManager.save();
+
         await this.manifestManager.updateChapter(chapterNum, 'error', {
           error: error.message,
         });
+
+        // In skipFailed mode, continue processing; otherwise re-throw
+        if (!config.retryControl?.skipFailed) {
+          throw error;
+        } else {
+          await progressTracker.log(
+            `⚠️  Skipping failed chapter ${chapterNum} and continuing...`,
+            'warning'
+          );
+        }
       }
     }
 

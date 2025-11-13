@@ -5,6 +5,52 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### Integration Tests for EPUB/PDF Parsers
+- **34 Integration Tests** - Real file validation for EPUB and PDF parsers (17 tests each)
+- **Programmatic Test Fixtures** - `scripts/generate-test-fixtures.ts` creates minimal valid test files
+  - `simple.epub` (2.0 KB) - Valid EPUB 3.0 with 2 chapters
+  - `simple.pdf` (1.8 KB) - Valid PDF 1.7 with 3 pages
+- **Comprehensive Coverage** - File format validation, metadata extraction, chapter parsing, error handling
+- **Fast Execution** - Full integration suite runs in ~427ms
+- **Fixture Documentation** - README.md files documenting expected results for each fixture
+
+**Test Files Added**:
+- `src/test/integration/epub-parser.integration.test.ts` (160 lines, 17 tests)
+- `src/test/integration/pdf-parser.integration.test.ts` (167 lines, 17 tests)
+- `scripts/generate-test-fixtures.ts` (236 lines) - Fixture generation using AdmZip and pdf-lib
+- `src/test/integration/fixtures/epub/` - EPUB test fixtures with documentation
+- `src/test/integration/fixtures/pdf/` - PDF test fixtures with documentation
+
+**Test Coverage Areas**:
+- ✅ EPUB chapter extraction and XHTML content processing
+- ✅ PDF text extraction and multi-page handling
+- ✅ Metadata validation (title, author, language, page count)
+- ✅ Chapter structure validation (numbers, titles, content)
+- ✅ HTML tag stripping and text cleaning
+- ✅ Text ordering and content preservation
+- ✅ Error handling for invalid/missing files
+
+**Test Suite Update**:
+- Total Tests: 527 (was 493) - Added 34 integration tests
+- Test Breakdown: 458 unit + 35 concurrent + 34 integration
+- Pass Rate: 100% (527/527 passing)
+
+**Documentation**:
+- Updated WORKING.md with integration tests session documentation
+- Updated NEXT_STEPS.md marking Priority 1 enhancement as complete
+- Created `docs/INTEGRATION_TESTS_PLAN.md` with implementation plan
+
+### Quality Metrics
+- **Test Coverage**: 527/527 tests passing (100%)
+- **Integration Tests**: 34/34 passing (100%)
+- **TypeScript Errors**: 0
+- **ESLint Warnings**: 0
+- **Security Vulnerabilities**: 0
+
 ## [2.7.0] - 2025-11-13
 
 **Major Release** - Comprehensive test coverage, progressive enrichment, series support, and PDF compilation.

@@ -4,7 +4,7 @@
 
 import { readdir, stat } from 'fs/promises';
 import { extname, basename } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import readline from 'readline';
 import { sanitizeFilename } from './epub-parser.js';
 
@@ -35,8 +35,7 @@ function isProcessed(file: string, outputPattern: string = 'imaginize_{name}'): 
   }
 
   try {
-    const fs = require('fs');
-    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+    const state = JSON.parse(readFileSync(stateFile, 'utf-8'));
     // Consider processed if analyze phase is completed
     return state.phases?.analyze?.status === 'completed';
   } catch {

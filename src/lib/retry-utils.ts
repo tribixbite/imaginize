@@ -140,20 +140,16 @@ export async function retryIfRetryable<T>(
   fn: () => Promise<T>,
   options: RetryOptions
 ): Promise<T> {
-  try {
-    return await retryWithBackoff(fn, {
-      ...options,
-      onRetry: (attempt, error) => {
-        if (!isRetryableError(error)) {
-          // Don't retry non-retryable errors
-          throw error;
-        }
-        options.onRetry?.(attempt, error);
-      },
-    });
-  } catch (error) {
-    throw error;
-  }
+  return await retryWithBackoff(fn, {
+    ...options,
+    onRetry: (attempt, error) => {
+      if (!isRetryableError(error)) {
+        // Don't retry non-retryable errors
+        throw error;
+      }
+      options.onRetry?.(attempt, error);
+    },
+  });
 }
 
 /**

@@ -2850,3 +2850,159 @@ imaginize regenerate --all
 **Documentation:** 12 comprehensive specifications
 **Commits:** 31+ session commits
 **Lines of Code:** ~9,531+ lines total (657+ added this session)
+
+---
+
+## ✏️  Session: Interactive Scene Editing (2025-11-13)
+
+**Objective:** Complete Full Granular Control to 100% by implementing interactive scene editing.
+
+**Implementation:**
+
+1. **Scene Editor Module** (`src/lib/scene-editor.ts` - 291 lines):
+   - `SceneEditor` class for interactive editing
+   - `editScenes()`: Interactive multi-scene editing workflow
+   - `viewScene()`: Scene detail viewing function
+   - `saveEditedScenes()`: Chapters.md updater
+   - Multi-line text prompting with readline
+   - Text wrapping for readability
+   - Yes/No confirmation prompts
+
+2. **CLI Integration** (modified `src/index.ts`):
+   - Added `--edit` flag to regenerate command
+   - Added `--view` flag to regenerate command
+   - Edit workflow: select scenes → edit → save to Chapters.md → regenerate
+   - View workflow: select scenes → display details → exit
+
+**Interactive Editing Workflow:**
+1. User selects scenes (by chapter/scene/ID)
+2. For each scene:
+   - Display current description (wrapped to 80 chars)
+   - Prompt: "Edit this scene? [Y/n]"
+   - If yes: Open multi-line editor
+   - User types new description
+   - Type "END" or press Ctrl+D to finish
+   - Changes staged for saving
+3. Save all edits to Chapters.md (preserves JSON structure)
+4. Proceed to regeneration with updated descriptions
+
+**CLI Usage:**
+```bash
+# View scene details
+imaginize regenerate --chapter 3 --scene 2 --view
+
+# Edit single scene
+imaginize regenerate --chapter 3 --scene 2 --edit
+
+# Edit multiple scenes in a chapter
+imaginize regenerate --chapter 5 --edit
+
+# Edit all scenes
+imaginize regenerate --all --edit
+```
+
+**Scene Viewing:**
+```bash
+imaginize regenerate --chapter 3 --scene 2 --view
+
+# Output:
+# 📍 Scene Details
+#
+# Chapter 3: The Journey Begins
+# Scene 2
+#
+# Description:
+# Christopher stands at the edge of Irongate Forest, tall pines
+# looming overhead casting long shadows...
+#
+# Mood: tense
+# Lighting: late afternoon, golden hour
+# Current image: chapter_3_the_journey_begins_scene_2.png
+```
+
+**Interactive Editor:**
+```bash
+imaginize regenerate --chapter 3 --scene 2 --edit
+
+# Interactive prompts:
+# ✏️  Interactive Scene Editor
+#
+# Editing 1 scene(s). Press Ctrl+C to cancel.
+#
+# 📍 Chapter 3: The Journey Begins
+#    Scene 2
+#
+# Current description:
+# Christopher stands at the edge of Irongate Forest...
+#
+# Edit this scene? [Y/n] y
+# Enter new description (press Ctrl+D or type "END" on new line to finish):
+# [user types multi-line description]
+# END
+# ✓ Scene updated
+#
+# 💾 Saving 1 edited scene(s)...
+# ✅ Changes saved to Chapters.md
+#
+# Proceeding with regeneration of edited scenes...
+```
+
+**Technical Features:**
+- **Chapters.md Parser**: State machine parses markdown + JSON blocks
+- **JSON Preservation**: Updates only edited scenes, preserves structure
+- **Multi-line Input**: readline with EOF detection (Ctrl+D) or "END" keyword
+- **Text Wrapping**: 80-char wrapping for readability
+- **Batch Editing**: Edit multiple scenes in one session
+- **Safe Updates**: Validates edits before saving to Chapters.md
+- **Colored Output**: chalk for visual hierarchy
+
+**Chapters.md Update Logic:**
+1. Parse entire file line-by-line
+2. Track current chapter and scene numbers
+3. Detect JSON blocks with scene data
+4. Replace JSON for edited scenes
+5. Preserve all other content
+6. Write updated file atomically
+
+**Code Quality:**
+- ✅ TypeScript: 0 errors
+- ✅ ESLint: 0 warnings
+- ✅ Build: Successful compilation
+
+**Checklist Impact:**
+- Full Granular Control: 99% → 100% ✅ COMPLETE
+- Overall Progress: 82% → 91% complete
+- **10 of 11 features complete** (only GitHub Pages Demo remaining)
+
+**Commits:**
+1. a96d1d6 - feat: add interactive scene editing to complete Full Granular Control
+
+---
+
+**Session Highlights:**
+1. ✅ Interactive scene editor with multi-line text input
+2. ✅ Safe Chapters.md updates preserving structure
+3. ✅ View mode for non-destructive scene inspection
+4. ✅ Batch editing support for multiple scenes
+5. ✅ Seamless integration with regenerate workflow
+6. ✅ Perfect code quality (0 errors, 0 warnings)
+7. ✅ **Full Granular Control: 100% COMPLETE**
+
+**Next Steps:**
+- **Only 1 checklist item remaining**: GitHub Pages Demo Tool (0% complete)
+- Estimated effort: 2-3 weeks for web-based demo
+- Full Granular Control is now feature-complete
+- Consider starting GitHub Pages demo architecture design
+
+---
+
+**Last Updated:** 2025-11-13
+**Status:** ✅ v2.7.0-RC.1 WITH INTERACTIVE SCENE EDITING
+**Version:** 2.7.0-rc.1
+**Build:** SUCCESS (0 TypeScript errors, 0 ESLint warnings)
+**Tests:** 37/43 pass (86.0%)
+**Checklist:** 91% complete (10/11 features complete)
+**Features:** ElementsMemory + Series + PDF + Templates + Scene Regen + Style Wizard + Scene Editing
+**Documentation:** 12 comprehensive specifications
+**Commits:** 33+ session commits
+**Lines of Code:** ~9,894+ lines total (363+ added this session)

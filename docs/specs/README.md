@@ -20,6 +20,7 @@ Comprehensive architecture and feature documentation for the imaginize project.
 - [Dashboard System](./dashboard.md) - Real-time WebSocket monitoring UI
 - [Multi-Book Series](./multi-book-series.md) - Series-wide element sharing and style inheritance
 - [Graphic Novel Compilation](./graphic-novel-compilation.md) - PDF generation with layouts and smart captions
+- [Custom Prompt Templates](./custom-prompt-templates.md) - Per-phase prompt customization with variables and presets
 
 ### Data Formats
 - [Output Files](./output-files.md) - Contents.md, Chapters.md, Elements.md formats

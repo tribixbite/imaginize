@@ -119,6 +119,33 @@ export interface IllustrateConfig {
     /** Book title for series catalog */
     bookTitle?: string;
   };
+
+  /**
+   * Custom prompt templates for fine-grained control
+   * Allows overriding default prompts for each phase
+   * @since v2.7.0
+   */
+  customTemplates?: {
+    /** Enable custom templates */
+    enabled: boolean;
+    /** Directory containing template files */
+    templatesDir?: string;
+    /** Analyze phase template file */
+    analyzeTemplate?: string;
+    /** Extract phase template file */
+    extractTemplate?: string;
+    /** Illustrate phase template file */
+    illustrateTemplate?: string;
+    /** Use built-in preset (fantasy, scifi, mystery, romance) */
+    preset?: 'fantasy' | 'scifi' | 'mystery' | 'romance';
+  };
+
+  /**
+   * Book genre for template customization
+   * Used in template variables like {{genre}}
+   * @since v2.7.0
+   */
+  genre?: string;
 }
 
 export interface BookMetadata {

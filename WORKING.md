@@ -4,7 +4,7 @@
 
 **Status:** Production-ready, all critical work complete
 
-**Latest Update (2025-11-13):** Graphic novel postprocessing (PDF compilation) complete
+**Latest Update (2025-11-13):** Custom prompt templates specification complete
 
 **Health Check Results:**
 - ✅ Code Quality: 0 TypeScript errors, 0 ESLint warnings, 86% test pass rate
@@ -554,6 +554,89 @@ graphic-novel.pdf:
 - Custom fonts from system
 
 **Status**: Fully implemented, TypeScript compiled successfully
+
+---
+
+## 🚧 Custom Prompt Templates - Specification (2025-11-13)
+
+**Implementation**: Designed comprehensive template customization system
+
+**Completed:**
+- ✅ Created `docs/specs/custom-prompt-templates.md` (724 lines)
+  - Complete architecture and variable system
+  - Template file format and structure
+  - Available variables (book metadata, chapter data, elements, config)
+  - Conditional blocks ({{#if}}, {{#unless}})
+  - Built-in preset specifications (fantasy, scifi, mystery, romance)
+  - CLI command designs (init, list, validate, export)
+  - Usage examples and best practices
+  - Performance and security considerations
+  - Testing strategy
+
+- ✅ Updated configuration types (`src/types/config.ts`)
+  - Added customTemplates configuration interface
+  - Template paths and preset selection
+  - Genre field for template variables
+
+- ✅ Updated specs README (`docs/specs/README.md`)
+  - Added Custom Prompt Templates to features list
+
+**Features Designed:**
+- **Template Variables**: 25+ variables for book metadata, chapters, elements, config
+- **Conditional Blocks**: {{#if}} and {{#unless}} for optional content
+- **Built-in Presets**:
+  - **Fantasy**: Emphasis on magical elements, world-building, epic landscapes
+  - **Sci-Fi**: Technical accuracy, futuristic tech, alien worlds
+  - **Mystery**: Atmospheric scenes, character expressions, environmental clues
+  - **Romance**: Emotional moments, character interactions, intimate settings
+- **CLI Commands**:
+  - `imaginize templates init [--preset fantasy]` - Initialize templates
+  - `imaginize templates list` - Show active templates
+  - `imaginize templates validate` - Check template syntax
+  - `imaginize templates export` - Export defaults as starting point
+
+**Template Example**:
+```
+You are an expert literary analyst specializing in {{genre}} fiction.
+
+Analyze this chapter from "{{bookTitle}}" by {{author}}.
+
+CHAPTER: {{chapterTitle}} (Chapter {{chapterNumber}})
+{{chapterContent}}
+
+{{#if style}}
+VISUAL STYLE GUIDE:
+{{style}}
+{{/if}}
+
+Return JSON array of visual scenes.
+```
+
+**Configuration Example**:
+```yaml
+customTemplates:
+  enabled: true
+  preset: "fantasy"  # Use fantasy-optimized prompts
+
+genre: "fantasy"
+```
+
+**Impact:**
+- Addresses checklist item #7: "Custom prompt templates per phase"
+- Gives users fine-grained control over AI behavior
+- Enables genre-specific optimizations
+- Reusable templates across books
+- No performance impact when disabled
+
+**Next Steps (Implementation)**:
+- Create src/lib/templates/template-loader.ts module
+- Implement variable replacement and conditional processing
+- Create default template files (extract from current prompts)
+- Integrate with analyze, extract, and illustrate phases
+- Add CLI template commands
+- Create built-in preset templates
+
+**Status**: Specification complete, implementation pending
 
 ---
 

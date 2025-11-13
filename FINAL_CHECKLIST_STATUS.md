@@ -226,9 +226,16 @@ imageEndpoint:
 - `src/lib/concurrent/elements-memory.ts` - Core memory system
 - Integration in `src/lib/phases/analyze-phase-v2.ts`
 
+**In Progress**:
+- 🚧 Custom prompt templates per phase (specification complete, implementation pending)
+  - Specification: docs/specs/custom-prompt-templates.md
+  - Configuration types added to config.ts
+  - Template variables: book metadata, chapter data, elements, config
+  - Built-in presets: fantasy, scifi, mystery, romance
+  - CLI commands designed: init, list, validate, export
+
 **Missing**:
 - ❌ Interactive scene editing
-- ❌ Custom prompt templates per phase
 - ❌ Granular retry control (skip failed chapters)
 - ❌ Scene-level regeneration
 

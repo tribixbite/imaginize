@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { StateManager } from '../lib/state-manager.js';
-import { existsSync, mkdirSync, rmSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { cwd } from 'process';
 
@@ -105,7 +105,7 @@ describe('state-manager', () => {
       const stateFile = join(outputDir, '.imaginize.state.json');
       const state = JSON.parse(readFileSync(stateFile, 'utf-8'));
       state.version = '1.0.0';
-      require('fs').writeFileSync(stateFile, JSON.stringify(state));
+      writeFileSync(stateFile, JSON.stringify(state));
 
       // Try to load
       const newManager = new StateManager(outputDir, 'test.epub', 'Test', 100);

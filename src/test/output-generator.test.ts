@@ -3,7 +3,7 @@
  * Critical for markdown file generation (Contents.md, Chapters.md, Elements.md)
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import {
   generateContentsFile,
   generateChaptersFile,

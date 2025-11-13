@@ -3,7 +3,7 @@
  * Tests OpenAI integration for chapter analysis, element extraction, and image generation
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 import type OpenAI from 'openai';
 import {
   analyzeChapter,
@@ -11,12 +11,7 @@ import {
   generateImage,
   processChaptersInBatches,
 } from '../lib/ai-analyzer.js';
-import type {
-  IllustrateConfig,
-  ChapterContent,
-  ImageConcept,
-  BookElement,
-} from '../types/config.js';
+import type { IllustrateConfig, ChapterContent } from '../types/config.js';
 
 // Mock OpenAI types
 interface MockChatCompletion {

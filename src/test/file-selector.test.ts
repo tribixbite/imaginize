@@ -3,7 +3,7 @@
  * Critical for multi-file selection and processing status tracking
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { findBookFiles, selectBookFile, type BookFile } from '../lib/file-selector.js';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';

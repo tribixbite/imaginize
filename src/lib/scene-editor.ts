@@ -210,12 +210,10 @@ export class SceneEditor {
     });
 
     const lines: string[] = [];
-    let isFinished = false;
 
     return new Promise((resolve) => {
       rl.on('line', (line) => {
         if (line.trim() === 'END') {
-          isFinished = true;
           rl.close();
         } else {
           lines.push(line);

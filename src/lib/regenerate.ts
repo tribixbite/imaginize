@@ -4,7 +4,7 @@
  */
 
 import { readFile } from 'fs/promises';
-import { join, basename } from 'path';
+import { join } from 'path';
 import { existsSync } from 'fs';
 import type { ImageConcept } from '../types/config.js';
 
@@ -111,14 +111,11 @@ export async function findScenesToRegenerate(
   const conceptsByChapter = await loadImageConcepts(outputDir);
   const scenes: SceneIdentifier[] = [];
 
-  let sceneGlobalIndex = 0;
-
   for (const [chapterTitle, concepts] of conceptsByChapter.entries()) {
     for (let i = 0; i < concepts.length; i++) {
       const concept = concepts[i];
       const chapterNumber = concept.chapterNumber || 0;
       const sceneNumber = i + 1;
-      sceneGlobalIndex++;
 
       // Check if this scene matches the selection criteria
       let matches = false;

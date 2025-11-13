@@ -1,0 +1,163 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Your ideas help make imaginize better for everyone.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What's the use case?
+      placeholder: |
+        Currently, imaginize requires processing entire books at once, which is time-consuming.
+        It would be helpful to process individual chapters on demand...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        Add a `--chapter` flag that allows processing specific chapters:
+        `imaginize --chapter "Chapter 1" --text --file book.epub`
+
+        This would only process the specified chapter instead of the entire book.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative approaches?
+      placeholder: |
+        - Using --chapters flag with a single number (but less flexible)
+        - Processing the whole book and manually extracting one chapter (current workaround)
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which category best describes this feature?
+      options:
+        - CLI / Command-line interface
+        - File processing (EPUB/PDF)
+        - AI integration / prompts
+        - Image generation
+        - Dashboard / UI
+        - Performance / optimization
+        - Configuration / settings
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Opinion)
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my usage
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: Benefits
+      description: Who would benefit from this feature and how?
+      placeholder: |
+        - Users with large books could process incrementally
+        - Faster iteration when refining prompts for specific chapters
+        - Reduced API costs by only processing needed chapters
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Show how you'd use this feature with examples
+      placeholder: |
+        ```bash
+        # Process only Chapter 1
+        imaginize --chapter "Chapter 1" --text --file book.epub
+
+        # Process Chapter 5 with images
+        imaginize --chapter "5" --text --images --file book.epub
+
+        # Process multiple specific chapters
+        imaginize --chapters "1,5,10" --text --file book.epub
+        ```
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup / Visual Reference
+      description: Any mockups, screenshots, or visual references (if applicable)
+      placeholder: |
+        Attach images or link to examples from other tools
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: Any thoughts on how this could be implemented? (optional)
+      placeholder: |
+        - Could add chapter name matching in epub-parser.ts
+        - Filter chapters array before processing
+        - Update state manager to track partial processing
+
+  - type: dropdown
+    id: willing-to-contribute
+    attributes:
+      label: Willing to Contribute
+      description: Would you be willing to help implement this feature?
+      options:
+        - "Yes - I can submit a PR"
+        - "Yes - With guidance"
+        - "Maybe - Depends on complexity"
+        - "No - Just suggesting"
+    validations:
+      required: true
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Issues
+      description: Link to any related issues or discussions
+      placeholder: |
+        - Related to #123
+        - Similar to feature discussed in #456
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Anything else to add?
+      placeholder: |
+        - This feature exists in tool X and works well
+        - I've seen similar requests from other users
+        - Here's a link to my use case...
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify before submitting
+      options:
+        - label: I have searched existing issues and discussions for similar feature requests
+          required: true
+        - label: This feature aligns with imaginize's purpose (book illustration guide generation)
+          required: true
+        - label: I have provided clear use cases and benefits
+          required: true

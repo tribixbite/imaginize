@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/tribixbite/imaginize#readme
+    about: Read the README for usage instructions and examples
+  - name: 💬 Discussions
+    url: https://github.com/tribixbite/imaginize/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔒 Security Issue
+    url: https://github.com/tribixbite/imaginize/security/advisories/new
+    about: Report security vulnerabilities privately (DO NOT create public issues for security)
+  - name: 🤝 Contributing Guide
+    url: https://github.com/tribixbite/imaginize/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to imaginize

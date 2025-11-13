@@ -1,0 +1,172 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out this form to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: When I run imaginize with --text flag, it crashes with...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Install imaginize@2.6.2
+        2. Run command: npx imaginize --text --file book.epub
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The tool should process the book and generate Contents.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: The tool crashed with an error about...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error Output
+      description: Complete error messages or logs (if applicable)
+      render: shell
+      placeholder: |
+        Error: ENOENT: no such file or directory
+        at Object.openSync (node:fs:590:3)
+        ...
+
+  - type: input
+    id: version
+    attributes:
+      label: imaginize Version
+      description: Run `npx imaginize --version` or check package.json
+      placeholder: "2.6.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Which JavaScript runtime are you using?
+      options:
+        - Node.js
+        - Bun
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime Version
+      description: Run `node --version` or `bun --version`
+      placeholder: "v20.10.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Termux (Android)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      description: e.g., Windows 11, macOS 14.0, Ubuntu 22.04
+      placeholder: "Ubuntu 22.04"
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI Provider
+      description: Which API provider are you using?
+      options:
+        - OpenRouter
+        - OpenAI
+        - Other
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: file-type
+    attributes:
+      label: Book File Type
+      description: What type of file were you processing?
+      options:
+        - EPUB
+        - PDF
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: Your .imaginize.config.json (remove API keys!)
+      render: json
+      placeholder: |
+        {
+          "defaultProvider": "openrouter",
+          "model": "gpt-4o-mini",
+          "maxConcurrency": 3
+        }
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information that might be relevant
+      placeholder: |
+        - This started happening after upgrading from v2.6.1
+        - Only happens with large EPUB files (>10MB)
+        - Works fine with small test files
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I am using the latest version of imaginize
+          required: true
+        - label: I have included complete error messages and logs
+          required: true
+        - label: I have removed any sensitive information (API keys, file paths, etc.)
+          required: true

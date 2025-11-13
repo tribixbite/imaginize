@@ -52,3 +52,5 @@ temp/
 
 # Test artifacts
 .test-locks/
+# Test artifacts
+src/test/.test-data/

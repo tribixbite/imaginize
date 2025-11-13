@@ -86,6 +86,41 @@ export async function main(): Promise<void> {
     .option('--dashboard-port <port>', 'Dashboard server port (default: 3000)', parseInt)
     .option('--dashboard-host <host>', 'Dashboard server host (default: localhost)');
 
+  // Compile command - generate graphic novel PDF
+  program
+    .command('compile')
+    .description('Compile images into graphic novel PDF')
+    .option('--input <dir>', 'Input directory (default: ./output)', './output')
+    .option('--output <file>', 'Output PDF path (default: graphic-novel.pdf)', 'graphic-novel.pdf')
+    .option('--layout <layout>', 'Images per page: 4x1, 2x2, 1x1, 6x2 (default: 4x1)', '4x1')
+    .option('--caption-style <style>', 'Caption style: modern, classic, minimal, none (default: modern)', 'modern')
+    .option('--no-toc', 'Exclude table of contents')
+    .option('--no-glossary', 'Exclude elements glossary')
+    .option('--no-page-numbers', 'Hide page numbers')
+    .option('--title <title>', 'Book title for cover page')
+    .action(async (cmdOptions) => {
+      const { GraphicNovelCompiler } = await import('./lib/compiler/pdf-generator.js');
+
+      const compiler = new GraphicNovelCompiler({
+        inputDir: cmdOptions.input,
+        outputPath: cmdOptions.output,
+        layout: cmdOptions.layout as '4x1' | '2x2' | '1x1' | '6x2',
+        captionStyle: cmdOptions.captionStyle as 'modern' | 'classic' | 'minimal' | 'none',
+        includeToc: cmdOptions.toc !== false,
+        includeGlossary: cmdOptions.glossary !== false,
+        pageNumbers: cmdOptions.pageNumbers !== false,
+        bookTitle: cmdOptions.title,
+      });
+
+      try {
+        await compiler.compile();
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`Error: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
   program.parse();
   const options = program.opts<CommandOptions>();
 

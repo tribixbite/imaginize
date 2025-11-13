@@ -19,6 +19,7 @@ Comprehensive architecture and feature documentation for the imaginize project.
 - [Visual Style System](./visual-style-system.md) - Style consistency and character tracking
 - [Dashboard System](./dashboard.md) - Real-time WebSocket monitoring UI
 - [Multi-Book Series](./multi-book-series.md) - Series-wide element sharing and style inheritance
+- [Graphic Novel Compilation](./graphic-novel-compilation.md) - PDF generation with layouts and smart captions
 
 ### Data Formats
 - [Output Files](./output-files.md) - Contents.md, Chapters.md, Elements.md formats

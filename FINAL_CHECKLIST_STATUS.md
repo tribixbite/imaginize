@@ -3,7 +3,7 @@
 Comprehensive status of all items from CLAUDE.md final checklist.
 
 **Last Updated**: 2025-11-13
-**Session**: GitHub Pages demo MVP implementation (Week 1 complete)
+**Session**: GitHub Pages demo MVP implementation (Week 2 parsing complete)
 
 ---
 
@@ -358,7 +358,7 @@ imaginize regenerate --chapter 3 --scene 2 --edit
 ## ❌ Not Yet Implemented
 
 ### 8. GitHub Pages Demo Tool
-**Status**: MVP PHASE (40% complete)
+**Status**: MVP PHASE (60% complete)
 
 **Current Progress**:
 - ✅ Comprehensive specification document (docs/specs/github-pages-demo.md)
@@ -375,10 +375,22 @@ imaginize regenerate --chapter 3 --scene 2 --edit
 - ✅ Type definitions for app state
 - ✅ localStorage utilities and React hooks
 - ✅ GitHub Actions deployment workflow
-- ✅ Build successful (206.5KB bundle, 19.1KB CSS)
-- ❌ EPUB/PDF parsing (pending)
-- ❌ Processing pipeline (pending)
-- ❌ Results view (pending)
+- ✅ EPUB/PDF parsing infrastructure
+  - ✅ EPUB parser with epub.js (197 lines)
+  - ✅ PDF parser with pdf.js (251 lines)
+  - ✅ Unified book parser interface (212 lines)
+  - ✅ Metadata extraction and validation
+  - ✅ Chapter/scene detection
+  - ✅ Word counting and cost estimation
+- ✅ OpenAI API client wrapper (254 lines)
+  - ✅ Chapter analysis with scene extraction
+  - ✅ Image generation with DALL-E 3
+  - ✅ Elements extraction (characters/places/objects)
+  - ✅ API key validation
+- ✅ Build successful (206.5KB bundle, 19.3KB CSS)
+- ❌ Processing pipeline UI and orchestration (pending)
+- ❌ Progress tracking component (pending)
+- ❌ Results view and download (pending)
 
 **Requirements**:
 - Web-based demo deployment on GitHub Pages
@@ -443,14 +455,29 @@ Deployment:
 - **useLocalStorage.ts**: React hook for localStorage with cross-tab sync
 - **deploy-demo.yml**: GitHub Actions workflow for GitHub Pages deployment
 
-**Next Steps** (Week 2):
-1. Implement EPUB parsing with epub.js
-2. Implement PDF parsing with pdf.js
-3. Create processing pipeline with OpenAI integration
-4. Add progress tracking UI
-5. Implement Web Workers for non-blocking parsing
+**Completed Week 2 Tasks**:
+1. ✅ Implement EPUB parsing with epub.js
+2. ✅ Implement PDF parsing with pdf.js
+3. ✅ Create unified book parser interface
+4. ✅ Implement OpenAI API client wrapper
+5. ✅ Add metadata extraction and cost estimation
 
-**Estimated Remaining Effort**: 1-2 weeks for full MVP implementation
+**Week 2 Deliverables**:
+- **epub-parser.ts** (197 lines): Full EPUB parsing with chapter extraction
+- **pdf-parser.ts** (251 lines): PDF text extraction with heuristic chapter detection
+- **book-parser.ts** (212 lines): Unified interface with word counting and cost estimation
+- **api-client.ts** (254 lines): OpenAI integration for analysis and image generation
+- Total: 914 lines of parsing and API infrastructure
+- Build successful with all TypeScript types
+
+**Next Steps** (Week 3):
+1. Create processing pipeline orchestrator
+2. Implement ProcessingProgress component with real-time updates
+3. Create ResultsView component with download functionality
+4. Add Web Workers for non-blocking parsing (optional optimization)
+5. Testing and deployment
+
+**Estimated Remaining Effort**: 3-5 days for full MVP implementation
 
 ---
 

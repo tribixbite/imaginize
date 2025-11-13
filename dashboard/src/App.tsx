@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useToast } from './contexts/ToastContext';
 import { OverallProgress } from './components/OverallProgress';
 import { PipelineVisualization } from './components/PipelineVisualization';
 import { ChapterGrid } from './components/ChapterGrid';
@@ -8,6 +10,29 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 function App() {
   const wsUrl = `ws://${window.location.hostname}:${window.location.port || 3000}`;
   const { state, chapters, logs, isConnected, error } = useWebSocket(wsUrl);
+  const { showToast } = useToast();
+  const prevConnectedRef = useRef<boolean | null>(null);
+
+  // Show toast notifications on connection status changes
+  useEffect(() => {
+    // Skip the initial connection (avoid "Connected" toast on first load)
+    if (prevConnectedRef.current === null && isConnected) {
+      prevConnectedRef.current = isConnected;
+      return;
+    }
+
+    // Connection established (reconnected after disconnect)
+    if (isConnected && prevConnectedRef.current === false) {
+      showToast('Connected to dashboard', 'success', 3000);
+    }
+
+    // Connection lost
+    if (!isConnected && prevConnectedRef.current === true) {
+      showToast('Connection lost. Reconnecting...', 'warning', 5000);
+    }
+
+    prevConnectedRef.current = isConnected;
+  }, [isConnected, showToast]);
 
   if (error) {
     return (

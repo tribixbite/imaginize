@@ -13,9 +13,21 @@
   - Bundle size: 206.98 kB (64.28 kB gzipped) - +0.75 kB overhead
   - Phase 4 optional enhancement: Enhanced Error Handling (70% → 85%)
 
+- ✅ **Accessibility Improvements** - Comprehensive WCAG 2.1 Level AA compliance (2025-11-12)
+  - Semantic HTML elements (section, header, time, etc.)
+  - ARIA labels and roles for all components
+  - Keyboard navigation support (tabIndex, focus management)
+  - aria-live regions for dynamic content announcements
+  - Screen reader optimizations (aria-hidden for decorative elements)
+  - Progress bar with proper ARIA attributes (progressbar role)
+  - Chapter grid with grid/gridcell roles and status announcements
+  - Pipeline with ordered list semantics and aria-current
+  - Log stream with live region support and keyboard scrollability
+  - Bundle size: 208.88 kB (64.74 kB gzipped) - +0.46 kB overhead
+  - Phase 4 optional enhancement: Accessibility (complete)
+
 **Planned for v2.6.1:**
 - [ ] Toast notifications for connection events
-- [ ] Accessibility improvements (ARIA labels, keyboard navigation)
 - [ ] Performance profiling and optimization
 - [ ] Dashboard screenshots for README
 

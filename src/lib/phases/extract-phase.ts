@@ -3,18 +3,22 @@
  * Corresponds to --elements flag
  */
 
+import { join } from 'path';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { BookElement } from '../../types/config.js';
 import { estimateTokens, createTokenEstimate, resolveModelConfig } from '../token-counter.js';
 import { generateElementsFile } from '../output-generator.js';
+import { TemplateLoader, DEFAULT_EXTRACT_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
 
 export class ExtractPhase extends BasePhase {
   private elements: BookElement[] = [];
   private estimatedTokens: number = 0;
   private estimatedCost: number = 0;
+  private templateLoader: TemplateLoader;
 
   constructor(context: PhaseContext) {
     super(context, 'extract');
+    this.templateLoader = new TemplateLoader();
   }
 
   /**
@@ -171,13 +175,13 @@ export class ExtractPhase extends BasePhase {
   }
 
   /**
-   * Extract story elements from text
+   * Extract story elements from text using custom templates
    */
   private async extractElements(
     fullText: string,
     modelConfig: any
   ): Promise<BookElement[]> {
-    const { openai, progressTracker } = this.context;
+    const { config, openai, progressTracker, stateManager } = this.context;
 
     // Estimate expected element count based on text length
     const estimatedPages = Math.ceil(fullText.split(/\s+/).length / 300);
@@ -189,46 +193,64 @@ export class ExtractPhase extends BasePhase {
       'info'
     );
 
-    const prompt = `Analyze this book text and extract ALL significant story elements comprehensively.
+    // Load template (custom or preset or default)
+    let extractTemplate = DEFAULT_EXTRACT_TEMPLATE;
 
-EXTRACTION TARGETS (for ~${estimatedPages} pages):
-- Main characters: 5-10 expected
-- Secondary characters (named, with dialogue/actions): 3-8 expected
-- Creature types (monsters, magical beings, animals): 5-15 expected
-- Key locations (cities, buildings, geographical features): 5-10 expected
-- Important items/objects (magical items, weapons, artifacts): 2-5 expected
+    if (config.customTemplates?.enabled) {
+      if (config.customTemplates.preset) {
+        // Use preset template
+        try {
+          const preset = this.templateLoader.loadPreset(config.customTemplates.preset);
+          extractTemplate = preset.extract;
+          await progressTracker.log(
+            `Using ${config.customTemplates.preset} preset extract template`,
+            'info'
+          );
+        } catch (error: any) {
+          await progressTracker.log(
+            `Failed to load preset ${config.customTemplates.preset}: ${error.message}`,
+            'warning'
+          );
+        }
+      } else if (config.customTemplates.extractTemplate) {
+        // Use custom template file
+        const templatePath = config.customTemplates.templatesDir
+          ? join(config.customTemplates.templatesDir, config.customTemplates.extractTemplate)
+          : config.customTemplates.extractTemplate;
 
-TOTAL TARGET: ${minExpected}-${maxExpected} elements minimum
-
-REQUIREMENTS:
-1. Be comprehensive - extract ALL named entities that appear multiple times
-2. Include secondary characters if they have dialogue or significant actions
-3. List each distinct creature type (not individual creatures)
-4. Include all named locations, even if mentioned briefly
-5. Catalog magical/significant items separately from ordinary objects
-
-For each element provide:
-1. Type: character/creature/place/item/object
-2. Name: The actual name from the text
-3. Quotes: 2-3 direct quotes describing this element (verbatim from text)
-4. Description: Consolidated 1-2 sentence summary
-
-Text excerpt (${fullText.length} chars):
-${fullText}
-
-Return as JSON with an "elements" array. IMPORTANT: Aim for ${minExpected}-${maxExpected} total elements.
-{
-  "elements": [
-    {
-      "type": "character",
-      "name": "Character Name",
-      "quotes": [
-        {"text": "direct quote describing them", "page": "estimated page"}
-      ],
-      "description": "consolidated description"
+        extractTemplate = await this.templateLoader.loadTemplate(
+          templatePath,
+          DEFAULT_EXTRACT_TEMPLATE
+        );
+        await progressTracker.log(`Using custom extract template`, 'info');
+      }
     }
-  ]
-}`;
+
+    // Build template variables
+    const state = stateManager.getState();
+    const templateVars: TemplateVariables = {
+      // Book metadata
+      bookTitle: state.bookTitle,
+      author: (state as any).author,
+      publisher: (state as any).publisher,
+      language: (state as any).language,
+      totalPages: state.totalPages,
+      genre: (config as any).genre,
+
+      // Chapter data (full text in this case)
+      chapterContent: fullText,
+      wordCount: fullText.split(/\s+/).length,
+      tokenCount: estimateTokens(fullText),
+
+      // Configuration
+      pagesPerImage: config.pagesPerImage,
+      imageSize: config.imageSize,
+      imageQuality: config.imageQuality,
+      style: (config as any).style,
+    };
+
+    // Render template with variables
+    const prompt = this.templateLoader.renderTemplate(extractTemplate, templateVars);
 
     const response = await openai.chat.completions.create({
       model: typeof modelConfig === 'string' ? modelConfig : modelConfig.name,

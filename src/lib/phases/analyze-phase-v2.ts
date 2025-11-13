@@ -24,6 +24,7 @@ import {
 import { createManifestManager } from '../concurrent/manifest-manager.js';
 import { createElementsLookup } from '../concurrent/elements-lookup.js';
 import { createElementsMemory } from '../concurrent/elements-memory.js';
+import { TemplateLoader, DEFAULT_ANALYZE_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -52,6 +53,7 @@ export class AnalyzePhaseV2 extends BasePhase {
   private manifestManager: ReturnType<typeof createManifestManager>;
   private elementsLookup: ReturnType<typeof createElementsLookup>;
   private elementsMemory: ReturnType<typeof createElementsMemory>;
+  private templateLoader: TemplateLoader;
 
   constructor(context: PhaseContext) {
     super(context, 'analyze');
@@ -64,6 +66,9 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Initialize elements memory for progressive enrichment
     this.elementsMemory = createElementsMemory(context.outputDir);
+
+    // Initialize template loader
+    this.templateLoader = new TemplateLoader();
   }
 
   /**
@@ -468,13 +473,13 @@ export class AnalyzePhaseV2 extends BasePhase {
   }
 
   /**
-   * Analyze single chapter with Elements.md enrichment
+   * Analyze single chapter with Elements.md enrichment and custom templates
    */
   private async analyzeChapterFull(
     chapter: ChapterContent,
     modelConfig: any
   ): Promise<ImageConcept[]> {
-    const { config, openai, progressTracker } = this.context;
+    const { config, openai, progressTracker, stateManager } = this.context;
 
     // Filter non-story content
     if (!isStoryContent(chapter.chapterTitle)) {
@@ -492,42 +497,79 @@ export class AnalyzePhaseV2 extends BasePhase {
       : 1;
     const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
-    // Base prompt with explicit quote length requirements
-    let basePrompt = `You are analyzing a book chapter to identify visually rich scenes for illustration.
+    // Load template (custom or preset or default)
+    let analyzeTemplate = DEFAULT_ANALYZE_TEMPLATE;
 
-**Task:** Identify the ${numImages} most visually compelling and narratively important scenes in this chapter.
+    if (config.customTemplates?.enabled) {
+      if (config.customTemplates.preset) {
+        // Use preset template
+        try {
+          const preset = this.templateLoader.loadPreset(config.customTemplates.preset);
+          analyzeTemplate = preset.analyze;
+          await progressTracker.log(
+            `Using ${config.customTemplates.preset} preset template`,
+            'info'
+          );
+        } catch (error: any) {
+          await progressTracker.log(
+            `Failed to load preset ${config.customTemplates.preset}: ${error.message}`,
+            'warning'
+          );
+        }
+      } else if (config.customTemplates.analyzeTemplate) {
+        // Use custom template file
+        const templatePath = config.customTemplates.templatesDir
+          ? join(config.customTemplates.templatesDir, config.customTemplates.analyzeTemplate)
+          : config.customTemplates.analyzeTemplate;
 
-For each scene, provide:
-1. A vivid visual description (2-3 sentences) suitable for image generation
-2. A substantial quote from the text (MINIMUM 3-8 sentences, 50-150 words) that captures the scene's atmosphere and key details
-3. Your reasoning for why this scene is visually and narratively significant
+        analyzeTemplate = await this.templateLoader.loadTemplate(
+          templatePath,
+          DEFAULT_ANALYZE_TEMPLATE
+        );
+        await progressTracker.log(`Using custom analyze template`, 'info');
+      }
+    }
 
-**IMPORTANT:** The quote must be substantial enough to serve as a standalone reference for illustration. Include enough context to understand character actions, setting details, and mood.
+    // Build template variables
+    const state = stateManager.getState();
+    const templateVars: TemplateVariables = {
+      // Book metadata
+      bookTitle: state.bookTitle,
+      author: (state as any).author,
+      publisher: (state as any).publisher,
+      language: (state as any).language,
+      totalPages: state.totalPages,
+      genre: (config as any).genre,
 
-**Chapter:** ${chapter.chapterTitle}
+      // Chapter data
+      chapterContent: chapter.content,
+      chapterNumber: chapter.chapterNumber,
+      chapterTitle: chapter.chapterTitle,
+      pageRange: chapter.pageRange,
+      wordCount: chapter.content.split(/\s+/).length,
+      tokenCount: estimateTokens(chapter.content),
 
-**Chapter Content:**
-${chapter.content}
+      // Configuration
+      imageCount: numImages,
+      pagesPerImage: config.pagesPerImage,
+      imageSize: config.imageSize,
+      imageQuality: config.imageQuality,
+      style: (config as any).style,
+    };
 
-Return your response as a JSON array with this structure:
-[
-  {
-    "description": "Detailed visual description of the scene",
-    "quote": "Substantial quote from the text (3-8 sentences minimum)",
-    "reasoning": "Why this scene is visually and narratively important"
-  }
-]`;
-
-    // Enrich prompt with Elements.md context if available
+    // Enrich with Elements.md context if available
     if (this.elementsLookup.isLoaded()) {
       // Find entities mentioned in this chapter
       const mentions = this.elementsLookup.findMentions(chapter.content);
 
       if (mentions.length > 0) {
-        basePrompt += '\n\n**Entity Reference (for visual consistency):**';
-        for (const entity of mentions.slice(0, 10)) { // Limit to 10 most relevant
-          basePrompt += `\n- ${entity.name} (${entity.type}): ${entity.description}`;
-        }
+        // Format characters for template
+        const charactersList = mentions
+          .slice(0, 10) // Limit to 10 most relevant
+          .map(entity => `- ${entity.name} (${entity.type}): ${entity.description}`)
+          .join('\n');
+
+        templateVars.characters = charactersList;
 
         await progressTracker.log(
           `Enriched prompt with ${mentions.length} entity references`,
@@ -535,6 +577,9 @@ Return your response as a JSON array with this structure:
         );
       }
     }
+
+    // Render template with variables
+    const basePrompt = this.templateLoader.renderTemplate(analyzeTemplate, templateVars);
 
     // Call AI with enriched prompt
     const response = await openai.chat.completions.create({

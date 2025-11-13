@@ -32,6 +32,7 @@ import {
   createCharacterRegistry,
   extractCharacterNames,
 } from '../visual-style/index.js';
+import { TemplateLoader, DEFAULT_ILLUSTRATE_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
 
 /**
  * Sleep helper for polling
@@ -57,6 +58,7 @@ export class IllustratePhaseV2 extends BasePhase {
   private visualStyleGuide: VisualStyleGuide | null = null; // New: Visual style from image analysis
   private characterRegistry: CharacterRegistry | null = null; // New: Character appearance tracking
   private bootstrapImages: string[] = []; // New: First N images for style analysis
+  private templateLoader: TemplateLoader;
   private pollInterval = 10000; // Poll every 10 seconds
   private stuckTimeout = 30 * 60 * 1000; // 30 minutes
 
@@ -65,6 +67,7 @@ export class IllustratePhaseV2 extends BasePhase {
 
     this.manifestManager = createManifestManager(context.outputDir);
     this.elementsLookup = createElementsLookup(context.outputDir);
+    this.templateLoader = new TemplateLoader();
 
     // Initialize character registry if tracking enabled
     if (context.config.trackCharacterAppearances !== false) {
@@ -320,7 +323,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
       );
 
       // Build enriched prompt
-      const prompt = this.buildEnrichedPrompt(concept);
+      const prompt = await this.buildEnrichedPrompt(concept);
 
       // Generate image
       const imageUrl = await this.executeWithRetry(
@@ -437,9 +440,11 @@ Return ONLY the style guide text, no JSON or formatting.`;
   }
 
   /**
-   * Build enriched prompt with Elements.md and style guide
+   * Build enriched prompt with Elements.md, style guide, and custom templates
    */
-  private buildEnrichedPrompt(concept: ImageConcept): string {
+  private async buildEnrichedPrompt(concept: ImageConcept): Promise<string> {
+    const { config } = this.context;
+
     // Use new visual style system if available
     if (this.visualStyleGuide || this.characterRegistry) {
       const enhanced = enhanceImagePrompt(
@@ -458,15 +463,52 @@ Return ONLY the style guide text, no JSON or formatting.`;
       return prompt;
     }
 
-    // Fallback to legacy text-based style guide
-    let prompt = concept.description;
+    // Load illustrate template (custom or preset or default)
+    let illustrateTemplate = DEFAULT_ILLUSTRATE_TEMPLATE;
 
-    // Add style guide
-    if (this.styleGuide) {
-      prompt += `\n\nStyle: ${this.styleGuide}`;
+    if (config.customTemplates?.enabled) {
+      if (config.customTemplates.preset) {
+        // Use preset template
+        try {
+          const preset = this.templateLoader.loadPreset(config.customTemplates.preset);
+          illustrateTemplate = preset.illustrate;
+        } catch (error) {
+          // Fall back to default on error
+        }
+      } else if (config.customTemplates.illustrateTemplate) {
+        // Use custom template file
+        const templatePath = config.customTemplates.templatesDir
+          ? join(config.customTemplates.templatesDir, config.customTemplates.illustrateTemplate)
+          : config.customTemplates.illustrateTemplate;
+
+        illustrateTemplate = await this.templateLoader.loadTemplate(
+          templatePath,
+          DEFAULT_ILLUSTRATE_TEMPLATE
+        );
+      }
     }
 
-    // Enrich with Elements.md if available
+    // Build template variables
+    const templateVars: TemplateVariables = {
+      description: concept.description,
+      style: (config as any).style || this.styleGuide,
+    };
+
+    // Add character enrichment from Elements.md if available
+    if (this.elementsLookup.isLoaded()) {
+      const mentions = this.elementsLookup.findMentions(concept.description);
+      if (mentions.length > 0) {
+        const charactersList = mentions
+          .map(entity => `${entity.name} (${entity.type}): ${entity.description}`)
+          .join('\n');
+        templateVars.characters = charactersList;
+      }
+    }
+
+    // Render template with variables
+    let prompt = this.templateLoader.renderTemplate(illustrateTemplate, templateVars);
+
+    // Additional enrichment with Elements.md
     if (this.elementsLookup.isLoaded()) {
       prompt = this.elementsLookup.enrichPrompt(prompt);
     }

@@ -36,11 +36,12 @@ const getConnectorColor = (index: number, currentIndex: number): string => {
 
 // Memoized component to prevent unnecessary re-renders
 export const PipelineVisualization = memo(function PipelineVisualization({ currentPhase }: PipelineVisualizationProps) {
-  // Memoize current index calculation
-  const currentIndex = useMemo(
-    () => phases.findIndex((p) => p.id === currentPhase),
-    [currentPhase]
-  );
+  // Memoize current index calculation with validation for invalid phases
+  const currentIndex = useMemo(() => {
+    const index = phases.findIndex((p) => p.id === currentPhase);
+    // Default to first phase (0) if currentPhase is not found (avoids -1 causing visual glitches)
+    return index === -1 ? 0 : index;
+  }, [currentPhase]);
 
   return (
     <section className="bg-gray-800 rounded-lg p-6 shadow-lg" aria-labelledby="pipeline-heading">

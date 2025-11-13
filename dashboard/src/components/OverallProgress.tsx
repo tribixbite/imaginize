@@ -24,13 +24,17 @@ const formatTime = (ms: number): string => {
 
 // Memoized component to prevent unnecessary re-renders
 export const OverallProgress = memo(function OverallProgress({ bookTitle, stats, currentPhase }: OverallProgressProps) {
-  // Memoize progress calculation
-  const progressPercent = useMemo(
-    () => stats.totalChapters > 0
-      ? Math.round((stats.completedChapters / stats.totalChapters) * 100)
-      : 0,
-    [stats.completedChapters, stats.totalChapters]
-  );
+  // Memoize progress calculation with edge case validation
+  const progressPercent = useMemo(() => {
+    // Validate edge cases: negative, zero, or NaN values
+    if (!stats.totalChapters || stats.totalChapters <= 0 || isNaN(stats.totalChapters)) {
+      return 0;
+    }
+    if (!stats.completedChapters || stats.completedChapters < 0 || isNaN(stats.completedChapters)) {
+      return 0;
+    }
+    return Math.round((stats.completedChapters / stats.totalChapters) * 100);
+  }, [stats.completedChapters, stats.totalChapters]);
 
   return (
     <section className="bg-gray-800 rounded-lg p-6 shadow-lg" aria-labelledby="book-title">

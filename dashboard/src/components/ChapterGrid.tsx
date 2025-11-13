@@ -98,6 +98,14 @@ export const ChapterGrid = memo(function ChapterGrid({ chapters }: ChapterGridPr
           ></div>
           <span className="text-gray-300">Completed</span>
         </div>
+        <div className="flex items-center gap-2" role="listitem">
+          <div
+            className="w-4 h-4 bg-red-600 border-2 border-red-500 rounded"
+            role="img"
+            aria-label="Error status color"
+          ></div>
+          <span className="text-gray-300">Error</span>
+        </div>
       </div>
     </section>
   );

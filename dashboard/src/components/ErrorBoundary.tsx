@@ -44,8 +44,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error details for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error details in development only (avoid exposing stack traces in production)
+    if (import.meta.env.DEV) {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
+    // In production, you should send errors to a logging service like Sentry
+    // Example: Sentry.captureException(error, { extra: errorInfo });
 
     this.setState({
       error,

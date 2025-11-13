@@ -358,26 +358,73 @@ imaginize regenerate --chapter 3 --scene 2 --edit
 ## ❌ Not Yet Implemented
 
 ### 8. GitHub Pages Demo Tool
-**Status**: NOT STARTED
+**Status**: SPECIFICATION PHASE (5% complete)
+
+**Current Progress**:
+- ✅ Comprehensive specification document (docs/specs/github-pages-demo.md)
+- ✅ Architecture design (Vite + React + TypeScript + Tailwind)
+- ✅ UI mockups (Landing, Processing, Results views)
+- ✅ Technical challenges identified with solutions
+- ✅ 3-week implementation plan
+- ❌ Project scaffolding (pending)
+- ❌ Core implementation (pending)
+- ❌ Testing & deployment (pending)
 
 **Requirements**:
-- Web-based demo deployment
+- Web-based demo deployment on GitHub Pages
 - Mobile-friendly Tailwind dark mode UI
 - BYOK (Bring Your Own Key) - users provide API keys
-- File picker for EPUB/PDF upload
-- Full client-side processing
+- File picker for EPUB/PDF upload with drag-and-drop
+- Full client-side processing (no server required)
 - Test suite in CI/CD
+- WCAG 2.1 AA accessibility compliance
 
-**Estimated Effort**: 2-3 weeks
-- Week 1: Web UI with file upload and API key input
-- Week 2: Client-side EPUB/PDF parsing
-- Week 3: Dashboard integration and testing
+**Specification Document**: docs/specs/github-pages-demo.md (250+ lines)
 
-**Challenges**:
-- Browser-based EPUB/PDF parsing
-- Client-side AI API calls (CORS)
-- Secure API key handling
-- Large file uploads
+**Technical Stack**:
+```
+Frontend:
+├── React 18 (UI framework)
+├── TypeScript (type safety)
+├── Vite (build tool with HMR)
+├── Tailwind CSS v4 (dark mode styling)
+├── epub.js (EPUB parsing)
+├── pdf.js (PDF parsing)
+└── OpenAI SDK (browser build)
+
+Deployment:
+├── GitHub Actions (CI/CD)
+└── GitHub Pages (hosting)
+```
+
+**Implementation Phases** (3 weeks):
+1. **Week 1**: Project setup, core UI, file upload, API key management
+2. **Week 2**: Client-side parsing (EPUB/PDF), processing pipeline, API integration
+3. **Week 3**: Results view, testing, documentation, deployment
+
+**Identified Challenges & Solutions**:
+1. **CORS Issues**: Use OpenAI CORS-enabled endpoints or document workarounds
+2. **Client-Side Parsing**: Web Workers + progressive loading for performance
+3. **API Key Security**: localStorage with clear warnings + session-only option
+4. **Large Downloads**: 1024x1024 resolution + progressive download
+5. **Mobile Performance**: Device detection + adaptive concurrency
+
+**UI Design**:
+- Landing page with drag-and-drop file upload
+- API key input with secure localStorage
+- Real-time progress visualization (Parse → Analyze → Extract → Illustrate)
+- Results view with download options (ZIP with all outputs)
+- Gallery view for generated images
+- Mobile-responsive with touch-friendly controls
+
+**Next Steps**:
+1. Initialize Vite project in `demo/` directory
+2. Configure Tailwind CSS v4 with dark mode
+3. Create file upload component with validation
+4. Implement API key storage with security warnings
+5. Set up GitHub Actions deployment workflow
+
+**Estimated Remaining Effort**: 2-3 weeks for full implementation
 
 ---
 

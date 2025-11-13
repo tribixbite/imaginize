@@ -23,6 +23,7 @@ import {
 } from '../concurrent/entity-extractor.js';
 import { createManifestManager } from '../concurrent/manifest-manager.js';
 import { createElementsLookup } from '../concurrent/elements-lookup.js';
+import { createElementsMemory } from '../concurrent/elements-memory.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -50,6 +51,7 @@ export class AnalyzePhaseV2 extends BasePhase {
   private conceptsByChapter: Map<string, ImageConcept[]> = new Map();
   private manifestManager: ReturnType<typeof createManifestManager>;
   private elementsLookup: ReturnType<typeof createElementsLookup>;
+  private elementsMemory: ReturnType<typeof createElementsMemory>;
 
   constructor(context: PhaseContext) {
     super(context, 'analyze');
@@ -59,6 +61,9 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Initialize elements lookup for Pass 2 enrichment
     this.elementsLookup = createElementsLookup(context.outputDir);
+
+    // Initialize elements memory for progressive enrichment
+    this.elementsMemory = createElementsMemory(context.outputDir);
   }
 
   /**
@@ -308,6 +313,14 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
     }
 
+    // Initialize memory system for progressive enrichment
+    await this.elementsMemory.load();
+    const memoryStats = this.elementsMemory.getStats();
+    await progressTracker.log(
+      `🧠 Memory: Initialized with ${memoryStats.totalEntities} entities (${memoryStats.totalEnrichments} enrichments)`,
+      'info'
+    );
+
     const modelConfig = resolveModelConfig(config.model, config);
     const chaptersToProcess = this.planData!.chaptersToProcess;
 
@@ -356,6 +369,15 @@ export class AnalyzePhaseV2 extends BasePhase {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
 
+    // Log memory enrichment summary
+    const finalMemoryStats = this.elementsMemory.getStats();
+    if (finalMemoryStats.totalEnrichments > 0) {
+      await progressTracker.log(
+        `🧠 Memory: Enriched ${finalMemoryStats.entitiesWithEnrichments}/${finalMemoryStats.totalEntities} entities with ${finalMemoryStats.totalEnrichments} new detail(s)`,
+        'success'
+      );
+    }
+
     await progressTracker.log(
       `✅ Pass 2 complete - ${chaptersToProcess.length} chapters analyzed in ${minutes}m ${seconds}s (avg ${avgSecondsPerChapter.toFixed(1)}s/chapter, batch size: ${batchSize})`,
       'success'
@@ -386,6 +408,27 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
 
       this.conceptsByChapter.set(chapter.chapterTitle, concepts);
+
+      // Enrich Elements.md with new details discovered in this chapter
+      try {
+        const enrichment = await this.elementsMemory.enrichFromConcepts(concepts, chapterNum);
+
+        if (enrichment.added > 0) {
+          await progressTracker.log(
+            `🧠 Memory: Added ${enrichment.added} new detail(s) to ${enrichment.entities.join(', ')}`,
+            'success'
+          );
+
+          // Reload elements lookup so subsequent chapters get enriched descriptions
+          await this.elementsLookup.load();
+        }
+      } catch (memoryError: any) {
+        // Don't fail the chapter if memory enrichment fails
+        await progressTracker.log(
+          `⚠️  Memory enrichment failed: ${memoryError.message}`,
+          'warning'
+        );
+      }
 
       // Estimate tokens used
       const tokensUsed = estimateTokens(chapter.content) + concepts.length * 200;

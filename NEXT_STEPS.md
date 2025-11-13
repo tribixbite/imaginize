@@ -2,7 +2,14 @@
 
 ## Current Status: v2.6.2 Published ✅
 
-**Latest Updates (Nov 12, 2025):**
+**Latest Updates (Nov 13, 2025):**
+- ✅ **CLI Test Fixes** - Bun runtime support in Termux
+  - Fixed 2 failing CLI tests (`--init-config` and `--help`)
+  - Test pass rate improved: 35/43 (81.4%) → 37/43 (86.0%)
+  - Inline PATH setting in test commands for bun wrapper compatibility
+  - Documented in WORKING.md with root cause analysis
+
+**Previous Updates (Nov 12, 2025):**
 - ✅ **v2.6.2 Dashboard Fixes** - Published to npm
   - 8 fixes from comprehensive QA review (3 critical, 4 important, 1 defensive)
   - WebSocket connection behind proxies, memory leak prevention, React best practices
@@ -240,26 +247,42 @@ describe('illustrate pipeline', () => {
 
 ---
 
+## Post v2.6.2 Completed Items ✅
+
+### Testing Improvements
+- ✅ **CLI Test Fixes** (Nov 13, 2025) - Fixed bun runtime compatibility
+  - Inline PATH setting for bun wrapper to find grun
+  - Tests now pass in Termux ARM64 environment
+  - Pass rate: 81.4% → 86.0%
+
+### Remaining Test Issues
+- ⏸️ **6 Integration Tests** - Require API keys (expected behavior)
+  - These tests validate full pipeline with real API calls
+  - Passing locally when API keys are provided
+  - Not blocking for release
+
+---
+
 ## Future Enhancements (Priority Order)
 
-### Priority 1: NPM Publication (v2.3.0)
-**Estimated Time:** 30 minutes
+### Priority 1: v2.6.3 Patch Release (Optional)
+**Estimated Time:** 1-2 hours
+**Status:** Low priority - v2.6.2 is stable and production-ready
 
-Current version has significant improvements over published v2.0.0:
-- Concurrent processing (40% faster)
-- Visual character descriptions
-- Enhanced quote quality
-- Character cross-referencing
-- Improved filenames
+**Potential Items:**
+- Publish CLI test fixes to npm (currently only in git)
+- Update V2.6.2_ROADMAP.md to mark CLI tests as complete
+- Consider any user-reported issues since v2.6.2 release
 
 **Tasks:**
-- [ ] Update package.json version to 2.3.0
-- [ ] Update CHANGELOG with all v2.3.0 improvements
+- [ ] Decide if patch release is warranted
+- [ ] Update package.json version to 2.6.3 if proceeding
+- [ ] Update CHANGELOG with CLI test improvements
 - [ ] Build and test: `npm run build && npm run test`
 - [ ] Publish: `npm publish`
 - [ ] Create GitHub release tag
 
-**Impact:** High - Users get all quality improvements
+**Impact:** Low - CLI test fixes are development-only improvements
 
 ---
 
@@ -500,6 +523,7 @@ Then consider Priority 2+ enhancements based on user feedback.
 
 ---
 
-Last Updated: 2025-11-12
-Status: v2.3.0 Feature Complete ✅
-Next Milestone: NPM Publication
+Last Updated: 2025-11-13
+Status: v2.6.2 Published ✅ + CLI Tests Fixed
+Test Pass Rate: 37/43 (86.0%)
+Next Milestone: v2.6.3 or v2.7.0 (TBD based on priorities)

@@ -6,7 +6,7 @@ End-to-end testing suite for the imaginize GitHub Pages demo using Playwright.
 
 This directory contains comprehensive E2E tests that validate the complete user journey through the demo application, from file upload to results download.
 
-**Status**: Phase 1-2 Complete (Setup & Core User Flows)
+**Status**: Phase 1-3 Complete (Setup, Core Flows & Edge Cases)
 
 ## Structure
 
@@ -24,7 +24,10 @@ e2e/
 │   ├── 02-file-upload.spec.ts        # File upload functionality (9 tests)
 │   ├── 03-api-key-management.spec.ts # API key security (8 tests)
 │   ├── 04-processing-flow.spec.ts    # Processing pipeline (10 tests)
-│   └── 05-results-view.spec.ts       # Results and downloads (8 tests)
+│   ├── 05-results-view.spec.ts       # Results and downloads (8 tests)
+│   ├── 06-error-scenarios.spec.ts    # Error handling & recovery (9 tests)
+│   ├── 07-mobile-responsive.spec.ts  # Mobile UX validation (8 tests)
+│   └── 08-accessibility.spec.ts      # WCAG 2.1 AA compliance (8 tests)
 └── README.md          # This file
 ```
 
@@ -143,16 +146,52 @@ E2E tests run automatically in GitHub Actions:
 
 **Total Phase 1-2**: 43 E2E tests
 
-### Phase 3-5: Planned (Not Yet Implemented)
+### Phase 3: Error Scenarios & Edge Cases ✅ COMPLETE
+
+**Tests Implemented** (25 tests across 3 suites):
+
+**06-error-scenarios.spec.ts** (9 tests):
+1. Display error message for invalid API key (401)
+2. Display error message for rate limit exceeded (429)
+3. Display error message for network error (500)
+4. Handle offline mode gracefully
+5. Allow retry after error
+6. Not crash on corrupted file
+7. Display error messages in accessible format (role="alert")
+8. Allow dismissing error messages
+9. Recover state after error and allow new processing
+
+**07-mobile-responsive.spec.ts** (8 tests):
+1. Adapt layout to mobile viewport (iPhone 12)
+2. Adapt layout to mobile viewport (Pixel 5/Android)
+3. Handle touch interactions on mobile
+4. Display text readable without zooming (min 14px font)
+5. Stack elements vertically on narrow screens (no horizontal scroll)
+6. Handle file upload on mobile device
+7. Display processing progress on mobile
+8. Allow scrolling through long content on mobile
+
+**08-accessibility.spec.ts** (8 tests):
+1. No accessibility violations on initial load (WCAG 2.1 AA)
+2. Have proper ARIA labels on form inputs
+3. Support keyboard navigation (Tab through interactive elements)
+4. Have proper heading hierarchy (h1 present, no level skips)
+5. Announce processing status to screen readers (aria-live regions)
+6. Have sufficient color contrast (WCAG 2.1 AA)
+7. Have accessible error messages
+8. Provide alternative text for images
+
+**Total Phase 1-3**: 68 E2E tests
+
+### Phase 4-5: Planned (Not Yet Implemented)
 
 See `docs/E2E_TESTING_PLAN.md` for full implementation plan.
 
-**Planned Test Suites**:
-- `06-error-scenarios.spec.ts` - Error handling (~9 tests)
-- `07-mobile-responsive.spec.ts` - Mobile UX (~8 tests)
-- `08-accessibility.spec.ts` - Accessibility (WCAG 2.1 AA) (~5 tests)
+**Planned Work**:
+- Phase 4: CI/CD integration (GitHub Actions workflow)
+- Phase 5: Documentation & polish (final refinements)
 
-**Total Planned**: 65+ E2E tests when all phases complete
+**Total Planned**: 68+ E2E tests when all phases complete
 
 ## Mocking Strategy
 
@@ -295,15 +334,15 @@ deploy:
 
 - [x] Phase 1: Setup & Infrastructure (Complete)
 - [x] Phase 2: Core User Flow Tests (Complete)
-- [ ] Phase 3: Error Scenarios & Edge Cases (Planned)
+- [x] Phase 3: Error Scenarios & Edge Cases (Complete)
 - [ ] Phase 4: CI/CD Integration (Planned)
 - [ ] Phase 5: Documentation & Polish (Planned)
 
-**Current Version**: Phase 1-2 (Setup + Core Flows Complete)
-**Next Steps**: Implement Phase 3 (Error Scenarios & Edge Cases)
+**Current Version**: Phase 1-3 (Setup, Core Flows & Edge Cases Complete)
+**Next Steps**: Implement Phase 4 (CI/CD Integration)
 
 ---
 
 **Last Updated**: November 13, 2025
-**Test Count**: 43 tests (5 suites)
-**Status**: Phase 1-2 Complete, ready for Phase 3
+**Test Count**: 68 tests (8 suites)
+**Status**: Phase 1-3 Complete, ready for Phase 4

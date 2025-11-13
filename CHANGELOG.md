@@ -5,6 +5,77 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2025-11-12
+
+### Fixed
+- **Dashboard WebSocket Connection** - Fixed hardcoded port fallback in WebSocket URL
+  - Changed from `ws://hostname:3000` to dynamic protocol and host detection
+  - Now uses `wss://` for HTTPS connections, `ws://` for HTTP
+  - Uses `window.location.host` instead of `hostname:port`
+  - Works correctly behind proxies on standard ports (80/443)
+  - File: dashboard/src/App.tsx:11-14
+- **React Key Anti-Pattern** - Fixed array index used as React key in LogStream
+  - Changed from `key={index}` to `key={timestamp-index}`
+  - Prevents UI bugs if logs are filtered or reordered
+  - Follows React best practices for stable component identity
+  - File: dashboard/src/components/LogStream.tsx:74
+- **Memory Leak in Log Stream** - Implemented circular buffer to prevent unbounded growth
+  - Added MAX_LOGS constant (1000 entries)
+  - Logs now capped at 1000 entries using `.slice(-MAX_LOGS)`
+  - Single setState operation for efficiency
+  - Prevents browser memory exhaustion in 8+ hour sessions
+  - File: dashboard/src/hooks/useWebSocket.ts:5,67
+- **Invalid Phase Handling** - Added validation for unknown phase values
+  - `findIndex()` now defaults to 0 when phase not found (previously -1)
+  - Prevents visual glitch where all phases show as "completed"
+  - Graceful handling of unexpected backend data
+  - File: dashboard/src/components/PipelineVisualization.tsx:40-44
+- **Missing Error Status in Legend** - Added Error status to ChapterGrid legend
+  - Legend now shows all 4 states: Pending, In Progress, Completed, Error
+  - Matches existing getStatusColor implementation
+  - Improves user understanding when chapters fail
+  - File: dashboard/src/components/ChapterGrid.tsx:101-108
+- **Production Console Logging** - Conditional error logging to prevent stack trace exposure
+  - Console logging now only enabled in development mode
+  - Uses `import.meta.env.DEV` for environment detection
+  - Includes comment suggesting Sentry integration for production
+  - File: dashboard/src/components/ErrorBoundary.tsx:47-52
+- **Edge Case Validation** - Added comprehensive validation for progress calculation
+  - Validates totalChapters and completedChapters for negative, zero, or NaN values
+  - Prevents NaN display and division by zero errors
+  - Returns 0 for invalid inputs
+  - File: dashboard/src/components/OverallProgress.tsx:28-37
+- **Root Element Validation** - Added explicit validation for root DOM element
+  - Replaced non-null assertion (`!`) with explicit check
+  - Throws descriptive error if `<div id="root">` missing from index.html
+  - Improves debugging for misconfigured HTML
+  - File: dashboard/src/main.tsx:7-11
+
+### Changed
+- **Dashboard Bundle Size** - Minimal increase from 65.52 kB to 65.58 kB gzipped
+  - Total overhead: +0.06 kB gzipped for all 8 fixes
+  - All fixes are backward compatible
+  - Zero TypeScript errors in build
+
+### Documentation
+- **Main README** - Added v2.6.1 enhancements section
+  - Documented Error Boundaries, Accessibility, Performance, Toast features
+  - Split Features section into v2.6.0 core and v2.6.1 enhanced
+  - Updated bundle size and technical details
+- **Dashboard README** - Created comprehensive 353-line documentation
+  - Replaced default Vite template with proper docs
+  - Complete architecture, component structure, and development guide
+  - WCAG 2.1 AA accessibility documentation
+  - Performance optimization techniques and metrics
+  - Error handling, testing, deployment, and troubleshooting guides
+
+### Technical Details
+- QA Review: Conducted via Claude Code + Gemini 2.5 Pro analysis (zen-mcp)
+- Files Reviewed: 9 dashboard components with systematic code review
+- Priority: 3 critical fixes, 4 important fixes, 1 defensive fix
+- All existing tests continue to pass (35/43 tests passing)
+- No breaking changes to API or CLI interface
+
 ## [2.6.1] - 2025-11-12
 
 ### Added

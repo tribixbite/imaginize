@@ -103,6 +103,22 @@ export interface IllustrateConfig {
    * @default true
    */
   trackCharacterAppearances?: boolean;
+
+  /**
+   * Multi-book series configuration
+   * Enables element sharing and style inheritance across books
+   * @since v2.7.0
+   */
+  series?: {
+    /** Enable series mode */
+    enabled: boolean;
+    /** Path to series root directory (relative to book directory) */
+    seriesRoot: string;
+    /** Unique book ID (must match ID in .imaginize.series.json) */
+    bookId: string;
+    /** Book title for series catalog */
+    bookTitle?: string;
+  };
 }
 
 export interface BookMetadata {

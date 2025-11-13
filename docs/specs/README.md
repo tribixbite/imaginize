@@ -18,6 +18,7 @@ Comprehensive architecture and feature documentation for the imaginize project.
 - [Token Management](./token-management.md) - Counting, estimation, and cost tracking
 - [Visual Style System](./visual-style-system.md) - Style consistency and character tracking
 - [Dashboard System](./dashboard.md) - Real-time WebSocket monitoring UI
+- [Multi-Book Series](./multi-book-series.md) - Series-wide element sharing and style inheritance
 
 ### Data Formats
 - [Output Files](./output-files.md) - Contents.md, Chapters.md, Elements.md formats

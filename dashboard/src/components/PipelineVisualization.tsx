@@ -36,27 +36,34 @@ export function PipelineVisualization({ currentPhase }: PipelineVisualizationPro
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-      <h2 className="text-xl font-bold text-white mb-6">Pipeline</h2>
-      <div className="flex items-center justify-between">
+    <section className="bg-gray-800 rounded-lg p-6 shadow-lg" aria-labelledby="pipeline-heading">
+      <h2 id="pipeline-heading" className="text-xl font-bold text-white mb-6">Pipeline</h2>
+      <ol className="flex items-center justify-between" role="list" aria-label="Processing pipeline stages">
         {phases.map((phase, index) => {
           const status = getPhaseStatus(index);
           return (
-            <div key={phase.id} className="contents">
+            <li key={phase.id} className="contents">
               <div className="flex flex-col items-center flex-1">
                 <div
                   className={`w-16 h-16 rounded-full border-4 flex items-center justify-center text-2xl transition-all ${getPhaseColor(
                     status
                   )}`}
+                  role="img"
+                  aria-label={`${phase.label} phase: ${status}`}
+                  aria-current={status === 'active' ? 'step' : undefined}
                 >
-                  {phase.icon}
+                  <span aria-hidden="true">{phase.icon}</span>
                 </div>
-                <div className="mt-2 text-sm font-semibold text-gray-300">
+                <div className="mt-2 text-sm font-semibold text-gray-300" aria-hidden="true">
                   {phase.label}
                 </div>
               </div>
               {index < phases.length - 1 && (
-                <div className="flex-1 h-1 mx-2 relative top-[-20px]">
+                <div
+                  className="flex-1 h-1 mx-2 relative top-[-20px]"
+                  role="presentation"
+                  aria-hidden="true"
+                >
                   <div
                     className={`h-full transition-all duration-500 ${getConnectorColor(
                       index
@@ -64,10 +71,10 @@ export function PipelineVisualization({ currentPhase }: PipelineVisualizationPro
                   />
                 </div>
               )}
-            </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </section>
   );
 }

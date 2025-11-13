@@ -50,29 +50,41 @@ export function LogStream({ logs }: LogStreamProps) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg flex flex-col h-96">
-      <div className="p-4 border-b border-gray-700">
-        <h2 className="text-xl font-bold text-white">Live Log</h2>
-      </div>
+    <section className="bg-gray-800 rounded-lg shadow-lg flex flex-col h-96" aria-labelledby="log-heading">
+      <header className="p-4 border-b border-gray-700">
+        <h2 id="log-heading" className="text-xl font-bold text-white">Live Log</h2>
+      </header>
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto p-4 space-y-1 font-mono text-sm"
         onScroll={handleScroll}
+        role="log"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-label="Processing log messages"
+        tabIndex={0}
       >
         {logs.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">Waiting for logs...</div>
+          <div className="text-gray-500 text-center py-8" role="status">Waiting for logs...</div>
         ) : (
           logs.map((log, index) => (
-            <div key={index} className={`flex gap-2 ${getLevelColor(log.level)}`}>
-              <span className="text-gray-500 select-none">{getLevelIcon(log.level)}</span>
-              <span className="text-gray-500 select-none min-w-[80px]">
-                {new Date(log.timestamp).toLocaleTimeString()}
+            <div
+              key={index}
+              className={`flex gap-2 ${getLevelColor(log.level)}`}
+              role="log"
+              aria-label={`${log.level} message at ${new Date(log.timestamp).toLocaleTimeString()}`}
+            >
+              <span className="text-gray-500 select-none" aria-hidden="true">
+                {getLevelIcon(log.level)}
               </span>
+              <time className="text-gray-500 select-none min-w-[80px]" dateTime={new Date(log.timestamp).toISOString()}>
+                {new Date(log.timestamp).toLocaleTimeString()}
+              </time>
               <span className="flex-1">{log.message}</span>
             </div>
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 }

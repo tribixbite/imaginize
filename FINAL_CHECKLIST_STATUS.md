@@ -197,7 +197,7 @@ imageEndpoint:
 ## 🚧 Partially Complete Items
 
 ### 7. Full Granular Control Over Processing
-**Status**: PARTIAL (90% complete)
+**Status**: PARTIAL (93% complete)
 
 **Implemented**:
 - ✅ Chapter selection (`--chapters 1-5`, `1,3,5`, `1-10,15-20`)
@@ -213,6 +213,7 @@ imageEndpoint:
 - ✅ Concurrency limits
 - ✅ Memory system to append descriptions of existing elements
 - ✅ Custom prompt templates per phase
+- 🚧 Granular retry control (infrastructure complete, phase integration pending)
 
 **Memory System Features**:
 - Progressive entity enrichment during Pass 2 analysis
@@ -255,9 +256,42 @@ genre: "fantasy"
 - Integration in `src/lib/phases/extract-phase.ts`
 - Integration in `src/lib/phases/illustrate-phase-v2.ts`
 
+**Granular Retry Control** (🚧 INFRASTRUCTURE COMPLETE):
+- ✅ Configuration options (retryControl)
+- ✅ State manager methods (getFailedChapters, markChapterFailed, clearChapterErrors)
+- ✅ CLI flags (--skip-failed, --retry-failed, --clear-errors)
+- ✅ Error tracking infrastructure (PhaseStatus 'failed', ChapterState error field)
+- ❌ Phase integration (analyze, illustrate error handling) - pending
+- ❌ Error summary reporting - pending
+
+**Configuration Example**:
+```yaml
+retryControl:
+  skipFailed: true      # Continue even if chapters fail
+  retryFailed: false    # Only retry failed chapters
+  clearErrors: false    # Clear errors before processing
+```
+
+**CLI Usage**:
+```bash
+# Skip failed chapters and continue
+imaginize --text --skip-failed book.epub
+
+# Retry only previously failed chapters
+imaginize --text --retry-failed book.epub
+
+# Clear errors and retry all
+imaginize --text --clear-errors book.epub
+```
+
+**Files**:
+- `src/types/config.ts` - Configuration types
+- `src/lib/state-manager.ts` - Error tracking methods (4 new methods)
+- `src/index.ts` - CLI flags and runtime config
+
 **Missing**:
 - ❌ Interactive scene editing
-- ❌ Granular retry control (skip failed chapters)
+- 🚧 Granular retry control phase integration (infrastructure done)
 - ❌ Scene-level regeneration
 - ❌ Template CLI commands (low priority - templates work via config)
 

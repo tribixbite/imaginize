@@ -6,7 +6,7 @@ Comprehensive unit testing for core utility modules
 ## Accomplishments
 
 ### Unit Tests Added ✅
-**246 utility tests** across 5 test files (3,120 lines)
+**281 utility tests** across 6 test files (3,724 lines)
 
 #### 1. file-selector.test.ts (23 tests, 390 lines)
 - **findBookFiles function**:
@@ -124,8 +124,8 @@ Comprehensive unit testing for core utility modules
 
 ## Test Coverage Summary
 
-### Total: 450 Tests (100% Passing)
-- **Main project**: 365 tests
+### Total: 485 Tests (100% Passing)
+- **Main project**: 400 tests
   - Concurrent operations: 35 tests
   - Token counter: 44 tests
   - Retry utils: 40 tests
@@ -135,7 +135,7 @@ Comprehensive unit testing for core utility modules
 - **Demo app**: 85 tests (components + utilities)
 
 ### Test Files
-**Main Project** (14 files):
+**Main Project** (15 files):
 - src/test/concurrent/*.test.ts (35 tests)
 - src/test/token-counter.test.ts (44 tests)
 - src/test/retry-utils.test.ts (40 tests)
@@ -152,9 +152,9 @@ Comprehensive unit testing for core utility modules
 - src/components/ResultsView.test.tsx (20 tests)
 
 ## Code Statistics
-- **Test code added**: 3,120 lines
-- **Total main project**: 365 tests across 14 test files
-- **Test pass rate**: 100% (450/450)
+- **Test code added**: 3,724 lines
+- **Total main project**: 400 tests across 15 test files
+- **Test pass rate**: 100% (485/485)
 
 ## Test Coverage Details
 
@@ -248,3 +248,38 @@ Comprehensive unit testing for core utility modules
 - **Current phase**: In-progress identification, progress calculation
 - **Consistency validation**: File existence checks, chapter-TOC validation
 - **Summary generation**: Book info, token stats, phase status with emojis
+
+#### 6. output-generator.test.ts (35 tests, 604 lines)
+- **generateContentsFile function**:
+  - Contents.md file creation
+  - Book title, author, publisher, total pages
+  - Chapters and elements count display
+  - Links to Chapters.md and Elements.md
+  - Usage instructions section
+  - Complete metadata handling
+- **generateChaptersFile function**:
+  - Chapters.md file creation
+  - Book title in header
+  - Empty chapters handling
+  - Chapter titles as headers (###)
+  - Scene numbering within chapters
+  - Page range display
+  - Line numbers when provided
+  - Source quote blockquotes
+  - Visual description display
+  - Image URL links when provided
+  - Empty chapter skipping
+  - Multiple chapters with multiple scenes
+- **generateElementsFile function**:
+  - Elements.md file creation
+  - Book title and author in header
+  - Element grouping by type (character, creature, place, item, object)
+  - Type ordering (character first, object last)
+  - Element names as headers (####)
+  - Element descriptions when provided
+  - Reference quotes with page numbers
+  - Image URL links when provided
+  - Statistics section with counts by type
+  - Empty elements handling
+  - All element types coverage
+  - Type skipping when empty

@@ -46,6 +46,11 @@ export async function loadImageConcepts(outputDir: string): Promise<Map<string, 
   for (const line of lines) {
     // Detect chapter heading
     if (line.startsWith('### ')) {
+      // Save previous concept before changing chapters
+      if (currentConcept.description && currentChapter) {
+        conceptsByChapter.get(currentChapter)!.push(currentConcept as ImageConcept);
+        currentConcept = {};
+      }
       currentChapter = line.replace('### ', '').trim();
       if (!conceptsByChapter.has(currentChapter)) {
         conceptsByChapter.set(currentChapter, []);

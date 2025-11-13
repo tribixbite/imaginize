@@ -6,7 +6,7 @@ End-to-end testing suite for the imaginize GitHub Pages demo using Playwright.
 
 This directory contains comprehensive E2E tests that validate the complete user journey through the demo application, from file upload to results download.
 
-**Status**: Phase 1 Complete (Setup & Infrastructure)
+**Status**: Phase 1-2 Complete (Setup & Core User Flows)
 
 ## Structure
 
@@ -20,7 +20,11 @@ e2e/
 │   ├── mock-api.ts    # Mock OpenAI API responses
 │   └── test-data.ts   # Test constants and data
 ├── tests/             # E2E test suites
-│   └── 01-initial-load.spec.ts  # Page load validation (8 tests)
+│   ├── 01-initial-load.spec.ts       # Page load validation (8 tests)
+│   ├── 02-file-upload.spec.ts        # File upload functionality (9 tests)
+│   ├── 03-api-key-management.spec.ts # API key security (8 tests)
+│   ├── 04-processing-flow.spec.ts    # Processing pipeline (10 tests)
+│   └── 05-results-view.spec.ts       # Results and downloads (8 tests)
 └── README.md          # This file
 ```
 
@@ -87,20 +91,68 @@ E2E tests run automatically in GitHub Actions:
 - Mobile Chrome (Pixel 5)
 - Mobile Safari (iPhone 12)
 
-### Phase 2-5: Planned (Not Yet Implemented)
+### Phase 2: Core User Flow Tests ✅ COMPLETE
+
+**Tests Implemented** (35 tests across 4 suites):
+
+**02-file-upload.spec.ts** (9 tests):
+1. Accept EPUB file upload via file picker
+2. Accept PDF file upload via file picker
+3. Display file information after upload
+4. Allow removing uploaded file
+5. Handle drag and drop for EPUB files
+6. Handle drag and drop for PDF files
+7. Reject files larger than 10MB
+8. Validate file type (reject non-EPUB/PDF)
+9. Show upload progress or loading state
+
+**03-api-key-management.spec.ts** (8 tests):
+1. Have API key input field visible
+2. Mask API key by default (password type)
+3. Allow toggling API key visibility
+4. Accept valid API key format
+5. Offer persistent storage option
+6. Offer session-only storage option
+7. Save API key to localStorage when persistent
+8. Clear API key from localStorage when forget button clicked
+9. Validate API key is required before processing
+
+**04-processing-flow.spec.ts** (10 tests):
+1. Disable start button without file and API key
+2. Enable start button with valid file and API key
+3. Start processing when start button clicked
+4. Show progress bar during processing
+5. Display current phase during processing
+6. Update progress percentage during processing
+7. Show chapter progress grid
+8. Handle phase transitions
+9. Complete processing successfully
+10. Show results section after completion
+11. Handle processing with PDF file
+
+**05-results-view.spec.ts** (8 tests):
+1. Display results section after processing
+2. Show download Chapters.md button
+3. Show download Elements.md button
+4. Trigger file download when Chapters button clicked
+5. Trigger file download when Elements button clicked
+6. Show image thumbnails if images were generated
+7. Show download all images button if images exist
+8. Show start new processing button
+9. Reset state when start new button clicked
+
+**Total Phase 1-2**: 43 E2E tests
+
+### Phase 3-5: Planned (Not Yet Implemented)
 
 See `docs/E2E_TESTING_PLAN.md` for full implementation plan.
 
 **Planned Test Suites**:
-- `02-file-upload.spec.ts` - File upload functionality (~9 tests)
-- `03-api-key-management.spec.ts` - API key security (~8 tests)
-- `04-processing-flow.spec.ts` - Processing pipeline (~10 tests)
-- `05-results-view.spec.ts` - Results and downloads (~8 tests)
 - `06-error-scenarios.spec.ts` - Error handling (~9 tests)
 - `07-mobile-responsive.spec.ts` - Mobile UX (~8 tests)
 - `08-accessibility.spec.ts` - Accessibility (WCAG 2.1 AA) (~5 tests)
 
-**Total Planned**: 50+ E2E tests
+**Total Planned**: 65+ E2E tests when all phases complete
 
 ## Mocking Strategy
 
@@ -242,16 +294,16 @@ deploy:
 ## Implementation Status
 
 - [x] Phase 1: Setup & Infrastructure (Complete)
-- [ ] Phase 2: Core User Flow Tests (Planned)
+- [x] Phase 2: Core User Flow Tests (Complete)
 - [ ] Phase 3: Error Scenarios & Edge Cases (Planned)
 - [ ] Phase 4: CI/CD Integration (Planned)
 - [ ] Phase 5: Documentation & Polish (Planned)
 
-**Current Version**: Phase 1 (Setup Complete)
-**Next Steps**: Implement Phase 2 (Core User Flow Tests)
+**Current Version**: Phase 1-2 (Setup + Core Flows Complete)
+**Next Steps**: Implement Phase 3 (Error Scenarios & Edge Cases)
 
 ---
 
 **Last Updated**: November 13, 2025
-**Test Count**: 8 tests (1 suite)
-**Status**: Phase 1 Complete, ready for Phase 2
+**Test Count**: 43 tests (5 suites)
+**Status**: Phase 1-2 Complete, ready for Phase 3

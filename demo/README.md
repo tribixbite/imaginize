@@ -86,6 +86,40 @@ Test files:
 - `src/components/ProcessingProgress.test.tsx` - Progress visualization (25 tests)
 - `src/components/ResultsView.test.tsx` - Results display (20 tests)
 
+## E2E Testing
+
+The demo includes comprehensive end-to-end tests using Playwright:
+
+- **68 E2E tests** across 8 test suites
+- **340 browser test runs** (5 browsers × 68 tests)
+- **Cross-browser testing**: Chrome, Firefox, Safari/WebKit
+- **Mobile testing**: iPhone 12 and Pixel 5 viewports
+- **Accessibility validation**: WCAG 2.1 AA compliance with @axe-core/playwright
+- **CI/CD integration**: Automatic execution on PRs and deployment gate
+
+Run E2E tests locally:
+```bash
+npm run test:e2e          # Run all E2E tests
+npm run test:e2e:ui       # Open Playwright UI
+npm run test:e2e:debug    # Debug mode with inspector
+npm run test:e2e:headed   # Run with visible browser
+npm run test:e2e:report   # View HTML test report
+```
+
+E2E test suites:
+- `e2e/tests/01-initial-load.spec.ts` - Page load validation (8 tests)
+- `e2e/tests/02-file-upload.spec.ts` - File upload functionality (9 tests)
+- `e2e/tests/03-api-key-management.spec.ts` - API key security (8 tests)
+- `e2e/tests/04-processing-flow.spec.ts` - Processing pipeline (10 tests)
+- `e2e/tests/05-results-view.spec.ts` - Results and downloads (8 tests)
+- `e2e/tests/06-error-scenarios.spec.ts` - Error handling & recovery (9 tests)
+- `e2e/tests/07-mobile-responsive.spec.ts` - Mobile UX validation (8 tests)
+- `e2e/tests/08-accessibility.spec.ts` - WCAG 2.1 AA compliance (8 tests)
+
+**Note**: E2E tests require Playwright browsers which cannot be installed on Android/Termux. These tests are designed to run in CI/CD (GitHub Actions) on Linux runners.
+
+See `e2e/README.md` for complete E2E testing documentation.
+
 ## API Key Security
 
 Your OpenAI API key is stored in your browser's localStorage and **never sent to our servers**. You have two storage options:

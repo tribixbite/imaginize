@@ -251,6 +251,45 @@ bun test test/my-feature.test.ts
 - 6 integration tests require API keys (expected)
 - All unit and CLI tests should pass before submitting PR
 
+### E2E Testing (Demo)
+
+The `demo/` directory includes comprehensive E2E tests using Playwright:
+
+**Running E2E Tests**:
+```bash
+cd demo
+npm run test:e2e          # Run all 68 E2E tests
+npm run test:e2e:ui       # Open Playwright UI (visual test runner)
+npm run test:e2e:debug    # Debug mode with inspector
+npm run test:e2e:report   # View HTML test report
+```
+
+**E2E Test Coverage** (68 tests across 8 suites):
+- Page load validation and initial state
+- File upload (EPUB/PDF, drag-and-drop, validation)
+- API key management (security, persistence, visibility toggle)
+- Processing pipeline (start, progress, phases, completion)
+- Results view (downloads, state reset)
+- Error scenarios (API errors, offline mode, retry, recovery)
+- Mobile responsive (iPhone/Android viewports, touch interactions)
+- Accessibility (WCAG 2.1 AA compliance with @axe-core/playwright)
+
+**E2E Test Requirements**:
+- E2E tests run in GitHub Actions CI/CD automatically
+- Playwright browsers cannot be installed on Android/Termux
+- For local development on standard systems: `npx playwright install --with-deps`
+- All E2E tests must pass before demo deployment
+- Mock API is used to avoid costs and rate limits
+
+**When to Add E2E Tests**:
+- When adding new demo features or UI components
+- When modifying user flows (upload → process → download)
+- When adding new error handling or edge cases
+- When implementing mobile-specific features
+- When updating accessibility features
+
+See `demo/e2e/README.md` for detailed E2E testing documentation.
+
 ---
 
 ## Submitting Changes

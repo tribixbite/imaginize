@@ -376,6 +376,22 @@ Tests complete dashboard system with live book processing:
 
 **Status:** Dashboard fully functional (Phases 1-3 complete). Backend infrastructure, React frontend UI, and integration testing all complete.
 
+**Demo E2E Tests** (GitHub Pages demo validation):
+```bash
+cd demo
+npm run test:e2e          # Run all 68 E2E tests
+npm run test:e2e:ui       # Open Playwright UI
+npm run test:e2e:report   # View test report
+```
+Comprehensive Playwright E2E tests for the GitHub Pages demo:
+- **68 E2E tests** across 8 suites (340 browser test runs)
+- **Cross-browser**: Chrome, Firefox, Safari/WebKit, Mobile
+- **Accessibility**: WCAG 2.1 AA compliance validation
+- **CI/CD**: Integrated into GitHub Actions (runs on PRs and gates deployments)
+- **Coverage**: File upload, API key management, processing, results, errors, mobile UX, accessibility
+
+See `demo/e2e/README.md` for complete documentation.
+
 ## Usage Examples
 
 ### Basic Usage

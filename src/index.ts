@@ -136,6 +136,8 @@ export async function main(): Promise<void> {
     .option('--all', 'Regenerate all scenes')
     .option('--list', 'List all available scenes without regenerating')
     .option('--dry-run', 'Show what would be regenerated without generating')
+    .option('--edit', 'Edit scene descriptions interactively before regenerating')
+    .option('--view', 'View scene details without regenerating')
     .action(async (cmdOptions) => {
       try {
         const { findScenesToRegenerate, loadImageConcepts } = await import('./lib/regenerate.js');
@@ -172,6 +174,41 @@ export async function main(): Promise<void> {
           sceneId: cmdOptions.sceneId,
           all: cmdOptions.all,
         });
+
+        // View mode
+        if (cmdOptions.view) {
+          const { viewScene } = await import('./lib/scene-editor.js');
+
+          for (const scene of scenes) {
+            await viewScene(scene);
+          }
+
+          process.exit(0);
+        }
+
+        // Edit mode
+        if (cmdOptions.edit) {
+          const { SceneEditor } = await import('./lib/scene-editor.js');
+          const editor = new SceneEditor(cmdOptions.outputDir);
+
+          const editedConcepts = await editor.editScenes(scenes);
+
+          if (editedConcepts.size === 0) {
+            console.log(chalk.gray('No edits made. Exiting.'));
+            process.exit(0);
+          }
+
+          // Update scenes with edited concepts
+          for (const scene of scenes) {
+            const sceneKey = `${scene.chapterNumber}_${scene.sceneNumber}`;
+            const editedConcept = editedConcepts.get(sceneKey);
+            if (editedConcept) {
+              scene.concept = editedConcept;
+            }
+          }
+
+          console.log(chalk.cyan('Proceeding with regeneration of edited scenes...\n'));
+        }
 
         // Dry run mode
         if (cmdOptions.dryRun) {

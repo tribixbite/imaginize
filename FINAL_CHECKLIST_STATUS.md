@@ -197,7 +197,7 @@ imageEndpoint:
 ## 🚧 Partially Complete Items
 
 ### 7. Full Granular Control Over Processing
-**Status**: PARTIAL (80% complete)
+**Status**: PARTIAL (90% complete)
 
 **Implemented**:
 - ✅ Chapter selection (`--chapters 1-5`, `1,3,5`, `1-10,15-20`)
@@ -212,6 +212,7 @@ imageEndpoint:
 - ✅ Image quality/size control
 - ✅ Concurrency limits
 - ✅ Memory system to append descriptions of existing elements
+- ✅ Custom prompt templates per phase
 
 **Memory System Features**:
 - Progressive entity enrichment during Pass 2 analysis
@@ -226,18 +227,39 @@ imageEndpoint:
 - `src/lib/concurrent/elements-memory.ts` - Core memory system
 - Integration in `src/lib/phases/analyze-phase-v2.ts`
 
-**In Progress**:
-- 🚧 Custom prompt templates per phase (specification complete, implementation pending)
-  - Specification: docs/specs/custom-prompt-templates.md
-  - Configuration types added to config.ts
-  - Template variables: book metadata, chapter data, elements, config
-  - Built-in presets: fantasy, scifi, mystery, romance
-  - CLI commands designed: init, list, validate, export
+**Custom Prompt Templates** (✅ COMPLETE):
+- ✅ Template loader with variable replacement and conditionals
+- ✅ 25+ template variables (book metadata, chapter data, elements, config)
+- ✅ Conditional blocks ({{#if}}, {{#unless}})
+- ✅ 4 built-in genre presets (fantasy, scifi, mystery, romance)
+- ✅ Integration with all phases (analyze, extract, illustrate)
+- ✅ Template caching for performance
+- ❌ CLI commands (init, list, validate, export) - deferred to future release
+
+**Configuration Example**:
+```yaml
+customTemplates:
+  enabled: true
+  preset: "fantasy"  # or scifi, mystery, romance
+  # OR use custom template files:
+  templatesDir: "./.imaginize/templates"
+  analyzeTemplate: "analyze.txt"
+  extractTemplate: "extract.txt"
+  illustrateTemplate: "illustrate.txt"
+genre: "fantasy"
+```
+
+**Files**:
+- `src/lib/templates/template-loader.ts` (661 lines) - Core template system
+- Integration in `src/lib/phases/analyze-phase-v2.ts`
+- Integration in `src/lib/phases/extract-phase.ts`
+- Integration in `src/lib/phases/illustrate-phase-v2.ts`
 
 **Missing**:
 - ❌ Interactive scene editing
 - ❌ Granular retry control (skip failed chapters)
 - ❌ Scene-level regeneration
+- ❌ Template CLI commands (low priority - templates work via config)
 
 ---
 
@@ -427,7 +449,7 @@ Options:
 
 **Checklist Progress**:
 - ✅ Complete: 8/11 items (73%)
-- 🚧 Partial: 1/11 items (9%)
+- 🚧 Partial: 1/11 items (9% → 90% internal completion)
 - ❌ Not Started: 2/11 items (18%)
 
 **Code Quality**:
@@ -445,13 +467,14 @@ Options:
 
 **Session Achievements (2025-11-13)**:
 1. ✅ Eliminated all 25 ESLint warnings
-2. ✅ Created comprehensive technical specifications (11 docs)
+2. ✅ Created comprehensive technical specifications (12 docs)
 3. ✅ Documented all major systems and components
 4. ✅ Implemented ElementsMemory progressive enrichment system
 5. ✅ Implemented Multi-Book Series Support core infrastructure
 6. ✅ Implemented Graphic Novel Postprocessing (PDF compilation)
-7. ✅ Perfect code quality score (0 errors, 0 warnings)
-8. ✅ 20+ commits pushed to GitHub
+7. ✅ Implemented Custom Prompt Templates system
+8. ✅ Perfect code quality score (0 errors, 0 warnings)
+9. ✅ 27+ commits pushed to GitHub
 
 ---
 

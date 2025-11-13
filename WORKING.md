@@ -1,5 +1,94 @@
 # imaginize - Development Status
 
+## 🎉 v2.6.2 Published to npm (2025-11-12)
+
+**Status:** ✅ PUBLISHED - Available on npm registry
+
+**Purpose:** Patch release addressing dashboard quality issues from comprehensive QA review
+
+**Dashboard Fixes (8 total):**
+
+**Priority 1 (Critical) - 3 fixes:**
+- ✅ **WebSocket Connection** - Fixed hardcoded port fallback
+  - Changed from `ws://hostname:3000` to dynamic protocol/host detection
+  - Now uses `wss://` for HTTPS, `ws://` for HTTP with `window.location.host`
+  - Works correctly behind proxies on standard ports (80/443)
+  - File: dashboard/src/App.tsx:11-14
+
+- ✅ **React Key Anti-Pattern** - Fixed array index as React key
+  - Changed from `key={index}` to `key={timestamp-index}`
+  - Prevents UI bugs if logs filtered or reordered
+  - Follows React best practices for stable component identity
+  - File: dashboard/src/components/LogStream.tsx:74
+
+- ✅ **Memory Leak** - Implemented circular buffer for log stream
+  - Added MAX_LOGS constant (1000 entries)
+  - Logs capped using `.slice(-MAX_LOGS)` with single setState
+  - Prevents browser memory exhaustion in 8+ hour sessions
+  - File: dashboard/src/hooks/useWebSocket.ts:5,67
+
+**Priority 2 (Important) - 4 fixes:**
+- ✅ **Invalid Phase Handling** - Added validation for unknown phases
+  - `findIndex()` defaults to 0 when phase not found (previously -1)
+  - Prevents visual glitch where all phases show "completed"
+  - File: dashboard/src/components/PipelineVisualization.tsx:40-44
+
+- ✅ **Missing Error Status** - Added Error to ChapterGrid legend
+  - Legend now shows all 4 states: Pending, In Progress, Completed, Error
+  - File: dashboard/src/components/ChapterGrid.tsx:101-108
+
+- ✅ **Production Console Logging** - Conditional error logging
+  - Console logging only in development (`import.meta.env.DEV`)
+  - Prevents stack trace exposure in production
+  - File: dashboard/src/components/ErrorBoundary.tsx:47-52
+
+- ✅ **Edge Case Validation** - Comprehensive progress calculation validation
+  - Validates totalChapters/completedChapters for negative, zero, NaN
+  - Prevents NaN display and division by zero
+  - File: dashboard/src/components/OverallProgress.tsx:28-37
+
+**Priority 3 (Defensive) - 1 fix:**
+- ✅ **Root Element Validation** - Explicit validation for root DOM element
+  - Replaced non-null assertion with explicit check
+  - Throws descriptive error if `<div id="root">` missing
+  - File: dashboard/src/main.tsx:7-11
+
+**Documentation Updates:**
+- ✅ **Main README** - Added v2.6.1 enhancements section
+  - Documented Error Boundaries, Accessibility, Performance, Toast features
+  - Split Features into v2.6.0 core and v2.6.1 enhanced sections
+  - Updated bundle size and technical details
+
+- ✅ **Dashboard README** - Created comprehensive 353-line documentation
+  - Replaced default Vite template with proper docs
+  - Architecture, component structure, development guide
+  - WCAG 2.1 AA accessibility documentation
+  - Performance optimization techniques and metrics
+  - Error handling, testing, deployment, troubleshooting
+
+**Publication Details:**
+- **npm URL:** https://www.npmjs.com/package/imaginize
+- **Version:** 2.6.2
+- **Published:** 2025-11-12
+- **Package Size:** 192.9 kB (compressed), 770.3 kB (unpacked)
+- **Total Files:** 140 files
+- **Git Tag:** v2.6.2 created and pushed
+- **Bundle Size:** 211.70 kB (65.58 kB gzipped) - only +0.06 kB overhead
+
+**QA Review Process:**
+- Claude Code + Gemini 2.5 Pro analysis via zen-mcp tool
+- 9 dashboard files systematically reviewed
+- 10 issues identified across 3 severity levels
+- V2.6.2_ROADMAP.md created with detailed fixes
+
+**Technical Details:**
+- All fixes backward compatible
+- Zero TypeScript errors in build
+- 35/43 tests passing (same as v2.6.1)
+- No breaking changes to API or CLI interface
+
+---
+
 ## 🎉 v2.6.1 Published to npm (2025-11-12)
 
 **Status:** ✅ PUBLISHED - Available on npm registry

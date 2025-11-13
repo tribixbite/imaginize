@@ -19,7 +19,7 @@ import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
 import { DashboardServer } from './lib/dashboard/server.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
-import type { IllustrateConfig } from './types/config.js';
+import type { IllustrateConfig, IllustrateState } from './types/config.js';
 import { prepareConfiguration, parseChapterSelection, mapStoryChaptersToEpub, parseElementSelection } from './lib/provider-utils.js';
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
@@ -69,6 +69,10 @@ export async function main(): Promise<void> {
     .option('--force', 'Force regeneration even if exists')
     .option('--migrate', 'Migrate old state to new schema')
     .option('--concurrent', 'Use concurrent processing architecture (experimental)')
+    // Retry control
+    .option('--skip-failed', 'Skip failed chapters and continue processing')
+    .option('--retry-failed', 'Only retry chapters that previously failed')
+    .option('--clear-errors', 'Clear error status for all chapters before processing')
     // Config override
     .option('--model <name>', 'Override model (e.g., "gpt-4o")')
     .option('--api-key <key>', 'Override API key')
@@ -326,6 +330,11 @@ export async function main(): Promise<void> {
     const runtimeConfig = {
       ...config,
       limit: options.limit, // Add limit from CLI options
+      retryControl: {
+        skipFailed: options.skipFailed || config.retryControl?.skipFailed || false,
+        retryFailed: options.retryFailed || config.retryControl?.retryFailed || false,
+        clearErrors: options.clearErrors || config.retryControl?.clearErrors || false,
+      },
     } as Required<IllustrateConfig> & { limit?: number };
 
     // Create phase context
@@ -343,6 +352,28 @@ export async function main(): Promise<void> {
     console.log(chalk.cyan.bold('\n🚀 Starting processing...\n'));
 
     try {
+      // Handle retry control flags
+      if (runtimeConfig.retryControl?.clearErrors) {
+        const phases = ['analyze', 'extract', 'illustrate'] as const;
+        let totalCleared = 0;
+        for (const phase of phases) {
+          const cleared = stateManager.clearChapterErrors(phase);
+          totalCleared += cleared;
+        }
+        if (totalCleared > 0) {
+          console.log(chalk.yellow(`🔄 Cleared ${totalCleared} failed chapter(s) for retry\n`));
+          await stateManager.save();
+        }
+      }
+
+      if (runtimeConfig.retryControl?.skipFailed) {
+        console.log(chalk.yellow('⚠️  Skip-failed mode: Will continue processing even if chapters fail\n'));
+      }
+
+      if (runtimeConfig.retryControl?.retryFailed) {
+        console.log(chalk.yellow('🔁 Retry-failed mode: Only processing chapters that previously failed\n'));
+      }
+
       // Use v2 phases if --concurrent flag is set
       const useConcurrent = options.concurrent || false;
 

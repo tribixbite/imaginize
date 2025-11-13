@@ -185,6 +185,80 @@ export class StateManager {
   }
 
   /**
+   * Get failed chapters for a phase
+   * Returns array of chapter numbers with status 'failed'
+   */
+  getFailedChapters(phase: keyof IllustrateState['phases']): number[] {
+    if (!this.state.phases[phase].chapters) {
+      return [];
+    }
+
+    return Object.keys(this.state.phases[phase].chapters!)
+      .filter((key) => this.state.phases[phase].chapters![key].status === 'failed')
+      .map(Number)
+      .sort((a, b) => a - b);
+  }
+
+  /**
+   * Get failed chapters with error details
+   */
+  getFailedChaptersWithErrors(phase: keyof IllustrateState['phases']): Array<{
+    chapterNumber: number;
+    error: string;
+  }> {
+    if (!this.state.phases[phase].chapters) {
+      return [];
+    }
+
+    return Object.entries(this.state.phases[phase].chapters!)
+      .filter(([_, chapterState]) => chapterState.status === 'failed')
+      .map(([chapterNum, chapterState]) => ({
+        chapterNumber: parseInt(chapterNum),
+        error: chapterState.error || 'Unknown error',
+      }))
+      .sort((a, b) => a.chapterNumber - b.chapterNumber);
+  }
+
+  /**
+   * Mark chapter as failed with error message
+   */
+  markChapterFailed(
+    phase: keyof IllustrateState['phases'],
+    chapterNumber: number,
+    errorMessage: string
+  ): void {
+    this.updateChapter(phase, chapterNumber, 'failed', {
+      error: errorMessage,
+    });
+  }
+
+  /**
+   * Clear error status for all chapters in a phase
+   * Resets failed chapters to pending so they can be retried
+   */
+  clearChapterErrors(phase: keyof IllustrateState['phases']): number {
+    if (!this.state.phases[phase].chapters) {
+      return 0;
+    }
+
+    let clearedCount = 0;
+    for (const [chapterNum, chapterState] of Object.entries(
+      this.state.phases[phase].chapters
+    )) {
+      if (chapterState.status === 'failed') {
+        this.state.phases[phase].chapters![chapterNum] = {
+          ...chapterState,
+          status: 'pending',
+          error: undefined,
+        };
+        clearedCount++;
+      }
+    }
+
+    return clearedCount;
+  }
+
+  /**
    * Get current phase and sub-phase
    */
   getCurrentPhase(): { phase: string; subPhase?: string; progress: string } | null {

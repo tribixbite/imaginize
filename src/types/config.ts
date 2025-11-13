@@ -146,6 +146,20 @@ export interface IllustrateConfig {
    * @since v2.7.0
    */
   genre?: string;
+
+  /**
+   * Granular retry control
+   * Allows skipping failed chapters or retrying only failed ones
+   * @since v2.7.0
+   */
+  retryControl?: {
+    /** Skip failed chapters and continue processing (default: false) */
+    skipFailed?: boolean;
+    /** Only retry chapters that previously failed (default: false) */
+    retryFailed?: boolean;
+    /** Clear error status for all chapters before processing (default: false) */
+    clearErrors?: boolean;
+  };
 }
 
 export interface BookMetadata {
@@ -264,6 +278,11 @@ export interface CommandOptions {
   force?: boolean;
   migrate?: boolean;
   concurrent?: boolean;
+
+  // Retry control
+  skipFailed?: boolean;
+  retryFailed?: boolean;
+  clearErrors?: boolean;
 
   // Config override
   model?: string;

@@ -40,11 +40,40 @@ npm install
 # Start development server
 npm run dev
 
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
 # Build for production
 npm run build
 
 # Preview production build
 npm run preview
+```
+
+## Testing
+
+The demo includes a comprehensive test suite using Vitest and React Testing Library:
+
+- **18 unit tests** covering core utilities and hooks
+- **100% passing** in CI/CD pipeline
+- Tests run automatically before deployment
+- Coverage includes:
+  - API key storage and management
+  - localStorage synchronization
+  - React hooks functionality
+
+Run tests locally:
+```bash
+npm test                # Run all tests once
+npm run test:watch      # Run tests in watch mode
+npm run test:coverage   # Run tests with coverage report
+npm run test:ui         # Open Vitest UI
 ```
 
 ## API Key Security

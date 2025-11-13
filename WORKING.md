@@ -87,6 +87,28 @@
 - 35/43 tests passing (same as v2.6.1)
 - No breaking changes to API or CLI interface
 
+**Integration Testing (2025-11-13):**
+- ✅ **Test 1: Chapters 1-5 with Images** - PASSED
+  - Command: `npx . --concurrent --text --images --chapters 1-5 --file ImpossibleCreatures.epub`
+  - Results: 5 chapters processed, 5 images generated, 4,598 tokens used
+  - Features verified: Visual scenes, concurrent processing, image generation
+  - Known issue: gpt-4-vision-preview unavailable on free tier (expected, no impact)
+
+- ✅ **Test 2: Elements Extraction** - PASSED
+  - Command: `npx . --concurrent --elements --file ImpossibleCreatures.epub`
+  - Results: 19 elements extracted (characters, locations, etc.), 14,500 tokens used
+  - Features verified: Entity extraction, character tracking, deduplication
+
+- ✅ **Test 3: Full Processing with Dashboard** - PASSED
+  - Command: `npx . --concurrent --text --images --dashboard --chapters 1-3 --file ImpossibleCreatures.epub`
+  - Results: 3 chapters processed, WebSocket server verified, 2,033 tokens used
+  - Features verified: Real-time updates, dashboard UI, all 8 v2.6.2 fixes working
+  - Dashboard URL: http://localhost:3000 (started and stopped cleanly)
+
+- **Total:** 21,131 tokens used, ~15 minutes processing time, 100% success rate (3/3 tests)
+- **Documentation:** INTEGRATION_TEST_RESULTS_v2.6.2.md (566 lines)
+- **Test Book:** ImpossibleCreatures.epub (83 chapters, 297 pages, 26 MB)
+
 ---
 
 ## 🎉 v2.6.1 Published to npm (2025-11-12)

@@ -2290,6 +2290,116 @@ const CLI_CMD = 'PATH=/data/data/com.termux/files/usr/bin:/data/data/com.termux/
 
 ---
 
+## Session: 2025-11-13 (Continuation - Granular Retry Control)
+
+**Type:** Feature implementation
+**Duration:** Extended session
+**Starting Status:** v2.7.0-rc.1
+**Target Status:** v2.7.0-rc.1 (enhanced)
+
+### Major Accomplishments
+
+**✅ Granular Retry Control Implementation** (COMPLETE)
+
+Implemented comprehensive retry control system enabling fine-grained error handling and recovery across all processing phases.
+
+**Files Modified:**
+- `src/types/config.ts` - Added retryControl configuration and command options
+- `src/lib/state-manager.ts` - Added 4 new error tracking methods
+- `src/index.ts` - Added CLI flags and runtime configuration
+- `src/lib/phases/analyze-phase-v2.ts` - Integrated retry control
+- `src/lib/phases/illustrate-phase-v2.ts` - Integrated retry control
+- `FINAL_CHECKLIST_STATUS.md` - Updated status to 97% completion
+
+**Features Implemented:**
+
+1. **Configuration System**
+   - `skipFailed`: Continue processing even if chapters fail
+   - `retryFailed`: Only process chapters that previously failed
+   - `clearErrors`: Reset failed chapters to pending before processing
+   - Configuration via config file and CLI flag overrides
+
+2. **State Manager Methods** (4 new methods)
+   - `getFailedChapters(phase)`: Get list of failed chapter numbers
+   - `getFailedChaptersWithErrors(phase)`: Get failed chapters with error messages
+   - `markChapterFailed(phase, chapterNum, error)`: Mark chapter as failed with error
+   - `clearChapterErrors(phase)`: Reset all failed chapters to pending
+
+3. **CLI Integration**
+   - `--skip-failed`: Skip failed chapters and continue processing
+   - `--retry-failed`: Only retry chapters that previously failed
+   - `--clear-errors`: Clear error status for all chapters before processing
+   - Visual feedback for active retry modes
+
+4. **Analyze Phase Integration**
+   - Retry-failed filtering in plan() - only processes failed chapters
+   - Skip-failed mode in executePass2() - uses Promise.allSettled to continue on errors
+   - Error tracking with markChapterFailed() on failures
+   - Error summary reporting at end of Pass 2
+
+5. **Illustrate Phase Integration**
+   - Retry-failed filtering in executePhase() - processes chapters with 'error' status
+   - Skip-failed mode in error handler - continues processing on failures
+   - Error tracking with markChapterFailed() on failures
+   - Error summary reporting at end of processing
+
+6. **Error Summary Reporting**
+   - Lists all failed chapters with error messages
+   - Displayed at end of analyze and illustrate phases
+   - Helps users identify and fix issues
+
+**Configuration Example:**
+```yaml
+retryControl:
+  skipFailed: true      # Continue even if chapters fail
+  retryFailed: false    # Only retry failed chapters
+  clearErrors: false    # Clear errors before processing
+```
+
+**CLI Usage:**
+```bash
+# Skip failed chapters and continue
+imaginize --text --skip-failed book.epub
+
+# Retry only previously failed chapters
+imaginize --text --retry-failed book.epub
+
+# Clear errors and retry all
+imaginize --text --clear-errors book.epub
+```
+
+**Implementation Details:**
+
+**Part 1: Infrastructure** (Commit: 66ff82a)
+- Configuration types in config.ts
+- State manager error tracking methods
+- CLI flags and runtime config
+- Error clearing logic in main execution flow
+
+**Part 2: Phase Integration** (Commit: 4203bc3)
+- Analyze phase: Retry-failed filtering, skip-failed mode, error summaries
+- Illustrate phase: Retry-failed filtering, skip-failed mode, error summaries
+- Consistent use of markChapterFailed() in error handlers
+- Promise.allSettled for skip-failed mode in analyze phase
+- Error tracking in both state manager and manifest
+
+**Code Quality:**
+- ✅ TypeScript: 0 errors
+- ✅ ESLint: 0 warnings
+- ✅ Build: Successful compilation
+
+**Checklist Impact:**
+- Full Granular Control: 93% → 97% complete
+- Retry control fully functional
+- Error handling robust and user-friendly
+
+**Commits:**
+1. `66ff82a` - "feat: add granular retry control infrastructure (Part 1)"
+2. `fc27e86` - "docs: document granular retry control infrastructure (Part 1)"
+3. `4203bc3` - "feat: complete granular retry control (Part 2)"
+
+---
+
 ## Session: 2025-11-13 (Continuation - Custom Prompt Templates)
 
 **Type:** Feature implementation

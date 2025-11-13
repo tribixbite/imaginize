@@ -4,7 +4,7 @@
 
 **Status:** Production-ready, all critical work complete
 
-**Latest Update (2025-11-13):** Comprehensive health check completed + contributor documentation added
+**Latest Update (2025-11-13):** Security policy + repository cleanup completed
 
 **Health Check Results:**
 - ✅ Code Quality: 0 TypeScript errors, 86% test pass rate
@@ -16,18 +16,40 @@
 
 **See:** PROJECT_HEALTH_CHECK_20251113.md for detailed analysis
 
-**Contributor Documentation (2025-11-13):**
-- ✅ Created CONTRIBUTING.md (479 lines) - comprehensive guide for contributors
-  - Development setup and prerequisites
-  - Project structure and key components
-  - Code style guidelines (TypeScript, naming, JSDoc)
-  - Testing instructions (Bun test runner, 86% coverage)
-  - Pull request process with conventional commits
-  - Issue reporting templates (bugs and feature requests)
-  - Dashboard development guide references
-- ✅ Updated package.json to include CHANGELOG.md and CONTRIBUTING.md in npm package
-  - Will be available to npm users in future publishes (v2.7.0+)
-  - Improves offline documentation accessibility
+**Open Source Improvements (2025-11-13):**
+
+1. **Contributor Documentation:**
+   - ✅ Created CONTRIBUTING.md (479 lines) - comprehensive guide for contributors
+     - Development setup and prerequisites
+     - Project structure and key components
+     - Code style guidelines (TypeScript, naming, JSDoc)
+     - Testing instructions (Bun test runner, 86% coverage)
+     - Pull request process with conventional commits
+     - Issue reporting templates (bugs and feature requests)
+     - Dashboard development guide references
+   - ✅ Updated package.json to include CHANGELOG.md and CONTRIBUTING.md in npm package
+     - Will be available to npm users in future publishes (v2.7.0+)
+     - Improves offline documentation accessibility
+   - ✅ Enhanced README.md Contributing section with references to guide
+
+2. **Security Policy:**
+   - ✅ Created SECURITY.md (317 lines) - comprehensive security guidelines
+     - Supported versions matrix (v2.6.x and v2.5.x)
+     - Vulnerability reporting process (GitHub Security Advisories, email)
+     - Response timeline and severity levels (critical/high/medium/low)
+     - Security best practices for users and contributors
+     - Known security considerations (API keys, file system, network)
+     - Coordinated disclosure policy
+     - Scope definition (in-scope and out-of-scope issues)
+
+3. **Repository Cleanup:**
+   - ✅ Archived 19 historical documentation files to .archive/
+     - 10 old release notes (v2.3.0-v2.6.1)
+     - 5 publishing process docs
+     - 4 development notes (analysis, specs, evaluations)
+   - ✅ Created .archive/README.md explaining archived contents
+   - ✅ Reduced root markdown files from 37 to 18
+   - Benefits: Cleaner navigation, easier for new contributors
 
 **Project State:**
 - ✅ v2.6.2 published to npm (fully functional)

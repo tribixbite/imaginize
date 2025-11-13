@@ -6,7 +6,7 @@ Comprehensive unit testing for core utility modules
 ## Accomplishments
 
 ### Unit Tests Added ✅
-**131 utility tests** across 3 test files (1,511 lines)
+**246 utility tests** across 5 test files (3,120 lines)
 
 #### 1. file-selector.test.ts (23 tests, 390 lines)
 - **findBookFiles function**:
@@ -124,8 +124,8 @@ Comprehensive unit testing for core utility modules
 
 ## Test Coverage Summary
 
-### Total: 335 Tests (100% Passing)
-- **Main project**: 250 tests
+### Total: 450 Tests (100% Passing)
+- **Main project**: 365 tests
   - Concurrent operations: 35 tests
   - Token counter: 44 tests
   - Retry utils: 40 tests
@@ -135,7 +135,7 @@ Comprehensive unit testing for core utility modules
 - **Demo app**: 85 tests (components + utilities)
 
 ### Test Files
-**Main Project** (12 files):
+**Main Project** (14 files):
 - src/test/concurrent/*.test.ts (35 tests)
 - src/test/token-counter.test.ts (44 tests)
 - src/test/retry-utils.test.ts (40 tests)
@@ -152,9 +152,9 @@ Comprehensive unit testing for core utility modules
 - src/components/ResultsView.test.tsx (20 tests)
 
 ## Code Statistics
-- **Test code added**: 1,511 lines
-- **Total main project**: 250 tests across 12 test files
-- **Test pass rate**: 100% (335/335)
+- **Test code added**: 3,120 lines
+- **Total main project**: 365 tests across 14 test files
+- **Test pass rate**: 100% (450/450)
 
 ## Test Coverage Details
 
@@ -223,3 +223,28 @@ Comprehensive unit testing for core utility modules
 
 ---
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+#### 4. progress-tracker.test.ts (51 tests, 661 lines)
+- **ProgressTracker class**: Constructor, EventEmitter, progress file initialization
+- **Log operations**: Info/success/warning/error logging with emoji formatting, file locking
+- **Chapter tracking**: Start/completion, concept accumulation, current chapter state
+- **Element extraction**: Phase transitions, element count tracking, stats events
+- **Image generation**: Success/failure tracking, image count, event emission
+- **Phase management**: Phase status updates, phase-start events
+- **State retrieval**: Book/phase/chapter tracking, stats calculation, ETA
+- **Finalization**: Summary generation, duration formatting
+- **Concurrent operations**: Thread-safe log appends with file locking
+
+#### 5. state-manager.test.ts (64 tests, 904 lines)
+- **StateManager class**: Constructor, book info, phases, TOC, token stats initialization
+- **State persistence**: Save/load, atomic writes, version management (2.0.0)
+- **Phase management**: Status updates, completedAt timestamps, phase data
+- **Chapter tracking**: Chapter status, completion timestamps, automatic phase transitions
+- **Token statistics**: Total accumulation, average per page, running averages
+- **TOC management**: Chapter lists, token counts per chapter
+- **Element management**: Add/update elements, case-insensitive matching, image URLs
+- **Chapter queries**: Completion checks, incomplete/failed chapter retrieval
+- **Error management**: Mark failed, clear errors, reset to pending
+- **Current phase**: In-progress identification, progress calculation
+- **Consistency validation**: File existence checks, chapter-TOC validation
+- **Summary generation**: Book info, token stats, phase status with emojis

@@ -5,6 +5,61 @@ All notable changes to imaginize will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2025-11-12
+
+### Added
+- **Error Boundaries** - React Error Boundaries for dashboard resilience
+  - ErrorBoundary component catches rendering errors in individual components
+  - Prevents entire dashboard from crashing due to single component failures
+  - Graceful fallback UI with error details and recovery options (Try Again / Reload Page)
+  - Wrapped all major components: OverallProgress, Pipeline, ChapterGrid, LogStream
+  - Bundle overhead: +0.75 kB (+0.28 kB gzipped)
+- **Accessibility Improvements** - Comprehensive WCAG 2.1 Level AA compliance
+  - Semantic HTML elements (section, header, time, nav, ol) for screen readers
+  - ARIA labels and roles for all interactive components
+  - Keyboard navigation support (tabIndex, focus management)
+  - aria-live regions for dynamic content announcements
+  - Screen reader optimizations (aria-hidden for decorative elements)
+  - Progress bar with proper ARIA attributes (progressbar role, valuenow/min/max)
+  - Chapter grid with grid/gridcell roles and status announcements
+  - Pipeline with ordered list semantics and aria-current for active step
+  - Log stream with live region support and keyboard scrollability
+  - Bundle overhead: +1.90 kB (+0.46 kB gzipped)
+- **Performance Optimization** - React memoization for optimized rendering
+  - Wrapped all 4 components with React.memo() to prevent unnecessary re-renders
+  - Applied useMemo() for expensive computations (array operations, calculations)
+  - Moved helper functions outside components to avoid recreation on each render
+  - ChapterGrid: memo + useMemo for array conversion/sorting
+  - OverallProgress: memo + useMemo for progress percentage calculation
+  - PipelineVisualization: memo + useMemo for phase index calculation
+  - LogStream: memo wrapper (refs and effects preserved)
+  - Bundle overhead: +0.15 kB (+0.04 kB gzipped)
+- **Toast Notifications** - Connection status feedback with auto-dismiss
+  - Toast component with 4 types (success, error, warning, info)
+  - ToastContext and ToastProvider for global toast management
+  - Integrated with WebSocket connection status changes
+  - Shows "Connected to dashboard" on reconnection (success, 3s duration)
+  - Shows "Connection lost. Reconnecting..." on disconnect (warning, 5s duration)
+  - Auto-dismiss with configurable duration + manual close button
+  - Slide-in animations from right with CSS keyframes
+  - ARIA live regions for screen reader announcements
+  - Stacked toast container at top-right corner
+  - Bundle overhead: +2.17 kB (+0.68 kB gzipped)
+
+### Changed
+- **Dashboard Bundle Size** - Increased from 206.98 kB to 211.20 kB (64.28 KB → 65.46 kB gzipped)
+  - Total overhead: +4.22 kB (+1.18 kB gzipped) for all 4 enhancements
+  - Error Boundaries: 198 lines (ErrorBoundary.tsx)
+  - Accessibility: Improvements across 4 components
+  - Performance: Memoization in 4 components
+  - Toast Notifications: 142 lines (Toast.tsx + ToastContext.tsx)
+
+### Technical Details
+- All enhancements follow React best practices and TypeScript strict mode
+- Zero TypeScript errors in build
+- All existing tests continue to pass
+- No breaking changes to API or CLI interface
+
 ## [2.6.0] - 2025-11-12
 
 ### Added

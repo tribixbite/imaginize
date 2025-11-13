@@ -6,7 +6,7 @@ Comprehensive unit testing for core utility modules
 ## Accomplishments
 
 ### Unit Tests Added ✅
-**352 utility tests** across 8 test files (5,220 lines)
+**374 utility tests** across 9 test files (5,832 lines)
 
 #### 1. file-selector.test.ts (23 tests, 390 lines)
 - **findBookFiles function**:
@@ -124,8 +124,8 @@ Comprehensive unit testing for core utility modules
 
 ## Test Coverage Summary
 
-### Total: 556 Tests (100% Passing)
-- **Main project**: 471 tests
+### Total: 578 Tests (100% Passing)
+- **Main project**: 493 tests
   - Concurrent operations: 35 tests
   - Token counter: 44 tests
   - Retry utils: 40 tests
@@ -134,6 +134,7 @@ Comprehensive unit testing for core utility modules
   - **Provider utils: 81 tests** ✨ NEW
   - **AI analyzer: 37 tests** ✨ NEW
   - **Regenerate: 34 tests** ✨ NEW
+  - **Scene editor: 22 tests** ✨ NEW
 - **Demo app**: 85 tests (components + utilities)
 ### Test Files
 **Main Project** (15 files):
@@ -145,6 +146,7 @@ Comprehensive unit testing for core utility modules
 - **src/test/provider-utils.test.ts (81 tests)** ✨ NEW
 - **src/test/ai-analyzer.test.ts (37 tests)** ✨ NEW
 - **src/test/regenerate.test.ts (34 tests)** ✨ NEW
+- **src/test/scene-editor.test.ts (22 tests)** ✨ NEW
 
 **Demo App** (6 files):
 - src/lib/storage.test.ts (12 tests)
@@ -155,9 +157,9 @@ Comprehensive unit testing for core utility modules
 - src/components/ResultsView.test.tsx (20 tests)
 
 ## Code Statistics
-- **Test code added**: 5,220 lines
-- **Total main project**: 471 tests across 13 test files
-- **Test pass rate**: 100% (556/556)
+- **Test code added**: 5,832 lines
+- **Total main project**: 493 tests across 14 test files
+- **Test pass rate**: 100% (578/578)
 - **Bug fixes**: 1 (regenerate.ts chapter boundary parsing)
 
 ## Test Coverage Details
@@ -215,6 +217,17 @@ Comprehensive unit testing for core utility modules
 - ✅ Error handling (missing files, no matches)
 - ✅ Malformed JSON graceful degradation
 
+### scene-editor.test.ts Coverage
+- ✅ SceneEditor class initialization
+- ✅ Text wrapping logic with word boundaries
+- ✅ Markdown file editing and preservation
+- ✅ JSON block updates while preserving structure
+- ✅ Multiple chapter and scene handling
+- ✅ Special characters in chapter titles
+- ✅ Large scene and chapter numbers
+- ✅ Optional fields (mood, lighting, image filename)
+- ✅ Edge case handling (empty strings, exact widths)
+
 ## Key Testing Patterns
 
 ### File System Testing
@@ -244,7 +257,8 @@ Comprehensive unit testing for core utility modules
 6. test: add comprehensive unit tests for ai-analyzer (37 tests)
 7. fix: save concept before chapter change in regenerate.ts
 8. test: add comprehensive unit tests for regenerate (34 tests)
-9. docs: update test coverage to 556 total tests
+9. test: add comprehensive unit tests for scene-editor (22 tests)
+10. docs: update test coverage to 578 total tests
 
 ## Quality Metrics
 - TypeScript errors: 0
@@ -397,3 +411,32 @@ Comprehensive unit testing for core utility modules
   - Round-trip multiple values
 
 **Bug fix in regenerate.ts**: Fixed parser to save current concept before changing chapters
+
+#### 9. scene-editor.test.ts (22 tests, 612 lines)
+- **SceneEditor class**:
+  - Constructor initialization
+  - Directory path handling
+- **Text wrapping (wrapText)**:
+  - Text wrapping to specified width
+  - Short text without wrapping
+  - Single long word handling
+  - Multiple spaces collapsing
+  - Empty string handling
+  - Word boundary wrapping
+  - Exact width match handling
+- **Scene saving (saveEditedScenes)**:
+  - Save edited scenes to Chapters.md
+  - Preserve non-edited scenes
+  - Multiple chapter edits
+  - JSON formatting preservation
+  - Empty edits map handling
+  - Markdown structure preservation
+- **viewScene function**:
+  - Scene viewing without errors
+  - Scene with mood and lighting
+  - Scene with image filename
+  - Scene without optional fields
+- **Edge cases**:
+  - Chapters with special characters
+  - Large scene numbers (999)
+  - Multi-scene chapter editing

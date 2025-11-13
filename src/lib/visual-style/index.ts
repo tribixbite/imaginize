@@ -12,3 +12,4 @@ export * from './style-guide.js';
 export * from './character-registry.js';
 export * from './style-analyzer.js';
 export * from './prompt-enhancer.js';
+export * from './style-wizard.js';

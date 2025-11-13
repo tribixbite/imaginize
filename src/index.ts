@@ -245,6 +245,49 @@ export async function main(): Promise<void> {
       }
     });
 
+  // Wizard command for interactive style creation
+  program
+    .command('wizard')
+    .description('Interactive wizard for creating custom visual style guides')
+    .option('--output-dir <dir>', 'Output directory (default: ./imaginize_output)', './imaginize_output')
+    .option('--genre <genre>', 'Book genre (helps guide style suggestions)')
+    .action(async (cmdOptions) => {
+      try {
+        // Load configuration
+        const config = await loadConfig();
+
+        // Setup OpenAI client
+        const openai = new OpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseUrl,
+          timeout: 120000,
+          maxRetries: config.maxRetries || 1,
+        });
+
+        // Run style wizard
+        const { runStyleWizard } = await import('./lib/visual-style/style-wizard.js');
+
+        const result = await runStyleWizard({
+          outputDir: cmdOptions.outputDir,
+          openai,
+          bookGenre: cmdOptions.genre || config.genre,
+        });
+
+        if (result.saved) {
+          console.log(chalk.gray('\nYou can now run imaginize to generate images with this style guide.'));
+          console.log(chalk.gray('The style will be automatically applied to all generated images.'));
+        }
+
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`\nError: ${error.message}`));
+        if (error.stack) {
+          console.error(chalk.gray(error.stack));
+        }
+        process.exit(1);
+      }
+    });
+
   program.parse();
   const options = program.opts<CommandOptions>();
 

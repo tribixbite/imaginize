@@ -44,9 +44,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated NEXT_STEPS.md marking Priority 1 enhancement as complete
 - Created `docs/INTEGRATION_TESTS_PLAN.md` with implementation plan
 
+#### E2E Tests for GitHub Pages Demo (Phase 1-2)
+- **43 E2E Tests** - End-to-end testing for complete user journey in GitHub Pages demo
+- **Multi-Browser Testing** - Chrome, Firefox, Safari/WebKit, Mobile Chrome, Mobile Safari
+- **Mock API Integration** - All OpenAI API calls mocked to avoid costs and rate limits
+- **Complete User Flow Coverage** - Upload → API key → Processing → Results → Download
+- **Playwright Framework** - Industry-standard E2E testing with accessibility support
+
+**Phase 1: Setup & Infrastructure** (8 tests):
+- `demo/playwright.config.ts` - Multi-browser Playwright configuration
+- `demo/e2e/fixtures/` - Test files (sample.epub, sample.pdf)
+- `demo/e2e/helpers/mock-api.ts` - Mock OpenAI API responses
+- `demo/e2e/helpers/test-data.ts` - Test constants and utilities
+- `demo/e2e/tests/01-initial-load.spec.ts` - Page load validation (8 tests)
+
+**Phase 2: Core User Flow Tests** (35 tests):
+- `demo/e2e/tests/02-file-upload.spec.ts` - File upload functionality (9 tests)
+- `demo/e2e/tests/03-api-key-management.spec.ts` - API key security (8 tests)
+- `demo/e2e/tests/04-processing-flow.spec.ts` - Processing pipeline (10 tests)
+- `demo/e2e/tests/05-results-view.spec.ts` - Results and downloads (8 tests)
+
+**Test Coverage Areas**:
+- ✅ Initial page load (title, sections, dark mode, mobile responsive)
+- ✅ File upload (EPUB/PDF, drag-and-drop, file validation, size limits)
+- ✅ API key management (visibility toggle, persistent/session storage, validation)
+- ✅ Processing flow (start button state, progress bar, phases, completion)
+- ✅ Results view (download buttons, file downloads, state reset)
+
+**Browser Coverage** (5 configurations × 43 tests = 215 test runs):
+- Desktop: Chrome, Firefox, Safari/WebKit
+- Mobile: Pixel 5 (Chrome), iPhone 12 (Safari)
+
+**npm Scripts Added**:
+- `test:e2e` - Run all E2E tests
+- `test:e2e:ui` - Open Playwright UI
+- `test:e2e:report` - View HTML test report
+- `test:e2e:debug` - Debug mode with inspector
+- `test:e2e:headed` - Run with visible browser
+
+**Documentation**:
+- Created `docs/E2E_TESTING_PLAN.md` (704 lines) - Complete 5-phase implementation plan
+- Created `demo/e2e/README.md` (310 lines) - E2E testing documentation and usage guide
+- Created `demo/e2e/fixtures/README.md` - Test fixture documentation
+- Updated WORKING.md with Phase 1-2 session documentation
+
+**Implementation Status**:
+- Phase 1: ✅ Complete (Setup & Infrastructure)
+- Phase 2: ✅ Complete (Core User Flow Tests)
+- Phase 3-5: Planned (Error scenarios, CI/CD integration, final documentation)
+
 ### Quality Metrics
-- **Test Coverage**: 527/527 tests passing (100%)
+- **Test Coverage**: 655 tests total (527 main + 85 demo unit + 43 demo E2E)
 - **Integration Tests**: 34/34 passing (100%)
+- **E2E Tests**: 43/43 designed (will run in CI/CD)
 - **TypeScript Errors**: 0
 - **ESLint Warnings**: 0
 - **Security Vulnerabilities**: 0

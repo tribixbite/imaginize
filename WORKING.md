@@ -1392,12 +1392,39 @@ for (let i = 0; i < chaptersToProcess.length; i += batchSize) {
 
 ---
 
-**Last Updated:** 2025-11-12
+## CLI Test Fixes for Bun Runtime (v2.6.2+)
+
+**Date:** 2025-11-13
+
+Fixed 2 failing CLI tests (`--init-config` and `--help`) that were failing in Termux environment due to runtime differences between Node.js and Bun.
+
+**Root Cause:**
+- Tests originally used `node bin/illustrate.js` which fails in Termux (uses bun, not node)
+- `execSync()` from child_process doesn't inherit PATH from test runner
+- Bun is a wrapper script that calls `grun` which also wasn't in PATH
+
+**Solution:**
+```typescript
+// Set PATH inline so bun wrapper can find grun executable
+const CLI_CMD = 'PATH=/data/data/com.termux/files/usr/bin:/data/data/com.termux/files/home/.bun/bin:$PATH /data/data/com.termux/files/home/.bun/bin/bun bin/imaginize.js';
+```
+
+**Results:**
+- Test pass rate improved: 35/43 (81.4%) → 37/43 (86.0%)
+- Both CLI tests now passing in Termux/bun environment
+- Remaining 6 failures are integration tests requiring API keys (expected)
+
+**Files Modified:**
+- `test/pipeline.test.ts`: Updated CLI_CMD with inline PATH setting
+
+---
+
+**Last Updated:** 2025-11-13
 **Status:** ✅ CONCURRENT PROCESSING + PARALLEL ANALYSIS COMPLETE
 **Concurrent Architecture:** ✅ Two-pass analysis + manifest-driven coordination + parallel batching
 **Content Quality:** ✅ Visual entity descriptions + enhanced quotes + character cross-referencing
 **Build:** SUCCESS (0 TypeScript errors)
-**Tests:** 35 unit tests (100% pass) + integration tests (75+ images total)
+**Tests:** 37/43 pass (86.0% pass rate) - Fixed CLI tests for bun runtime in Termux
 **Performance:**
   - Concurrent mode (free tier): 40% faster (5h → 3h)
   - Parallel analysis (paid tier): Up to 50% additional speedup (3h → 1.5-2h)

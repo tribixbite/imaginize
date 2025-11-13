@@ -261,6 +261,13 @@ consistencyThreshold: 0.7
 
 Monitor your book processing in real-time with the optional web dashboard. Perfect for long-running operations to track progress, view ETA, and ensure everything is running smoothly.
 
+**Latest Enhancements (v2.6.1):**
+- ✨ **Error Boundaries** - Component-level fault isolation prevents entire dashboard from crashing
+- ♿ **WCAG 2.1 AA Accessibility** - Full screen reader support, keyboard navigation, and semantic HTML
+- ⚡ **Performance Optimized** - React memoization reduces unnecessary re-renders
+- 🔔 **Toast Notifications** - Visual feedback for connection status changes
+- **Bundle Size:** Only 65.52 kB gzipped (+2.1% from v2.6.0)
+
 ### Starting the Dashboard
 
 ```bash
@@ -276,6 +283,7 @@ npx imaginize --dashboard --dashboard-host 0.0.0.0 --dashboard-port 3000 --text 
 
 ### Features
 
+**Core Features (v2.6.0):**
 - **React-Based UI** - Modern, responsive dark-themed interface with real-time updates
 - **Live Progress Updates** - WebSocket-driven updates showing current chapter, phase, and progress percentage
 - **Visual Pipeline** - See processing phases (Initialize → Analyze → Extract → Illustrate → Complete)
@@ -285,6 +293,12 @@ npx imaginize --dashboard --dashboard-host 0.0.0.0 --dashboard-port 3000 --text 
 - **REST API** - `/api/state` and `/api/health` endpoints for integration
 - **Auto-Reconnection** - Automatic WebSocket reconnection with exponential backoff
 - **Statistics** - Total chapters, completed chapters, concepts found, images generated, elapsed time
+
+**Enhanced Features (v2.6.1):**
+- **Error Boundaries** - Graceful error handling with recovery options (Try Again / Reload)
+- **Accessibility** - WCAG 2.1 Level AA compliant with ARIA labels, roles, and keyboard navigation
+- **Performance** - React.memo() and useMemo() for optimized rendering
+- **Toast Notifications** - Connection status feedback with auto-dismiss
 
 ### Dashboard UI Components
 
@@ -333,11 +347,12 @@ The dashboard displays real-time information through five main components:
 
 **Frontend:**
 - React 18 with TypeScript
-- Vite build system (203 kB JS, 16 kB CSS gzipped)
+- Vite build system (212 kB JS, 19 kB CSS; 65.5 kB gzipped)
 - Tailwind CSS v4 with dark theme (#111827 background)
 - WebSocket client with automatic reconnection
 - Responsive design (mobile-first, 4-10 column grid)
 - Built to dist/dashboard/ and served by Express
+- Enhanced with error boundaries, accessibility, and performance optimizations (v2.6.1)
 
 ### Testing
 

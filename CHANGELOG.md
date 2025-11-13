@@ -44,12 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated NEXT_STEPS.md marking Priority 1 enhancement as complete
 - Created `docs/INTEGRATION_TESTS_PLAN.md` with implementation plan
 
-#### E2E Tests for GitHub Pages Demo (Phase 1-2)
-- **43 E2E Tests** - End-to-end testing for complete user journey in GitHub Pages demo
+#### E2E Tests for GitHub Pages Demo (Phase 1-3)
+- **68 E2E Tests** - End-to-end testing for complete user journey in GitHub Pages demo
 - **Multi-Browser Testing** - Chrome, Firefox, Safari/WebKit, Mobile Chrome, Mobile Safari
 - **Mock API Integration** - All OpenAI API calls mocked to avoid costs and rate limits
-- **Complete User Flow Coverage** - Upload → API key → Processing → Results → Download
+- **Complete User Flow Coverage** - Upload → API key → Processing → Results → Download → Errors → Mobile → Accessibility
 - **Playwright Framework** - Industry-standard E2E testing with accessibility support
+- **WCAG 2.1 AA Compliance** - Accessibility validation with @axe-core/playwright
 
 **Phase 1: Setup & Infrastructure** (8 tests):
 - `demo/playwright.config.ts` - Multi-browser Playwright configuration
@@ -64,14 +65,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `demo/e2e/tests/04-processing-flow.spec.ts` - Processing pipeline (10 tests)
 - `demo/e2e/tests/05-results-view.spec.ts` - Results and downloads (8 tests)
 
+**Phase 3: Error Scenarios & Edge Cases** (25 tests):
+- `demo/e2e/tests/06-error-scenarios.spec.ts` - Error handling & recovery (9 tests)
+  - Invalid API key (401), rate limiting (429), network errors (500)
+  - Offline mode graceful degradation
+  - Retry functionality, error dismissal, state recovery
+  - Corrupted file handling, accessible error messages
+- `demo/e2e/tests/07-mobile-responsive.spec.ts` - Mobile UX validation (8 tests)
+  - iPhone 12 and Pixel 5 viewport adaptation
+  - Touch interactions (tap, fill, scroll)
+  - Readable text without zoom (min 14px)
+  - No horizontal scrolling, vertical stacking
+  - Mobile file upload and processing progress
+- `demo/e2e/tests/08-accessibility.spec.ts` - WCAG 2.1 AA compliance (8 tests)
+  - Automated AxeBuilder scanning (no violations)
+  - ARIA labels and keyboard navigation
+  - Proper heading hierarchy (h1, no level skips)
+  - Screen reader announcements (aria-live)
+  - Color contrast validation
+  - Alternative text for images
+
 **Test Coverage Areas**:
 - ✅ Initial page load (title, sections, dark mode, mobile responsive)
 - ✅ File upload (EPUB/PDF, drag-and-drop, file validation, size limits)
 - ✅ API key management (visibility toggle, persistent/session storage, validation)
 - ✅ Processing flow (start button state, progress bar, phases, completion)
 - ✅ Results view (download buttons, file downloads, state reset)
+- ✅ Error handling (API errors, network failures, offline mode, retry)
+- ✅ Mobile responsive (iPhone/Android, touch interactions, readable text)
+- ✅ Accessibility (WCAG 2.1 AA, ARIA, keyboard, screen readers, contrast)
 
-**Browser Coverage** (5 configurations × 43 tests = 215 test runs):
+**Browser Coverage** (5 configurations × 68 tests = 340 test runs):
 - Desktop: Chrome, Firefox, Safari/WebKit
 - Mobile: Pixel 5 (Chrome), iPhone 12 (Safari)
 
@@ -84,19 +108,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Documentation**:
 - Created `docs/E2E_TESTING_PLAN.md` (704 lines) - Complete 5-phase implementation plan
-- Created `demo/e2e/README.md` (310 lines) - E2E testing documentation and usage guide
+- Created `demo/e2e/README.md` (348 lines) - E2E testing documentation and usage guide
 - Created `demo/e2e/fixtures/README.md` - Test fixture documentation
-- Updated WORKING.md with Phase 1-2 session documentation
+- Updated WORKING.md with Phase 1-3 session documentation
 
 **Implementation Status**:
 - Phase 1: ✅ Complete (Setup & Infrastructure)
 - Phase 2: ✅ Complete (Core User Flow Tests)
-- Phase 3-5: Planned (Error scenarios, CI/CD integration, final documentation)
+- Phase 3: ✅ Complete (Error Scenarios & Edge Cases)
+- Phase 4-5: Planned (CI/CD integration, final documentation)
 
 ### Quality Metrics
-- **Test Coverage**: 655 tests total (527 main + 85 demo unit + 43 demo E2E)
+- **Test Coverage**: 680 tests total (527 main + 85 demo unit + 68 demo E2E)
 - **Integration Tests**: 34/34 passing (100%)
-- **E2E Tests**: 43/43 designed (will run in CI/CD)
+- **E2E Tests**: 68/68 designed (will run in CI/CD, 340 browser test runs)
 - **TypeScript Errors**: 0
 - **ESLint Warnings**: 0
 - **Security Vulnerabilities**: 0

@@ -90,7 +90,19 @@
      - release.sh: Complete release workflow with safety checks
    - Benefits: Reduced human error, consistent releases, faster feedback
 
-6. **Manual Testing (2025-11-13):**
+6. **Code Quality Improvements (2025-11-13):**
+   - ✅ Fixed 2 ESLint errors
+     - file-selector.ts: Replaced require() with proper ES6 import
+     - retry-utils.ts: Removed unnecessary try-catch wrapper
+   - ✅ ESLint now passes: 0 errors, 25 warnings
+   - **Technical Debt:** 25 ESLint warnings remain (non-blocking)
+     - 20 warnings: `@typescript-eslint/no-explicit-any` - generic type usage
+     - 4 warnings: `@typescript-eslint/no-unused-vars` - unused imports/variables
+     - 1 warning: unused config parameter
+   - **Status:** Production code quality verified, warnings tracked for v2.7.0
+   - Benefits: CI workflow will prevent new errors, existing warnings don't impact functionality
+
+7. **Manual Testing (2025-11-13):**
    - ✅ Test 1: 5 chapters with images (ImpossibleCreatures.epub)
      - Command: `--concurrent --text --images --chapters 1-5 --force`
      - Result: SUCCESS - 4,598 tokens, generated Chapters.md and Contents.md

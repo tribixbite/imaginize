@@ -3,7 +3,7 @@
 Comprehensive status of all items from CLAUDE.md final checklist.
 
 **Last Updated**: 2025-11-13
-**Session**: Code quality improvements + Documentation infrastructure
+**Session**: GitHub Pages demo MVP implementation (Week 1 complete)
 
 ---
 
@@ -358,7 +358,7 @@ imaginize regenerate --chapter 3 --scene 2 --edit
 ## ❌ Not Yet Implemented
 
 ### 8. GitHub Pages Demo Tool
-**Status**: SPECIFICATION PHASE (5% complete)
+**Status**: MVP PHASE (40% complete)
 
 **Current Progress**:
 - ✅ Comprehensive specification document (docs/specs/github-pages-demo.md)
@@ -366,9 +366,19 @@ imaginize regenerate --chapter 3 --scene 2 --edit
 - ✅ UI mockups (Landing, Processing, Results views)
 - ✅ Technical challenges identified with solutions
 - ✅ 3-week implementation plan
-- ❌ Project scaffolding (pending)
-- ❌ Core implementation (pending)
-- ❌ Testing & deployment (pending)
+- ✅ Project scaffolding complete (Vite + React + TypeScript)
+- ✅ Tailwind CSS v4 configured with dark mode
+- ✅ Core UI components implemented
+  - ✅ FileUpload component with drag-and-drop
+  - ✅ APIKeyInput component with secure storage
+  - ✅ Landing page with dark mode toggle
+- ✅ Type definitions for app state
+- ✅ localStorage utilities and React hooks
+- ✅ GitHub Actions deployment workflow
+- ✅ Build successful (206.5KB bundle, 19.1KB CSS)
+- ❌ EPUB/PDF parsing (pending)
+- ❌ Processing pipeline (pending)
+- ❌ Results view (pending)
 
 **Requirements**:
 - Web-based demo deployment on GitHub Pages
@@ -417,14 +427,30 @@ Deployment:
 - Gallery view for generated images
 - Mobile-responsive with touch-friendly controls
 
-**Next Steps**:
-1. Initialize Vite project in `demo/` directory
-2. Configure Tailwind CSS v4 with dark mode
-3. Create file upload component with validation
-4. Implement API key storage with security warnings
-5. Set up GitHub Actions deployment workflow
+**Completed Week 1 Tasks**:
+1. ✅ Initialize Vite project in `demo/` directory
+2. ✅ Configure Tailwind CSS v4 with dark mode
+3. ✅ Create file upload component with validation
+4. ✅ Implement API key storage with security warnings
+5. ✅ Set up GitHub Actions deployment workflow
 
-**Estimated Remaining Effort**: 2-3 weeks for full implementation
+**Week 1 Deliverables**:
+- **demo/** directory with complete React application
+- **FileUpload.tsx**: Drag-and-drop file picker with EPUB/PDF validation, 10MB max
+- **APIKeyInput.tsx**: Secure API key input with localStorage/sessionStorage, privacy notice
+- **App.tsx**: Landing page with hero section, file upload, API key input, dark mode toggle
+- **storage.ts**: API key persistence with session-only option
+- **useLocalStorage.ts**: React hook for localStorage with cross-tab sync
+- **deploy-demo.yml**: GitHub Actions workflow for GitHub Pages deployment
+
+**Next Steps** (Week 2):
+1. Implement EPUB parsing with epub.js
+2. Implement PDF parsing with pdf.js
+3. Create processing pipeline with OpenAI integration
+4. Add progress tracking UI
+5. Implement Web Workers for non-blocking parsing
+
+**Estimated Remaining Effort**: 1-2 weeks for full MVP implementation
 
 ---
 

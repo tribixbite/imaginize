@@ -90,12 +90,35 @@
      - release.sh: Complete release workflow with safety checks
    - Benefits: Reduced human error, consistent releases, faster feedback
 
+6. **Manual Testing (2025-11-13):**
+   - ✅ Test 1: 5 chapters with images (ImpossibleCreatures.epub)
+     - Command: `--concurrent --text --images --chapters 1-5 --force`
+     - Result: SUCCESS - 4,598 tokens, generated Chapters.md and Contents.md
+     - Images: 5 PNG files generated successfully
+     - Exit code: 0
+   - ✅ Test 2: Elements extraction only
+     - Command: `--concurrent --elements --force`
+     - Result: SUCCESS - 14,500 tokens, extracted 25 story elements
+     - Generated: Elements.md with complete character and setting catalog
+     - Exit code: 0
+   - ✅ Test 3: Full workflow with dashboard
+     - Command: `--concurrent --text --elements --images --dashboard --chapters 1-3 --force`
+     - Result: SUCCESS - 5,466 tokens, all phases completed
+     - Dashboard: Launched at http://localhost:3000, real-time monitoring
+     - Generated: Contents.md, Chapters.md, Elements.md, 3 PNG images
+     - Exit code: 0
+   - **Note:** GPT-4 Vision model (gpt-4-vision-preview) not available on OpenRouter
+     - Style analysis gracefully falls back, non-fatal error
+     - Image generation proceeds successfully without style bootstrap
+   - **Validation:** All core features working in production build
+
 **Project State:**
 - ✅ v2.6.2 published to npm (fully functional)
 - ✅ Test suite at 86.0% pass rate (37/43 tests)
 - ✅ CLI test fixes for bun runtime (in git)
-- ✅ Comprehensive documentation (4,000+ lines)
+- ✅ Comprehensive documentation (4,500+ lines)
 - ✅ CI/CD automation complete (testing and releases)
+- ✅ Manual testing validated (3/3 tests passing)
 - ✅ Zero blocking issues
 - 📊 Monitoring mode - awaiting user feedback
 

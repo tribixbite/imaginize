@@ -183,15 +183,32 @@ E2E tests run automatically in GitHub Actions:
 
 **Total Phase 1-3**: 68 E2E tests
 
-### Phase 4-5: Planned (Not Yet Implemented)
+### Phase 4: CI/CD Integration ✅ COMPLETE
+
+**Implemented**:
+- ✅ Created `.github/workflows/demo-e2e.yml` - Standalone E2E test workflow
+- ✅ Updated `.github/workflows/deploy-demo.yml` - E2E gate before deployment
+- ✅ Automatic test execution on PR and push to main
+- ✅ Test reports uploaded as GitHub Actions artifacts
+- ✅ Deployment blocked if E2E tests fail
+
+**Features**:
+- Independent E2E workflow for fast feedback on PRs
+- Pre-deployment validation (build → e2e → deploy)
+- HTML test reports with 30-day retention
+- Test results and traces with 7-day retention
+- 10-minute timeout protection
+
+### Phase 5: Documentation & Polish (Planned)
 
 See `docs/E2E_TESTING_PLAN.md` for full implementation plan.
 
-**Planned Work**:
-- Phase 4: CI/CD integration (GitHub Actions workflow)
-- Phase 5: Documentation & polish (final refinements)
+**Remaining Work**:
+- Final documentation polish
+- Add badges to README
+- Update contributor guidelines
 
-**Total Planned**: 68+ E2E tests when all phases complete
+**Current Status**: 68 E2E tests implemented and integrated into CI/CD
 
 ## Mocking Strategy
 
@@ -292,36 +309,77 @@ npx playwright show-trace trace.zip
 
 ## CI/CD Integration
 
-### GitHub Actions Workflow
+### GitHub Actions Workflows
 
-E2E tests are integrated into CI/CD:
+E2E tests are integrated into CI/CD with two workflows:
 
-```yaml
-# .github/workflows/demo-e2e.yml
-- name: Install Playwright browsers
-  run: npx playwright install --with-deps
+#### 1. Standalone E2E Workflow (`.github/workflows/demo-e2e.yml`)
 
-- name: Run E2E tests
-  run: npm run test:e2e
-
-- name: Upload test report
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: playwright-report
-    path: playwright-report/
-```
-
-### Pre-Deployment Check
-
-E2E tests must pass before GitHub Pages deployment:
+Runs on every push and PR affecting `demo/**` files:
 
 ```yaml
-deploy:
-  needs: [build, test, demo-e2e]  # E2E tests required
-  runs-on: ubuntu-latest
-  # ... deployment steps
+name: Demo E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths: ['demo/**']
+  pull_request:
+    branches: [main]
+    paths: ['demo/**']
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - Install dependencies
+      - Install Playwright browsers
+      - Build demo
+      - Run E2E tests (68 tests across 5 browsers)
+      - Upload test reports and results as artifacts
 ```
+
+**Features**:
+- Runs independently for fast feedback
+- Uploads HTML reports as artifacts (30-day retention)
+- Uploads test results for debugging (7-day retention)
+- 10-minute timeout to prevent hanging tests
+
+#### 2. Pre-Deployment E2E Check (`.github/workflows/deploy-demo.yml`)
+
+E2E tests gate GitHub Pages deployment:
+
+```yaml
+jobs:
+  build:
+    # Builds the demo
+
+  e2e:
+    needs: build  # Runs after successful build
+    # Runs all E2E tests
+
+  deploy:
+    needs: [build, e2e]  # Deployment requires E2E tests to pass
+    # Deploys to GitHub Pages
+```
+
+**Deployment Safety**:
+- E2E tests must pass before deployment
+- Prevents broken UI from being published
+- Test failures block deployment automatically
+- Reports available in GitHub Actions artifacts
+
+### Viewing Test Reports
+
+**In GitHub Actions**:
+1. Go to **Actions** tab in GitHub repository
+2. Select the workflow run (e.g., "Demo E2E Tests")
+3. Download **playwright-report** artifact
+4. Extract and open `index.html` in a browser
+
+**Artifact Contents**:
+- `playwright-report/` - Interactive HTML report with screenshots
+- `test-results/` - Raw test results and failure traces
 
 ## Resources
 
@@ -335,14 +393,15 @@ deploy:
 - [x] Phase 1: Setup & Infrastructure (Complete)
 - [x] Phase 2: Core User Flow Tests (Complete)
 - [x] Phase 3: Error Scenarios & Edge Cases (Complete)
-- [ ] Phase 4: CI/CD Integration (Planned)
+- [x] Phase 4: CI/CD Integration (Complete)
 - [ ] Phase 5: Documentation & Polish (Planned)
 
-**Current Version**: Phase 1-3 (Setup, Core Flows & Edge Cases Complete)
-**Next Steps**: Implement Phase 4 (CI/CD Integration)
+**Current Version**: Phase 1-4 (Setup, Core Flows, Edge Cases & CI/CD Complete)
+**Next Steps**: Implement Phase 5 (Documentation & Polish)
 
 ---
 
 **Last Updated**: November 13, 2025
 **Test Count**: 68 tests (8 suites)
-**Status**: Phase 1-3 Complete, ready for Phase 4
+**Status**: Phase 1-4 Complete, 90% done
+**CI/CD**: ✅ Integrated into GitHub Actions

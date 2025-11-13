@@ -3,6 +3,7 @@ import { OverallProgress } from './components/OverallProgress';
 import { PipelineVisualization } from './components/PipelineVisualization';
 import { ChapterGrid } from './components/ChapterGrid';
 import { LogStream } from './components/LogStream';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const wsUrl = `ws://${window.location.hostname}:${window.location.port || 3000}`;
@@ -50,20 +51,44 @@ function App() {
         </div>
 
         {/* Overall Progress */}
-        <OverallProgress
-          bookTitle={state.bookTitle}
-          stats={state.stats}
-          currentPhase={state.currentPhase}
-        />
+        <ErrorBoundary fallback={
+          <div className="bg-gray-800 border border-yellow-500/30 rounded-lg p-4">
+            <p className="text-yellow-400">Unable to load progress overview</p>
+          </div>
+        }>
+          <OverallProgress
+            bookTitle={state.bookTitle}
+            stats={state.stats}
+            currentPhase={state.currentPhase}
+          />
+        </ErrorBoundary>
 
         {/* Pipeline Visualization */}
-        <PipelineVisualization currentPhase={state.currentPhase} />
+        <ErrorBoundary fallback={
+          <div className="bg-gray-800 border border-yellow-500/30 rounded-lg p-4">
+            <p className="text-yellow-400">Unable to load pipeline visualization</p>
+          </div>
+        }>
+          <PipelineVisualization currentPhase={state.currentPhase} />
+        </ErrorBoundary>
 
         {/* Chapters Grid */}
-        <ChapterGrid chapters={chapters} />
+        <ErrorBoundary fallback={
+          <div className="bg-gray-800 border border-yellow-500/30 rounded-lg p-4">
+            <p className="text-yellow-400">Unable to load chapter grid</p>
+          </div>
+        }>
+          <ChapterGrid chapters={chapters} />
+        </ErrorBoundary>
 
         {/* Log Stream */}
-        <LogStream logs={logs} />
+        <ErrorBoundary fallback={
+          <div className="bg-gray-800 border border-yellow-500/30 rounded-lg p-4">
+            <p className="text-yellow-400">Unable to load log stream</p>
+          </div>
+        }>
+          <LogStream logs={logs} />
+        </ErrorBoundary>
       </div>
     </div>
   );

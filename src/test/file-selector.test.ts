@@ -10,7 +10,13 @@ import { join } from 'path';
 import { cwd } from 'process';
 
 // Test data - use project test directory instead of /tmp which is not writable on Termux
-const testDir = join(cwd(), 'src', 'test', '.test-data', `file-selector-test-${Date.now()}`);
+const testDir = join(
+  cwd(),
+  'src',
+  'test',
+  '.test-data',
+  `file-selector-test-${Date.now()}`
+);
 
 // Helper to create test book files
 function createTestFile(name: string, content: string = 'test content'): string {
@@ -20,7 +26,10 @@ function createTestFile(name: string, content: string = 'test content'): string 
 }
 
 // Helper to create processed book state
-function createProcessedState(bookName: string, status: 'completed' | 'in-progress' | 'failed'): void {
+function createProcessedState(
+  bookName: string,
+  status: 'completed' | 'in-progress' | 'failed'
+): void {
   const outputDir = join(testDir, `imaginize_${bookName.replace(/\.[^.]+$/, '')}`);
   mkdirSync(outputDir, { recursive: true });
 
@@ -84,7 +93,7 @@ describe('file-selector', () => {
       const files = await findBookFiles();
 
       expect(files).toHaveLength(3);
-      const extensions = files.map(f => f.extension);
+      const extensions = files.map((f) => f.extension);
       expect(extensions).toContain('.epub');
       expect(extensions).toContain('.pdf');
     });
@@ -195,7 +204,7 @@ describe('file-selector', () => {
     it('should sort by modification time within same processed status', async () => {
       // Create files with different timestamps
       createTestFile('old.epub', 'old');
-      await new Promise(resolve => setTimeout(resolve, 10)); // Small delay
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Small delay
       createTestFile('new.epub', 'new');
 
       const files = await findBookFiles();
@@ -233,15 +242,15 @@ describe('file-selector', () => {
 
     it('should handle files with special characters in name', async () => {
       createTestFile('book-with-dashes.epub');
-      createTestFile("book_with_underscores.pdf");
+      createTestFile('book_with_underscores.pdf');
       createTestFile('book (with parens).epub');
 
       const files = await findBookFiles();
 
       expect(files).toHaveLength(3);
-      expect(files.some(f => f.name === 'book-with-dashes.epub')).toBe(true);
-      expect(files.some(f => f.name === 'book_with_underscores.pdf')).toBe(true);
-      expect(files.some(f => f.name === 'book (with parens).epub')).toBe(true);
+      expect(files.some((f) => f.name === 'book-with-dashes.epub')).toBe(true);
+      expect(files.some((f) => f.name === 'book_with_underscores.pdf')).toBe(true);
+      expect(files.some((f) => f.name === 'book (with parens).epub')).toBe(true);
     });
 
     it('should skip files with read errors', async () => {
@@ -254,7 +263,7 @@ describe('file-selector', () => {
 
       // Should have at least the readable file
       expect(files.length).toBeGreaterThanOrEqual(1);
-      expect(files.some(f => f.name === 'readable.epub')).toBe(true);
+      expect(files.some((f) => f.name === 'readable.epub')).toBe(true);
     });
   });
 

@@ -114,7 +114,7 @@ export class ManifestManager {
    * @param chapterNumbers - List of chapter numbers to initialize
    */
   async initialize(bookId: string, chapterNumbers: number[]): Promise<void> {
-    await this.update(manifest => {
+    await this.update((manifest) => {
       manifest.book_id = bookId;
       manifest.version = '3.0.0';
       manifest.elements_md_status = 'pending';
@@ -141,9 +141,14 @@ export class ManifestManager {
   async updateChapter(
     chapterNum: number,
     status: ChapterStatus,
-    metadata?: Partial<{ analyzed_at: string; illustrated_at: string; concepts: number; error: string }>
+    metadata?: Partial<{
+      analyzed_at: string;
+      illustrated_at: string;
+      concepts: number;
+      error: string;
+    }>
   ): Promise<void> {
-    await this.update(manifest => {
+    await this.update((manifest) => {
       const key = chapterNum.toString();
       if (!manifest.chapters[key]) {
         manifest.chapters[key] = { status: 'pending' };
@@ -162,7 +167,7 @@ export class ManifestManager {
    * Update Elements.md status
    */
   async updateElementsStatus(status: ElementsStatus): Promise<void> {
-    await this.update(manifest => {
+    await this.update((manifest) => {
       manifest.elements_md_status = status;
     });
   }
@@ -171,7 +176,7 @@ export class ManifestManager {
    * Mark analyze phase as complete
    */
   async markAnalyzeComplete(): Promise<void> {
-    await this.update(manifest => {
+    await this.update((manifest) => {
       manifest.analyze_complete = true;
     });
   }
@@ -180,7 +185,7 @@ export class ManifestManager {
    * Mark illustrate phase as complete
    */
   async markIllustrateComplete(): Promise<void> {
-    await this.update(manifest => {
+    await this.update((manifest) => {
       manifest.illustrate_complete = true;
     });
   }
@@ -214,7 +219,10 @@ export class ManifestManager {
    * @param intervalMs - Poll interval (default 5s)
    * @param timeoutMs - Timeout (default 30 minutes)
    */
-  async waitForElementsReady(intervalMs = 5000, timeoutMs = 30 * 60 * 1000): Promise<void> {
+  async waitForElementsReady(
+    intervalMs = 5000,
+    timeoutMs = 30 * 60 * 1000
+  ): Promise<void> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeoutMs) {
@@ -225,7 +233,7 @@ export class ManifestManager {
       }
 
       // Wait and retry
-      await new Promise(resolve => setTimeout(resolve, intervalMs));
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
 
     throw new Error(`Elements.md not ready after ${timeoutMs}ms`);

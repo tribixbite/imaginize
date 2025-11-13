@@ -5,7 +5,12 @@
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { ImageConcept, ChapterContent } from '../../types/config.js';
-import { estimateTokens, createTokenEstimate, calculateSplits, resolveModelConfig } from '../token-counter.js';
+import {
+  estimateTokens,
+  createTokenEstimate,
+  calculateSplits,
+  resolveModelConfig,
+} from '../token-counter.js';
 import { generateChaptersFile } from '../output-generator.js';
 import { isStoryContent } from '../provider-utils.js';
 
@@ -34,8 +39,8 @@ export class AnalyzePhase extends BasePhase {
 
     // Determine which chapters need processing
     const chaptersToProcess = chapters
-      .map(c => c.chapterNumber)
-      .filter(num => this.shouldProcessChapter(num));
+      .map((c) => c.chapterNumber)
+      .filter((num) => this.shouldProcessChapter(num));
 
     if (chaptersToProcess.length === 0) {
       await progressTracker.log('All chapters already analyzed', 'info');
@@ -49,7 +54,7 @@ export class AnalyzePhase extends BasePhase {
     const modelConfig = resolveModelConfig(config.model, config);
 
     for (const chapterNum of chaptersToProcess) {
-      const chapter = chapters.find(c => c.chapterNumber === chapterNum)!;
+      const chapter = chapters.find((c) => c.chapterNumber === chapterNum)!;
       const estimate = createTokenEstimate(
         chapter.content,
         1000, // Expected output tokens per chapter
@@ -68,8 +73,8 @@ export class AnalyzePhase extends BasePhase {
       chaptersToProcess,
       totalEstimatedTokens,
       estimatedCost,
-      requiresSplitting: chaptersToProcess.some(num => {
-        const chapter = chapters.find(c => c.chapterNumber === num)!;
+      requiresSplitting: chaptersToProcess.some((num) => {
+        const chapter = chapters.find((c) => c.chapterNumber === num)!;
         const estimate = createTokenEstimate(
           chapter.content,
           1000,
@@ -147,7 +152,7 @@ export class AnalyzePhase extends BasePhase {
     let totalTokensUsed = 0;
 
     for (const chapterNum of this.planData.chaptersToProcess) {
-      const chapter = chapters.find(c => c.chapterNumber === chapterNum)!;
+      const chapter = chapters.find((c) => c.chapterNumber === chapterNum)!;
 
       await progressTracker.startChapter(chapter.chapterNumber, chapter.chapterTitle);
 
@@ -238,10 +243,8 @@ export class AnalyzePhase extends BasePhase {
 
     // Calculate number of images based on actual page count
     // Parse page range (e.g., "8-8" or "9-11")
-    const pageRange = chapter.pageRange.split('-').map(p => parseInt(p.trim()));
-    const pageCount = pageRange.length === 2
-      ? (pageRange[1] - pageRange[0] + 1)
-      : 1;
+    const pageRange = chapter.pageRange.split('-').map((p) => parseInt(p.trim()));
+    const pageCount = pageRange.length === 2 ? pageRange[1] - pageRange[0] + 1 : 1;
 
     // Generate 1 image per pagesPerImage (default: 10)
     const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
@@ -296,7 +299,8 @@ Return JSON format:
       messages: [
         {
           role: 'system',
-          content: 'You are a literary analyst specializing in visual storytelling. Extract mood and lighting details for cinematic illustration. Return only valid JSON.',
+          content:
+            'You are a literary analyst specializing in visual storytelling. Extract mood and lighting details for cinematic illustration. Return only valid JSON.',
         },
         { role: 'user', content: prompt },
       ],

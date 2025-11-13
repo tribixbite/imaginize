@@ -4,13 +4,23 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { ProgressTracker, type ProgressEvent, type ProgressStats } from '../lib/progress-tracker.js';
+import {
+  ProgressTracker,
+  type ProgressEvent,
+  type ProgressStats,
+} from '../lib/progress-tracker.js';
 import { existsSync, mkdirSync, rmSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { cwd } from 'process';
 
 // Test directory
-const testDir = join(cwd(), 'src', 'test', '.test-data', `progress-tracker-test-${Date.now()}`);
+const testDir = join(
+  cwd(),
+  'src',
+  'test',
+  '.test-data',
+  `progress-tracker-test-${Date.now()}`
+);
 
 describe('progress-tracker', () => {
   let tracker: ProgressTracker;
@@ -492,7 +502,7 @@ describe('progress-tracker', () => {
 
     it('should return elapsed time', async () => {
       // Wait a bit
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const state = tracker.getState();
       expect(state.stats.elapsedMs).toBeGreaterThanOrEqual(0);
@@ -542,7 +552,7 @@ describe('progress-tracker', () => {
 
     it('should include duration', async () => {
       // Wait a bit to get measurable duration
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       await tracker.finalize(10, 5, 3);
 
       const progressFile = join(outputDir, 'progress.md');

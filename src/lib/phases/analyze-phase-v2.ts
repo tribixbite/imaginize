@@ -12,7 +12,11 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { ImageConcept, ChapterContent } from '../../types/config.js';
-import { estimateTokens, createTokenEstimate, resolveModelConfig } from '../token-counter.js';
+import {
+  estimateTokens,
+  createTokenEstimate,
+  resolveModelConfig,
+} from '../token-counter.js';
 import { generateChaptersFile } from '../output-generator.js';
 import { isStoryContent } from '../provider-utils.js';
 import {
@@ -26,7 +30,11 @@ import { createElementsLookup } from '../concurrent/elements-lookup.js';
 import { createElementsMemory } from '../concurrent/elements-memory.js';
 import { createSeriesManager } from '../concurrent/series-manager.js';
 import { createSeriesElementsManager } from '../concurrent/series-elements.js';
-import { TemplateLoader, DEFAULT_ANALYZE_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
+import {
+  TemplateLoader,
+  DEFAULT_ANALYZE_TEMPLATE,
+  type TemplateVariables,
+} from '../templates/template-loader.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -91,7 +99,7 @@ export class AnalyzePhaseV2 extends BasePhase {
     await progressTracker.log('Planning two-pass analysis...', 'info');
 
     // Initialize manifest with all chapters
-    const chapterNumbers = chapters.map(c => c.chapterNumber);
+    const chapterNumbers = chapters.map((c) => c.chapterNumber);
     await this.manifestManager.initialize(
       stateManager.getState().bookTitle,
       chapterNumbers
@@ -99,14 +107,14 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Determine which chapters need processing
     let chaptersToProcess = chapters
-      .map(c => c.chapterNumber)
-      .filter(num => this.shouldProcessChapter(num));
+      .map((c) => c.chapterNumber)
+      .filter((num) => this.shouldProcessChapter(num));
 
     // Retry control: Filter based on retry mode
     if (config.retryControl?.retryFailed) {
       // Only process chapters that previously failed
       const failedChapters = stateManager.getFailedChapters('analyze');
-      chaptersToProcess = chaptersToProcess.filter(num => failedChapters.includes(num));
+      chaptersToProcess = chaptersToProcess.filter((num) => failedChapters.includes(num));
 
       if (failedChapters.length > 0) {
         await progressTracker.log(
@@ -128,7 +136,7 @@ export class AnalyzePhaseV2 extends BasePhase {
     const modelConfig = resolveModelConfig(config.model, config);
 
     for (const chapterNum of chaptersToProcess) {
-      const chapter = chapters.find(c => c.chapterNumber === chapterNum)!;
+      const chapter = chapters.find((c) => c.chapterNumber === chapterNum)!;
       const estimate = createTokenEstimate(
         chapter.content,
         1000,
@@ -210,7 +218,8 @@ export class AnalyzePhaseV2 extends BasePhase {
    * Performance: Process chapters in parallel batches (respecting rate limits)
    */
   private async executePass1(): Promise<void> {
-    const { chapters, openai, progressTracker, config, stateManager, outputDir } = this.context;
+    const { chapters, openai, progressTracker, config, stateManager, outputDir } =
+      this.context;
 
     const startTime = Date.now();
     await progressTracker.log('PASS 1: Extracting entities from all chapters...', 'info');
@@ -218,7 +227,10 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Series mode: Import elements from series before extraction
     if (this.seriesElements && config.series?.enabled) {
       try {
-        await progressTracker.log('📚 Series mode: Importing elements from series...', 'info');
+        await progressTracker.log(
+          '📚 Series mode: Importing elements from series...',
+          'info'
+        );
 
         const bookId = config.series.bookId || 'unknown';
         const bookTitle = stateManager.getState().bookTitle;
@@ -255,12 +267,13 @@ export class AnalyzePhaseV2 extends BasePhase {
     // gpt-4o-mini is fast and cheap, can handle higher concurrency
     // For OpenRouter free tier (1 req/min), use batch size 1
     // For paid tiers or OpenAI, use configured maxConcurrency (default: 3)
-    const modelStr = typeof config.model === 'string' ? config.model : config.model?.name || '';
+    const modelStr =
+      typeof config.model === 'string' ? config.model : config.model?.name || '';
     const isFreeModel = modelStr.includes('free');
-    const batchSize = isFreeModel ? 1 : (config.maxConcurrency || 3);
+    const batchSize = isFreeModel ? 1 : config.maxConcurrency || 3;
 
-    const chaptersToProcess = this.planData!.chaptersToProcess.filter(num => {
-      const chapter = chapters.find(c => c.chapterNumber === num)!;
+    const chaptersToProcess = this.planData!.chaptersToProcess.filter((num) => {
+      const chapter = chapters.find((c) => c.chapterNumber === num)!;
       return isStoryContent(chapter.chapterTitle);
     });
 
@@ -273,8 +286,13 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Process chapters in parallel batches
     for (let i = 0; i < chaptersToProcess.length; i += batchSize) {
-      const batchNums = chaptersToProcess.slice(i, Math.min(i + batchSize, chaptersToProcess.length));
-      const batchChapters = batchNums.map(num => chapters.find(c => c.chapterNumber === num)!);
+      const batchNums = chaptersToProcess.slice(
+        i,
+        Math.min(i + batchSize, chaptersToProcess.length)
+      );
+      const batchChapters = batchNums.map(
+        (num) => chapters.find((c) => c.chapterNumber === num)!
+      );
 
       await progressTracker.log(
         `Pass 1: Processing batch ${Math.floor(i / batchSize) + 1}: chapters ${batchNums.join(', ')}`,
@@ -283,7 +301,7 @@ export class AnalyzePhaseV2 extends BasePhase {
 
       // Process batch in parallel
       const batchResults = await Promise.all(
-        batchChapters.map(async chapter => {
+        batchChapters.map(async (chapter) => {
           await progressTracker.log(
             `Pass 1: Extracting entities from Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
             'info'
@@ -319,13 +337,18 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
 
       // Collect successful results
-      entityResults.push(...batchResults.filter(r => r !== null) as EntityExtractionResult[]);
+      entityResults.push(
+        ...(batchResults.filter((r) => r !== null) as EntityExtractionResult[])
+      );
 
       // Add delay between batches to respect rate limits (if not last batch)
       if (i + batchSize < chaptersToProcess.length) {
         const delayMs = isFreeModel ? 60000 : 2000; // 1 min for free tier, 2s for paid
-        await progressTracker.log(`Waiting ${delayMs / 1000}s before next batch...`, 'info');
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await progressTracker.log(
+          `Waiting ${delayMs / 1000}s before next batch...`,
+          'info'
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
@@ -354,7 +377,10 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Series mode: Export new elements to series catalog
     if (this.seriesElements && config.series?.enabled) {
       try {
-        await progressTracker.log('📚 Series mode: Exporting elements to series...', 'info');
+        await progressTracker.log(
+          '📚 Series mode: Exporting elements to series...',
+          'info'
+        );
 
         const bookId = config.series.bookId || 'unknown';
         const bookTitle = stateManager.getState().bookTitle;
@@ -409,7 +435,10 @@ export class AnalyzePhaseV2 extends BasePhase {
     const { chapters, config, progressTracker } = this.context;
 
     const startTime = Date.now();
-    await progressTracker.log('PASS 2: Full analysis with Elements.md enrichment...', 'info');
+    await progressTracker.log(
+      'PASS 2: Full analysis with Elements.md enrichment...',
+      'info'
+    );
 
     // Load Elements.md for enrichment
     await this.elementsLookup.load();
@@ -440,9 +469,10 @@ export class AnalyzePhaseV2 extends BasePhase {
     // Determine batch size based on rate limits
     // For OpenRouter free tier (1 req/min), use batch size 1
     // For paid tiers or OpenAI, use configured maxConcurrency (default: 3)
-    const modelStr = typeof config.model === 'string' ? config.model : config.model?.name || '';
+    const modelStr =
+      typeof config.model === 'string' ? config.model : config.model?.name || '';
     const isFreeModel = modelStr.includes('free');
-    const batchSize = isFreeModel ? 1 : (config.maxConcurrency || 3);
+    const batchSize = isFreeModel ? 1 : config.maxConcurrency || 3;
 
     await progressTracker.log(
       `Pass 2: Processing ${chaptersToProcess.length} chapters in batches of ${batchSize}`,
@@ -451,8 +481,13 @@ export class AnalyzePhaseV2 extends BasePhase {
 
     // Process chapters in parallel batches
     for (let i = 0; i < chaptersToProcess.length; i += batchSize) {
-      const batchNums = chaptersToProcess.slice(i, Math.min(i + batchSize, chaptersToProcess.length));
-      const batchChapters = batchNums.map(num => chapters.find(c => c.chapterNumber === num)!);
+      const batchNums = chaptersToProcess.slice(
+        i,
+        Math.min(i + batchSize, chaptersToProcess.length)
+      );
+      const batchChapters = batchNums.map(
+        (num) => chapters.find((c) => c.chapterNumber === num)!
+      );
 
       await progressTracker.log(
         `Processing batch ${Math.floor(i / batchSize) + 1}: chapters ${batchNums.join(', ')}`,
@@ -460,7 +495,7 @@ export class AnalyzePhaseV2 extends BasePhase {
       );
 
       // Process batch in parallel
-      const batchPromises = batchChapters.map(chapter =>
+      const batchPromises = batchChapters.map((chapter) =>
         this.analyzeChapterWithTracking(chapter, modelConfig)
       );
 
@@ -488,8 +523,11 @@ export class AnalyzePhaseV2 extends BasePhase {
       // Add delay between batches to respect rate limits (if not last batch)
       if (i + batchSize < chaptersToProcess.length) {
         const delayMs = isFreeModel ? 60000 : 2000; // 1 min for free tier, 2s for paid
-        await progressTracker.log(`Pass 2: Waiting ${delayMs / 1000}s before next batch...`, 'info');
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await progressTracker.log(
+          `Pass 2: Waiting ${delayMs / 1000}s before next batch...`,
+          'info'
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
@@ -513,9 +551,16 @@ export class AnalyzePhaseV2 extends BasePhase {
     }
 
     // Series mode: Export enrichments from Pass 2 to series
-    if (this.seriesElements && config.series?.enabled && finalMemoryStats.totalEnrichments > 0) {
+    if (
+      this.seriesElements &&
+      config.series?.enabled &&
+      finalMemoryStats.totalEnrichments > 0
+    ) {
       try {
-        await progressTracker.log('📚 Series mode: Exporting Pass 2 enrichments to series...', 'info');
+        await progressTracker.log(
+          '📚 Series mode: Exporting Pass 2 enrichments to series...',
+          'info'
+        );
 
         const { stateManager, outputDir } = this.context;
         const bookId = config.series.bookId || 'unknown';
@@ -544,7 +589,8 @@ export class AnalyzePhaseV2 extends BasePhase {
     }
 
     // Error summary reporting
-    const failedChaptersWithErrors = this.context.stateManager.getFailedChaptersWithErrors('analyze');
+    const failedChaptersWithErrors =
+      this.context.stateManager.getFailedChaptersWithErrors('analyze');
     if (failedChaptersWithErrors.length > 0) {
       await progressTracker.log(
         `⚠️  ${failedChaptersWithErrors.length} chapter(s) failed during analysis:`,
@@ -602,7 +648,10 @@ export class AnalyzePhaseV2 extends BasePhase {
 
       // Enrich Elements.md with new details discovered in this chapter
       try {
-        const enrichment = await this.elementsMemory.enrichFromConcepts(concepts, chapterNum);
+        const enrichment = await this.elementsMemory.enrichFromConcepts(
+          concepts,
+          chapterNum
+        );
 
         if (enrichment.added > 0) {
           await progressTracker.log(
@@ -676,10 +725,8 @@ export class AnalyzePhaseV2 extends BasePhase {
     }
 
     // Calculate number of images
-    const pageRange = chapter.pageRange.split('-').map(p => parseInt(p.trim()));
-    const pageCount = pageRange.length === 2
-      ? (pageRange[1] - pageRange[0] + 1)
-      : 1;
+    const pageRange = chapter.pageRange.split('-').map((p) => parseInt(p.trim()));
+    const pageCount = pageRange.length === 2 ? pageRange[1] - pageRange[0] + 1 : 1;
     const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
     // Load template (custom or preset or default)
@@ -704,7 +751,10 @@ export class AnalyzePhaseV2 extends BasePhase {
       } else if (config.customTemplates.analyzeTemplate) {
         // Use custom template file
         const templatePath = config.customTemplates.templatesDir
-          ? join(config.customTemplates.templatesDir, config.customTemplates.analyzeTemplate)
+          ? join(
+              config.customTemplates.templatesDir,
+              config.customTemplates.analyzeTemplate
+            )
           : config.customTemplates.analyzeTemplate;
 
         analyzeTemplate = await this.templateLoader.loadTemplate(
@@ -751,7 +801,7 @@ export class AnalyzePhaseV2 extends BasePhase {
         // Format characters for template
         const charactersList = mentions
           .slice(0, 10) // Limit to 10 most relevant
-          .map(entity => `- ${entity.name} (${entity.type}): ${entity.description}`)
+          .map((entity) => `- ${entity.name} (${entity.type}): ${entity.description}`)
           .join('\n');
 
         templateVars.characters = charactersList;
@@ -772,7 +822,8 @@ export class AnalyzePhaseV2 extends BasePhase {
       messages: [
         {
           role: 'system',
-          content: 'You are a literary analysis expert specializing in identifying visually rich scenes for illustration. Return valid JSON only.',
+          content:
+            'You are a literary analysis expert specializing in identifying visually rich scenes for illustration. Return valid JSON only.',
         },
         {
           role: 'user',

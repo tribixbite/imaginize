@@ -50,7 +50,8 @@ describe('ai-analyzer', () => {
   const mockChapter: ChapterContent = {
     chapterTitle: 'Chapter 1: The Beginning',
     pageRange: '1-20',
-    content: 'The forest was dark and mysterious. A lone traveler walked through the ancient trees, carrying a glowing sword. The moonlight cast eerie shadows on the path ahead. Suddenly, a dragon appeared in the clearing, its scales gleaming like emeralds.',
+    content:
+      'The forest was dark and mysterious. A lone traveler walked through the ancient trees, carrying a glowing sword. The moonlight cast eerie shadows on the path ahead. Suddenly, a dragon appeared in the clearing, its scales gleaming like emeralds.',
   };
 
   describe('analyzeChapter', () => {
@@ -61,12 +62,14 @@ describe('ai-analyzer', () => {
             message: {
               content: JSON.stringify([
                 {
-                  quote: 'A lone traveler walked through the ancient trees, carrying a glowing sword.',
+                  quote:
+                    'A lone traveler walked through the ancient trees, carrying a glowing sword.',
                   description: 'Traveler with glowing sword in dark forest',
                   reasoning: 'Key character introduction with visual prop',
                 },
                 {
-                  quote: 'A dragon appeared in the clearing, its scales gleaming like emeralds.',
+                  quote:
+                    'A dragon appeared in the clearing, its scales gleaming like emeralds.',
                   description: 'Emerald-scaled dragon in forest clearing',
                   reasoning: 'Major plot event with visually striking creature',
                 },
@@ -416,7 +419,10 @@ describe('ai-analyzer', () => {
                   type: 'creature',
                   name: 'Emerald Dragon',
                   quotes: [
-                    { text: 'A dragon appeared, scales gleaming like emeralds', page: '1' },
+                    {
+                      text: 'A dragon appeared, scales gleaming like emeralds',
+                      page: '1',
+                    },
                   ],
                   description: 'Large dragon with emerald-colored scales',
                 },

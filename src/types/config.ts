@@ -219,10 +219,15 @@ export interface ChapterState {
 export interface PhaseState {
   status: PhaseStatus;
   currentSubPhase?: SubPhase;
-  subPhases?: Partial<Record<SubPhase, {
-    status: PhaseStatus;
-    [key: string]: unknown;
-  }>>;
+  subPhases?: Partial<
+    Record<
+      SubPhase,
+      {
+        status: PhaseStatus;
+        [key: string]: unknown;
+      }
+    >
+  >;
   chapters?: Record<string, ChapterState>;
   completedAt?: string;
   error?: string;
@@ -269,8 +274,8 @@ export interface CommandOptions {
   images?: boolean;
 
   // Filtering
-  chapters?: string;  // e.g., "1,2,5-10"
-  elementsFilter?: string;  // e.g., "character:*, place:castle"
+  chapters?: string; // e.g., "1,2,5-10"
+  elementsFilter?: string; // e.g., "character:*, place:castle"
   limit?: number;
 
   // Control

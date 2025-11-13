@@ -30,11 +30,7 @@ export class CaptionRenderer {
    * @param font - Font to use for text
    * @param options - Caption styling options
    */
-  renderCaption(
-    page: PDFPage,
-    font: PDFFont,
-    options: CaptionOptions
-  ): void {
+  renderCaption(page: PDFPage, font: PDFFont, options: CaptionOptions): void {
     if (options.style === 'none') return;
 
     const { x, y, width } = options.position;

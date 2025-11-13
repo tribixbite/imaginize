@@ -113,7 +113,11 @@ export class IllustratePhase extends BasePhase {
     const { openai } = this.context;
 
     // Sample first 3 chapters for style analysis
-    const sampleText = chapters.slice(0, 3).map(ch => ch.content).join('\n\n').substring(0, 8000);
+    const sampleText = chapters
+      .slice(0, 3)
+      .map((ch) => ch.content)
+      .join('\n\n')
+      .substring(0, 8000);
 
     const state = stateManager.getState();
     const bookTitle = state.bookTitle;
@@ -136,21 +140,28 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are a visual style analyst for book illustrations.' },
-        { role: 'user', content: prompt }
+        {
+          role: 'system',
+          content: 'You are a visual style analyst for book illustrations.',
+        },
+        { role: 'user', content: prompt },
       ],
       temperature: 0.7,
       max_tokens: 200,
     });
 
-    return response.choices[0]?.message?.content || 'Detailed fantasy illustration with rich atmospheric detail.';
+    return (
+      response.choices[0]?.message?.content ||
+      'Detailed fantasy illustration with rich atmospheric detail.'
+    );
   }
 
   /**
    * Sub-phase 4: Execute image generation
    */
   protected async executePhase(): Promise<SubPhaseResult> {
-    const { progressTracker, imageOpenai, config, outputDir, stateManager } = this.context;
+    const { progressTracker, imageOpenai, config, outputDir, stateManager } =
+      this.context;
 
     if (!imageOpenai) {
       await progressTracker.log('No image generation endpoint configured', 'warning');
@@ -168,7 +179,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
     // Apply limit if specified
     const limit = config.limit ?? undefined;
-    const conceptsToProcess = limit !== undefined ? this.concepts.slice(0, limit) : this.concepts;
+    const conceptsToProcess =
+      limit !== undefined ? this.concepts.slice(0, limit) : this.concepts;
 
     await progressTracker.log(
       `Generating images for ${conceptsToProcess.length} concepts${limit ? ` (limited from ${this.concepts.length})` : ''}...`,
@@ -220,7 +232,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
           }
 
           // Download image from temporary URL and save to disk
-          const chapterNum = concept.chapterNumber || this.getChapterNumber(concept.chapter);
+          const chapterNum =
+            concept.chapterNumber || this.getChapterNumber(concept.chapter);
 
           // Get or initialize scene counter for this chapter (thread-safe increment)
           const sceneNum = (sceneCounters.get(chapterNum) || 0) + 1;
@@ -237,10 +250,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
           const imageBuffer = await response.arrayBuffer();
           await writeFile(filepath, Buffer.from(imageBuffer));
 
-          await progressTracker.log(
-            `✅ Saved: ${filename}`,
-            'success'
-          );
+          await progressTracker.log(`✅ Saved: ${filename}`, 'success');
 
           // Update concept with local file path (relative to output dir)
           concept.imageUrl = `./${filename}`;
@@ -263,7 +273,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
       // Wait for batch to complete
       const results = await Promise.all(batchPromises);
-      const successCount = results.filter(r => r.success).length;
+      const successCount = results.filter((r) => r.success).length;
       generatedCount += successCount;
 
       await progressTracker.log(
@@ -307,7 +317,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
       if (existsSync(elementsPath)) {
         const elementsContent = await readFile(elementsPath, 'utf-8');
         this.elements = this.parseElementsFile(elementsContent);
-        await progressTracker.log(`Loaded ${this.elements.length} elements for cross-referencing`, 'info');
+        await progressTracker.log(
+          `Loaded ${this.elements.length} elements for cross-referencing`,
+          'info'
+        );
       }
     } catch (error) {
       // Elements.md doesn't exist, cross-referencing not available
@@ -324,7 +337,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const state = this.context.stateManager.getState();
     const toc = state.toc?.chapters || [];
     const chapterTitleToNumber = new Map<string, number>();
-    toc.forEach(ch => chapterTitleToNumber.set(ch.title, ch.number));
+    toc.forEach((ch) => chapterTitleToNumber.set(ch.title, ch.number));
 
     // Split content by chapter headers (### Chapter Name)
     const chapterSections = content.split(/(?=###\s+(?!Scene\s+\d+)[^\n]+)/);
@@ -347,13 +360,14 @@ Return ONLY the style guide text, no JSON or formatting.`;
           chapterNum = parseInt(numMatch[1], 10);
         } else {
           // Last resort: use sequential numbering based on unique chapters seen
-          const uniqueChapters = new Set(concepts.map(c => c.chapter));
+          const uniqueChapters = new Set(concepts.map((c) => c.chapter));
           chapterNum = uniqueChapters.size + 1;
         }
       }
 
       // Now find all scenes within this chapter section
-      const sceneRegex = /#### Scene \d+\n\n\*\*Pages:\*\* (.+?)\n\n\*\*Source Text:\*\*\n> (.+?)\n\n\*\*Visual Elements:\*\* (.+?)(?=\n\n---|$)/gs;
+      const sceneRegex =
+        /#### Scene \d+\n\n\*\*Pages:\*\* (.+?)\n\n\*\*Source Text:\*\*\n> (.+?)\n\n\*\*Visual Elements:\*\* (.+?)(?=\n\n---|$)/gs;
 
       let sceneMatch;
       while ((sceneMatch = sceneRegex.exec(section)) !== null) {
@@ -377,7 +391,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const elements: BookElement[] = [];
 
     // Match each element section (#### Name)
-    const elementRegex = /#### (.+?)\n\n\*\*Description:\*\* (.+?)\n\n\*\*Reference Quotes:\*\*/gs;
+    const elementRegex =
+      /#### (.+?)\n\n\*\*Description:\*\* (.+?)\n\n\*\*Reference Quotes:\*\*/gs;
 
     let match;
     while ((match = elementRegex.exec(content)) !== null) {
@@ -387,13 +402,19 @@ Return ONLY the style guide text, no JSON or formatting.`;
       // Determine type from section headers
       let type: BookElement['type'] = 'object';
       const beforeElement = content.substring(0, match.index);
-      if (beforeElement.includes('### Characters') && !beforeElement.includes('### Creatures')) {
+      if (
+        beforeElement.includes('### Characters') &&
+        !beforeElement.includes('### Creatures')
+      ) {
         type = 'character';
       } else if (beforeElement.includes('### Creatures')) {
         type = 'creature';
       } else if (beforeElement.includes('### Places')) {
         type = 'place';
-      } else if (beforeElement.includes('### Items') || beforeElement.includes('### Objects')) {
+      } else if (
+        beforeElement.includes('### Items') ||
+        beforeElement.includes('### Objects')
+      ) {
         type = 'item';
       }
 
@@ -441,7 +462,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
       const referencedElements: string[] = [];
 
       // Extract entity names mentioned in the description
-      const mentionedEntities = this.extractEntityNames(concept.description, concept.quote);
+      const mentionedEntities = this.extractEntityNames(
+        concept.description,
+        concept.quote
+      );
 
       for (const entityName of mentionedEntities) {
         // Find matching element (fuzzy match)
@@ -459,7 +483,9 @@ Return ONLY the style guide text, no JSON or formatting.`;
     }
 
     // 7. Technical requirements
-    promptParts.push('\nTECHNICAL: Cinematic composition, detailed illustration, high-quality fantasy art');
+    promptParts.push(
+      '\nTECHNICAL: Cinematic composition, detailed illustration, high-quality fantasy art'
+    );
     promptParts.push('CRITICAL: No text, letters, words, or writing in the image');
 
     return promptParts.join('\n');
@@ -479,7 +505,20 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
     for (const word of capitalizedWords) {
       // Skip common non-entity words
-      const skipWords = ['The', 'A', 'An', 'She', 'He', 'It', 'They', 'When', 'Where', 'What', 'How', 'Why'];
+      const skipWords = [
+        'The',
+        'A',
+        'An',
+        'She',
+        'He',
+        'It',
+        'They',
+        'When',
+        'Where',
+        'What',
+        'How',
+        'Why',
+      ];
       if (!skipWords.includes(word)) {
         entities.add(word);
       }
@@ -493,17 +532,20 @@ Return ONLY the style guide text, no JSON or formatting.`;
    */
   private findElement(entityName: string): BookElement | undefined {
     // Exact match
-    let element = this.elements.find(e => e.name === entityName);
+    let element = this.elements.find((e) => e.name === entityName);
     if (element) return element;
 
     // Case-insensitive match
-    element = this.elements.find(e => e.name.toLowerCase() === entityName.toLowerCase());
+    element = this.elements.find(
+      (e) => e.name.toLowerCase() === entityName.toLowerCase()
+    );
     if (element) return element;
 
     // Partial match (entity name contains element name or vice versa)
-    element = this.elements.find(e =>
-      e.name.toLowerCase().includes(entityName.toLowerCase()) ||
-      entityName.toLowerCase().includes(e.name.toLowerCase())
+    element = this.elements.find(
+      (e) =>
+        e.name.toLowerCase().includes(entityName.toLowerCase()) ||
+        entityName.toLowerCase().includes(e.name.toLowerCase())
     );
 
     return element;
@@ -529,7 +571,12 @@ Return ONLY the style guide text, no JSON or formatting.`;
     if (imageModel.includes('google/') && imageModel.includes('image')) {
       try {
         await progressTracker.log(`Trying OpenRouter model: ${imageModel}`, 'info');
-        const url = await this.generateOpenRouterImage(imageOpenai, prompt, imageModel, size);
+        const url = await this.generateOpenRouterImage(
+          imageOpenai,
+          prompt,
+          imageModel,
+          size
+        );
         if (url) {
           await progressTracker.log(`Using OpenRouter ${imageModel}`, 'info');
           return url;
@@ -547,8 +594,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
       try {
         // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
         const qualityMap: Record<string, string> = {
-          'standard': 'medium',
-          'hd': 'high',
+          standard: 'medium',
+          hd: 'high',
         };
         const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
 
@@ -674,8 +721,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const { progressTracker } = this.context;
 
     // Parse size for aspect ratio (e.g., "1024x1024" -> "1:1")
-    const aspectRatio = size === '1024x1792' ? '9:16' :
-                       size === '1792x1024' ? '16:9' : '1:1';
+    const aspectRatio =
+      size === '1024x1792' ? '9:16' : size === '1792x1024' ? '16:9' : '1:1';
 
     // OpenRouter image models require modalities parameter
     const response = await openai.chat.completions.create({

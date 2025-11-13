@@ -40,7 +40,9 @@ export class SceneEditor {
     for (const scene of scenes) {
       const sceneKey = `${scene.chapterNumber}_${scene.sceneNumber}`;
 
-      console.log(chalk.yellow(`\n📍 Chapter ${scene.chapterNumber}: ${scene.chapterTitle}`));
+      console.log(
+        chalk.yellow(`\n📍 Chapter ${scene.chapterNumber}: ${scene.chapterTitle}`)
+      );
       console.log(chalk.yellow(`   Scene ${scene.sceneNumber}\n`));
 
       // Show current description
@@ -93,7 +95,9 @@ export class SceneEditor {
   /**
    * Save edited scenes back to Chapters.md
    */
-  private async saveEditedScenes(editedConcepts: Map<string, ImageConcept>): Promise<void> {
+  private async saveEditedScenes(
+    editedConcepts: Map<string, ImageConcept>
+  ): Promise<void> {
     const content = await readFile(this.chaptersPath, 'utf-8');
     const lines = content.split('\n');
 
@@ -177,7 +181,10 @@ export class SceneEditor {
   /**
    * Prompt for yes/no input
    */
-  private async promptYesNo(question: string, defaultYes: boolean = true): Promise<boolean> {
+  private async promptYesNo(
+    question: string,
+    defaultYes: boolean = true
+  ): Promise<boolean> {
     const hint = defaultYes ? '[Y/n]' : '[y/N]';
     const rl = readline.createInterface({
       input: process.stdin,
@@ -200,7 +207,10 @@ export class SceneEditor {
   /**
    * Prompt for multiline text input
    */
-  private async promptMultilineText(prompt: string, defaultValue: string): Promise<string> {
+  private async promptMultilineText(
+    prompt: string,
+    defaultValue: string
+  ): Promise<string> {
     console.log(chalk.cyan(prompt));
 
     const rl = readline.createInterface({

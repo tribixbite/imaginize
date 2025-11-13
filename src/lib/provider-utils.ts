@@ -111,9 +111,7 @@ export async function prepareConfiguration(
   const warnings: string[] = [];
 
   const textModel =
-    typeof config.model === 'string'
-      ? getDefaultModelConfig(config.model)
-      : config.model;
+    typeof config.model === 'string' ? getDefaultModelConfig(config.model) : config.model;
 
   // Prepare text configuration
   const textConfig = {

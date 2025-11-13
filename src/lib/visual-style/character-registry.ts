@@ -121,7 +121,9 @@ export class CharacterRegistry {
     const character = this.characters.get(key);
 
     if (!character) {
-      console.warn(`Character "${characterName}" not registered. Call registerFirstAppearance first.`);
+      console.warn(
+        `Character "${characterName}" not registered. Call registerFirstAppearance first.`
+      );
       return;
     }
 
@@ -154,7 +156,9 @@ export class CharacterRegistry {
     parts.push(`${character.name} - Appearance Reference:`);
 
     if (features.hairColor || features.hairStyle) {
-      const hairDesc = [features.hairColor, features.hairStyle].filter(Boolean).join(', ');
+      const hairDesc = [features.hairColor, features.hairStyle]
+        .filter(Boolean)
+        .join(', ');
       parts.push(`  • Hair: ${hairDesc}`);
     }
 
@@ -178,8 +182,12 @@ export class CharacterRegistry {
       parts.push(`  • Distinguishing: ${features.distinguishingFeatures.join(', ')}`);
     }
 
-    parts.push(`  • First seen: Chapter ${character.firstAppearance.chapterNumber}, Scene ${character.firstAppearance.sceneNumber}`);
-    parts.push(`  • IMPORTANT: Maintain visual consistency with previous ${character.appearances.length} appearance(s)`);
+    parts.push(
+      `  • First seen: Chapter ${character.firstAppearance.chapterNumber}, Scene ${character.firstAppearance.sceneNumber}`
+    );
+    parts.push(
+      `  • IMPORTANT: Maintain visual consistency with previous ${character.appearances.length} appearance(s)`
+    );
 
     return parts.join('\n');
   }
@@ -215,7 +223,9 @@ export class CharacterRegistry {
   /**
    * Extract visual features from description text
    */
-  private extractVisualFeatures(description: string): CharacterAppearance['visualFeatures'] {
+  private extractVisualFeatures(
+    description: string
+  ): CharacterAppearance['visualFeatures'] {
     const features: CharacterAppearance['visualFeatures'] = {
       clothing: [],
       distinguishingFeatures: [],
@@ -224,30 +234,48 @@ export class CharacterRegistry {
     const lower = description.toLowerCase();
 
     // Extract hair information
-    const hairColorMatches = lower.match(/\b(blonde|brown|black|red|gray|grey|white|silver|dark|light)\s+hair\b/i);
+    const hairColorMatches = lower.match(
+      /\b(blonde|brown|black|red|gray|grey|white|silver|dark|light)\s+hair\b/i
+    );
     if (hairColorMatches) {
       features.hairColor = hairColorMatches[1];
     }
 
-    const hairStyleMatches = lower.match(/\b(long|short|curly|straight|wavy|tousled|windblown|braided)\s+(hair|locks)\b/i);
+    const hairStyleMatches = lower.match(
+      /\b(long|short|curly|straight|wavy|tousled|windblown|braided)\s+(hair|locks)\b/i
+    );
     if (hairStyleMatches) {
       features.hairStyle = hairStyleMatches[1];
     }
 
     // Extract eye color
-    const eyeColorMatches = lower.match(/\b(blue|brown|green|gray|grey|hazel|amber|dark|bright)\s+(eyes|gaze)\b/i);
+    const eyeColorMatches = lower.match(
+      /\b(blue|brown|green|gray|grey|hazel|amber|dark|bright)\s+(eyes|gaze)\b/i
+    );
     if (eyeColorMatches) {
       features.eyeColor = eyeColorMatches[1];
     }
 
     // Extract build
-    const buildMatches = lower.match(/\b(tall|short|thin|slender|muscular|stocky|gangly|petite|large|small)\s+(build|frame|figure)\b/i);
+    const buildMatches = lower.match(
+      /\b(tall|short|thin|slender|muscular|stocky|gangly|petite|large|small)\s+(build|frame|figure)\b/i
+    );
     if (buildMatches) {
       features.build = buildMatches[1];
     }
 
     // Extract clothing (simplified - look for common clothing items)
-    const clothingKeywords = ['coat', 'jacket', 'dress', 'robe', 'cloak', 'shirt', 'tunic', 'armor', 'uniform'];
+    const clothingKeywords = [
+      'coat',
+      'jacket',
+      'dress',
+      'robe',
+      'cloak',
+      'shirt',
+      'tunic',
+      'armor',
+      'uniform',
+    ];
     for (const item of clothingKeywords) {
       if (lower.includes(item)) {
         // Try to get descriptor before clothing item
@@ -262,7 +290,16 @@ export class CharacterRegistry {
     }
 
     // Extract distinguishing features
-    const distinguishingKeywords = ['scar', 'tattoo', 'mark', 'birthmark', 'beard', 'mustache', 'glasses', 'spectacles'];
+    const distinguishingKeywords = [
+      'scar',
+      'tattoo',
+      'mark',
+      'birthmark',
+      'beard',
+      'mustache',
+      'glasses',
+      'spectacles',
+    ];
     for (const feature of distinguishingKeywords) {
       if (lower.includes(feature)) {
         features.distinguishingFeatures.push(feature);

@@ -35,9 +35,12 @@ export async function generateContentsFile(
   content += `- **[Elements.md](./Elements.md)** - ${elementsCount} story elements (characters, places, items)\n`;
   content += '\n---\n\n';
   content += '## How to Use This Guide\n\n';
-  content += '1. **Chapters.md**: Browse visual scenes chapter by chapter. Each scene includes exact quotes from the source text and factual descriptions.\n\n';
-  content += '2. **Elements.md**: Reference catalog of characters, creatures, places, and items with multiple source quotes for accurate illustration.\n\n';
-  content += '3. **Cross-Reference**: When illustrating a scene mentioning a character or place, check Elements.md for their complete description.\n\n';
+  content +=
+    '1. **Chapters.md**: Browse visual scenes chapter by chapter. Each scene includes exact quotes from the source text and factual descriptions.\n\n';
+  content +=
+    '2. **Elements.md**: Reference catalog of characters, creatures, places, and items with multiple source quotes for accurate illustration.\n\n';
+  content +=
+    '3. **Cross-Reference**: When illustrating a scene mentioning a character or place, check Elements.md for their complete description.\n\n';
 
   const filePath = join(outputDir, 'Contents.md');
   await writeFile(filePath, content);
@@ -53,7 +56,8 @@ export async function generateChaptersFile(
 ): Promise<void> {
   let content = `# Chapters - ${metadata.title}\n\n`;
   content += '## Visual Scenes by Chapter\n\n';
-  content += 'Each scene includes exact quotes from the source text for illustration reference.\n\n';
+  content +=
+    'Each scene includes exact quotes from the source text for illustration reference.\n\n';
   content += '---\n\n';
 
   // Group concepts by chapter
@@ -103,7 +107,8 @@ export async function generateElementsFile(
 
   content += '---\n\n';
   content += '## Story Elements\n\n';
-  content += 'This document catalogs key characters, creatures, places, items, and objects mentioned in the book, with direct quotes for accurate illustration reference.\n\n';
+  content +=
+    'This document catalogs key characters, creatures, places, items, and objects mentioned in the book, with direct quotes for accurate illustration reference.\n\n';
 
   // Group elements by type
   const elementsByType = new Map<string, BookElement[]>();

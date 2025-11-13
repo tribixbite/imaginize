@@ -21,8 +21,8 @@ export function extractCharacterNames(text: string): string[] {
   // Common patterns for character mentions
   // Look for capitalized names (simple approach)
   const words = text.split(/\s+/);
-  const capitalizedWords = words.filter(word =>
-    /^[A-Z][a-z]+/.test(word) && word.length > 2
+  const capitalizedWords = words.filter(
+    (word) => /^[A-Z][a-z]+/.test(word) && word.length > 2
   );
 
   // Remove duplicates
@@ -152,9 +152,7 @@ function buildConsistencyReminder(
   }
 
   if (characterRegistry && characterRegistry.getCount() > 0) {
-    reminders.push(
-      `- Ensure character appearances match their previous depictions`
-    );
+    reminders.push(`- Ensure character appearances match their previous depictions`);
     reminders.push(`- Maintain visual consistency for all recurring characters`);
   }
 
@@ -173,7 +171,7 @@ export function enhanceImagePrompts(
   styleGuide: VisualStyleGuide | null,
   characterRegistry: CharacterRegistry | null
 ): EnhancedPrompt[] {
-  return concepts.map(concept =>
+  return concepts.map((concept) =>
     enhanceImagePrompt(concept, styleGuide, characterRegistry)
   );
 }

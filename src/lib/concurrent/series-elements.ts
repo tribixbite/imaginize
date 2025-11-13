@@ -205,7 +205,9 @@ export function createSeriesElementsManager(seriesRoot: string) {
       const data = JSON.parse(content);
 
       bookEntities = new Map();
-      for (const [name, entity] of Object.entries(data.entities as Record<string, EntityMemory>)) {
+      for (const [name, entity] of Object.entries(
+        data.entities as Record<string, EntityMemory>
+      )) {
         bookEntities.set(name, entity);
       }
     } catch (error: any) {

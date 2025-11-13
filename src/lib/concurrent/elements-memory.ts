@@ -79,7 +79,8 @@ export function createElementsMemory(outputDir: string) {
 
       // Parse Elements.md to extract entities
       // Format: ## EntityName\n\n**Type:** type\n\n**Description:** description
-      const entityRegex = /## ([^\n]+)\n\n\*\*Type:\*\* (character|creature|place|item)\n\n\*\*Description:\*\* ([^\n]+(?:\n(?!\n##)[^\n]+)*)/g;
+      const entityRegex =
+        /## ([^\n]+)\n\n\*\*Type:\*\* (character|creature|place|item)\n\n\*\*Description:\*\* ([^\n]+(?:\n(?!\n##)[^\n]+)*)/g;
 
       let match;
       while ((match = entityRegex.exec(content)) !== null) {
@@ -149,8 +150,10 @@ export function createElementsMemory(outputDir: string) {
           // Check if this detail is already in base description or enrichments
           const allDescriptions = [
             entityData.baseDescription,
-            ...entityData.enrichments.map(e => e.detail),
-          ].join(' ').toLowerCase();
+            ...entityData.enrichments.map((e) => e.detail),
+          ]
+            .join(' ')
+            .toLowerCase();
 
           if (!allDescriptions.includes(detail.toLowerCase())) {
             newDetails.push(detail);
@@ -233,7 +236,9 @@ export function createElementsMemory(outputDir: string) {
     const lines: string[] = [];
 
     lines.push('# Story Elements\n');
-    lines.push('Comprehensive catalog of all characters, creatures, places, and items.\n');
+    lines.push(
+      'Comprehensive catalog of all characters, creatures, places, and items.\n'
+    );
 
     // Group by type
     const byType = new Map<string, EntityMemory[]>();
@@ -258,7 +263,9 @@ export function createElementsMemory(outputDir: string) {
         if (entity.enrichments.length > 0) {
           lines.push('\n\n**Additional Details:**');
           for (const enrichment of entity.enrichments) {
-            lines.push(`\n- ${enrichment.detail} _(Chapter ${enrichment.sourceChapter})_`);
+            lines.push(
+              `\n- ${enrichment.detail} _(Chapter ${enrichment.sourceChapter})_`
+            );
           }
         }
 
@@ -299,7 +306,7 @@ export function createElementsMemory(outputDir: string) {
     const added = await applyUpdates(allUpdates);
 
     // Return summary
-    const entities = [...new Set(allUpdates.map(u => u.entityName))];
+    const entities = [...new Set(allUpdates.map((u) => u.entityName))];
 
     return { added, entities };
   }

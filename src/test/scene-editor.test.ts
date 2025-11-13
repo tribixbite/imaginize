@@ -52,7 +52,8 @@ describe('scene-editor', () => {
         // Access private method through type assertion for testing
         const wrapText = (editor as any).wrapText.bind(editor);
 
-        const text = 'This is a very long text that should be wrapped at the specified width to ensure readability';
+        const text =
+          'This is a very long text that should be wrapped at the specified width to ensure readability';
         const wrapped = wrapText(text, 30);
 
         const lines = wrapped.split('\n');

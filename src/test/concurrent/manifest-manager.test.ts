@@ -77,7 +77,7 @@ describe('ManifestManager', () => {
   test('update modifies manifest atomically', async () => {
     await manager.initialize('TestBook', [1]);
 
-    await manager.update(m => {
+    await manager.update((m) => {
       m.elements_md_status = 'complete';
     });
 
@@ -92,9 +92,9 @@ describe('ManifestManager', () => {
     const timestamp1 = before.last_updated;
 
     // Wait a bit to ensure timestamp changes
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    await manager.update(m => {
+    await manager.update((m) => {
       m.elements_md_status = 'complete';
     });
 
@@ -109,7 +109,7 @@ describe('ManifestManager', () => {
 
     await manager.updateChapter(1, 'analyzed', {
       analyzed_at: '2025-01-01T00:00:00.000Z',
-      concepts: 3
+      concepts: 3,
     });
 
     const manifest = await manager.load();
@@ -187,7 +187,7 @@ describe('ManifestManager', () => {
     await Promise.all([
       manager.updateChapter(1, 'analyzed', { concepts: 1 }),
       manager.updateChapter(2, 'analyzed', { concepts: 2 }),
-      manager.updateChapter(3, 'analyzed', { concepts: 3 })
+      manager.updateChapter(3, 'analyzed', { concepts: 3 }),
     ]);
 
     const manifest = await manager.load();
@@ -206,7 +206,7 @@ describe('ManifestManager', () => {
 
     await manager.update(async (m) => {
       // Simulate async work
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
       m.elements_md_status = 'complete';
     });
 

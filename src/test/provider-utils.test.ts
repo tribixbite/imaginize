@@ -413,11 +413,15 @@ describe('provider-utils', () => {
     });
 
     it('should throw error for invalid number', () => {
-      expect(() => parseChapterSelection('1,abc,3')).toThrow(/Invalid chapter number: abc/);
+      expect(() => parseChapterSelection('1,abc,3')).toThrow(
+        /Invalid chapter number: abc/
+      );
     });
 
     it('should throw error for invalid range', () => {
-      expect(() => parseChapterSelection('1-abc')).toThrow(/Invalid chapter range: 1-abc/);
+      expect(() => parseChapterSelection('1-abc')).toThrow(
+        /Invalid chapter range: 1-abc/
+      );
     });
 
     it('should handle single-item range', () => {
@@ -501,9 +505,7 @@ describe('provider-utils', () => {
 
   describe('matchesElementFilter', () => {
     it('should match exact name without type filter', () => {
-      const filters: ElementFilter[] = [
-        { namePattern: 'aria', isWildcard: false },
-      ];
+      const filters: ElementFilter[] = [{ namePattern: 'aria', isWildcard: false }];
       expect(matchesElementFilter('character', 'Aria', filters)).toBe(true);
       expect(matchesElementFilter('character', 'Bob', filters)).toBe(false);
     });
@@ -517,9 +519,7 @@ describe('provider-utils', () => {
     });
 
     it('should match wildcard pattern', () => {
-      const filters: ElementFilter[] = [
-        { namePattern: 'aria*', isWildcard: true },
-      ];
+      const filters: ElementFilter[] = [{ namePattern: 'aria*', isWildcard: true }];
       expect(matchesElementFilter('character', 'Aria', filters)).toBe(true);
       expect(matchesElementFilter('character', 'Ariana', filters)).toBe(true);
       expect(matchesElementFilter('character', 'Bob', filters)).toBe(false);
@@ -545,18 +545,14 @@ describe('provider-utils', () => {
     });
 
     it('should be case-insensitive', () => {
-      const filters: ElementFilter[] = [
-        { namePattern: 'aria', isWildcard: false },
-      ];
+      const filters: ElementFilter[] = [{ namePattern: 'aria', isWildcard: false }];
       expect(matchesElementFilter('CHARACTER', 'ARIA', filters)).toBe(true);
       expect(matchesElementFilter('character', 'aria', filters)).toBe(true);
       expect(matchesElementFilter('Character', 'Aria', filters)).toBe(true);
     });
 
     it('should handle complex wildcard patterns', () => {
-      const filters: ElementFilter[] = [
-        { namePattern: '*castle*', isWildcard: true },
-      ];
+      const filters: ElementFilter[] = [{ namePattern: '*castle*', isWildcard: true }];
       expect(matchesElementFilter('location', 'The Castle', filters)).toBe(true);
       expect(matchesElementFilter('location', 'Castle Hill', filters)).toBe(true);
       expect(matchesElementFilter('location', 'Dark Castle Keep', filters)).toBe(true);
@@ -573,9 +569,7 @@ describe('provider-utils', () => {
     });
 
     it('should return false when no filters match', () => {
-      const filters: ElementFilter[] = [
-        { namePattern: 'bob', isWildcard: false },
-      ];
+      const filters: ElementFilter[] = [{ namePattern: 'bob', isWildcard: false }];
       expect(matchesElementFilter('character', 'Aria', filters)).toBe(false);
     });
 

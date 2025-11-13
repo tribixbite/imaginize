@@ -54,7 +54,8 @@ export async function analyzeStyleFromImages(
       messages: [
         {
           role: 'system',
-          content: 'You are an expert art director analyzing book illustrations for visual consistency. Return structured JSON only.',
+          content:
+            'You are an expert art director analyzing book illustrations for visual consistency. Return structured JSON only.',
         },
         {
           role: 'user',
@@ -63,7 +64,7 @@ export async function analyzeStyleFromImages(
               type: 'text',
               text: prompt,
             },
-            ...imageDataList.map(base64 => ({
+            ...imageDataList.map((base64) => ({
               type: 'image_url' as const,
               image_url: {
                 url: `data:image/png;base64,${base64}`,
@@ -109,7 +110,9 @@ export async function analyzeStyleFromImages(
 
     // Fallback: Create basic style guide
     if (progressCallback) {
-      await progressCallback('Warning: Style analysis failed, using fallback style guide');
+      await progressCallback(
+        'Warning: Style analysis failed, using fallback style guide'
+      );
     }
 
     return createFallbackStyleGuide(imagePaths.length);

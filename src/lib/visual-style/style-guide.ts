@@ -131,14 +131,14 @@ export function calculateStyleSimilarity(
   const style1Keywords = guide1.artStyle.toLowerCase().split(' ');
   const style2Keywords = guide2.artStyle.toLowerCase().split(' ');
   const styleOverlap =
-    style1Keywords.filter(k => style2Keywords.includes(k)).length /
+    style1Keywords.filter((k) => style2Keywords.includes(k)).length /
     Math.max(style1Keywords.length, style2Keywords.length);
   score += styleOverlap;
   factors++;
 
   // Color palette overlap
   const colorOverlap =
-    guide1.colorPalette.filter(c => guide2.colorPalette.includes(c)).length /
+    guide1.colorPalette.filter((c) => guide2.colorPalette.includes(c)).length /
     Math.max(guide1.colorPalette.length, guide2.colorPalette.length);
   score += colorOverlap;
   factors++;
@@ -147,7 +147,7 @@ export function calculateStyleSimilarity(
   const lighting1Keywords = guide1.lighting.toLowerCase().split(' ');
   const lighting2Keywords = guide2.lighting.toLowerCase().split(' ');
   const lightingOverlap =
-    lighting1Keywords.filter(k => lighting2Keywords.includes(k)).length /
+    lighting1Keywords.filter((k) => lighting2Keywords.includes(k)).length /
     Math.max(lighting1Keywords.length, lighting2Keywords.length);
   score += lightingOverlap;
   factors++;
@@ -156,7 +156,7 @@ export function calculateStyleSimilarity(
   const mood1Keywords = guide1.mood.toLowerCase().split(' ');
   const mood2Keywords = guide2.mood.toLowerCase().split(' ');
   const moodOverlap =
-    mood1Keywords.filter(k => mood2Keywords.includes(k)).length /
+    mood1Keywords.filter((k) => mood2Keywords.includes(k)).length /
     Math.max(mood1Keywords.length, mood2Keywords.length);
   score += moodOverlap;
   factors++;

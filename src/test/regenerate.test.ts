@@ -35,9 +35,7 @@ describe('regenerate', () => {
 
   describe('loadImageConcepts', () => {
     it('should throw error if Chapters.md does not exist', async () => {
-      await expect(loadImageConcepts(testDir)).rejects.toThrow(
-        'Chapters.md not found'
-      );
+      await expect(loadImageConcepts(testDir)).rejects.toThrow('Chapters.md not found');
     });
 
     it('should parse chapters and scenes from markdown with JSON blocks', async () => {

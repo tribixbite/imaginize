@@ -15,11 +15,7 @@ export type ChapterStatus =
 /**
  * Elements.md generation status
  */
-export type ElementsStatus =
-  | 'pending'
-  | 'inprogress'
-  | 'complete'
-  | 'error';
+export type ElementsStatus = 'pending' | 'inprogress' | 'complete' | 'error';
 
 /**
  * Chapter state in manifest

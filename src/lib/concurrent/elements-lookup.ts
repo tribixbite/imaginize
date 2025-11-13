@@ -81,7 +81,7 @@ export class ElementsLookup {
     this.elements.clear();
 
     // Split into sections by ## headers
-    const sections = markdown.split(/^## /m).filter(s => s.trim());
+    const sections = markdown.split(/^## /m).filter((s) => s.trim());
 
     for (const section of sections) {
       const lines = section.split('\n');
@@ -121,8 +121,8 @@ export class ElementsLookup {
           if (chapterMatch) {
             currentAppearances = chapterMatch[1]
               .split(',')
-              .map(s => s.trim())
-              .filter(s => s);
+              .map((s) => s.trim())
+              .filter((s) => s);
           }
         } else if (line && !line.startsWith('**')) {
           // Description line
@@ -193,8 +193,8 @@ export class ElementsLookup {
       const nameParts = key.split(/\s+/);
       if (nameParts.length > 1) {
         // Check if any significant name part appears (skip common words like "the", "a")
-        const significantParts = nameParts.filter(part =>
-          part.length > 2 && !['the', 'a', 'an', 'of'].includes(part)
+        const significantParts = nameParts.filter(
+          (part) => part.length > 2 && !['the', 'a', 'an', 'of'].includes(part)
         );
 
         for (const part of significantParts) {
@@ -276,7 +276,7 @@ export class ElementsLookup {
    * @returns Array of elements matching type
    */
   getElementsByType(type: ElementType): Element[] {
-    return Array.from(this.elements.values()).filter(e => e.type === type);
+    return Array.from(this.elements.values()).filter((e) => e.type === type);
   }
 
   /**
@@ -297,7 +297,7 @@ export class ElementsLookup {
    * Get all element names (for debugging/testing)
    */
   getAllNames(): string[] {
-    return Array.from(this.elements.values()).map(e => e.name);
+    return Array.from(this.elements.values()).map((e) => e.name);
   }
 }
 

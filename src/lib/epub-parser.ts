@@ -28,8 +28,7 @@ export async function parseEpub(filePath: string): Promise<{
 
   const containerXml = containerEntry.getData().toString('utf8');
   const containerData = await parseStringPromise(containerXml);
-  const rootfilePath =
-    containerData.container.rootfiles[0].rootfile[0].$['full-path'];
+  const rootfilePath = containerData.container.rootfiles[0].rootfile[0].$['full-path'];
 
   // Parse content.opf
   const opfEntry = zipEntries.find((e) => e.entryName === rootfilePath);

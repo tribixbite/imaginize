@@ -87,7 +87,7 @@ describe('AtomicWrite', () => {
 
     // Check for temp files
     const files = await readdir(TEST_DIR);
-    const tempFiles = files.filter(f => f.includes('.tmp.'));
+    const tempFiles = files.filter((f) => f.includes('.tmp.'));
 
     expect(tempFiles.length).toBe(0);
   });
@@ -105,7 +105,7 @@ describe('AtomicWrite', () => {
 
     // Should not leave temp files in current directory
     const files = await readdir(TEST_DIR);
-    const tempFiles = files.filter(f => f.includes('.tmp.'));
+    const tempFiles = files.filter((f) => f.includes('.tmp.'));
 
     expect(tempFiles.length).toBe(0);
   });
@@ -132,7 +132,7 @@ describe('AtomicWrite', () => {
     const data = {
       name: 'Test',
       count: 42,
-      nested: { value: true }
+      nested: { value: true },
     };
 
     await atomicWriteJSON(TEST_JSON_FILE, data);
@@ -172,7 +172,7 @@ describe('AtomicWrite', () => {
     const writes = [
       atomicWrite(join(TEST_DIR, 'file1.txt'), 'Content 1'),
       atomicWrite(join(TEST_DIR, 'file2.txt'), 'Content 2'),
-      atomicWrite(join(TEST_DIR, 'file3.txt'), 'Content 3')
+      atomicWrite(join(TEST_DIR, 'file3.txt'), 'Content 3'),
     ];
 
     await Promise.all(writes);

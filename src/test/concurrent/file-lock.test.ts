@@ -133,19 +133,19 @@ describe('FileLock', () => {
     const promises = [
       lock.withLock(async () => {
         executionOrder.push(1);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return 1;
       }),
       lock.withLock(async () => {
         executionOrder.push(2);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return 2;
       }),
       lock.withLock(async () => {
         executionOrder.push(3);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return 3;
-      })
+      }),
     ];
 
     const results = await Promise.all(promises);

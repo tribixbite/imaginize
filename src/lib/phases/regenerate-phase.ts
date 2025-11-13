@@ -45,7 +45,9 @@ export class RegeneratePhase {
 
     for (const scene of scenes) {
       try {
-        console.log(`  Generating: Chapter ${scene.chapterNumber}, Scene ${scene.sceneNumber}`);
+        console.log(
+          `  Generating: Chapter ${scene.chapterNumber}, Scene ${scene.sceneNumber}`
+        );
         console.log(`  ${scene.concept.description.substring(0, 60)}...`);
 
         // Build enriched prompt
@@ -53,7 +55,8 @@ export class RegeneratePhase {
 
         // Generate image
         const imageModelValue = config.imageEndpoint?.model || 'dall-e-3';
-        const imageModel = typeof imageModelValue === 'string' ? imageModelValue : imageModelValue.name;
+        const imageModel =
+          typeof imageModelValue === 'string' ? imageModelValue : imageModelValue.name;
 
         const response = await imageOpenai.images.generate({
           model: imageModel,
@@ -93,7 +96,6 @@ export class RegeneratePhase {
 
         console.log(`  ✅ Saved: ${filename}\n`);
         generated++;
-
       } catch (error: any) {
         console.error(`  ❌ Failed: ${error.message}\n`);
         failed++;

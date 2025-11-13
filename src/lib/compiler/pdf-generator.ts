@@ -306,11 +306,7 @@ export class GraphicNovelCompiler {
 
         // Calculate position
         const x = this.margin + col * cellWidth + imagePadding;
-        const y =
-          this.pageHeight -
-          this.margin -
-          (row + 1) * cellHeight +
-          imagePadding;
+        const y = this.pageHeight - this.margin - (row + 1) * cellHeight + imagePadding;
         const w = cellWidth - imagePadding * 2;
         const h = cellHeight - imagePadding * 2;
 
@@ -348,9 +344,7 @@ export class GraphicNovelCompiler {
           // Add caption
           if (this.options.captionStyle !== 'none') {
             const captionText =
-              img.concept.description ||
-              img.concept.chapter ||
-              'Untitled';
+              img.concept.description || img.concept.chapter || 'Untitled';
 
             const textColor = img.analysis?.recommendedTextColor || {
               r: 255,

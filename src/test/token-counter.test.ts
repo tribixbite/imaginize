@@ -196,7 +196,9 @@ describe('token-counter', () => {
     });
 
     it('should split long paragraphs by sentences', () => {
-      const longParagraph = 'First sentence. Second sentence. Third sentence. ' .repeat(20);
+      const longParagraph = 'First sentence. Second sentence. Third sentence. '.repeat(
+        20
+      );
       const result = calculateSplits(longParagraph, 50);
 
       expect(result.chunks.length).toBeGreaterThan(1);
@@ -233,7 +235,8 @@ describe('token-counter', () => {
     });
 
     it('should handle text with no paragraph breaks', () => {
-      const text = 'This is a very long text without any paragraph breaks that should still be split properly when it exceeds the token limit.';
+      const text =
+        'This is a very long text without any paragraph breaks that should still be split properly when it exceeds the token limit.';
       const result = calculateSplits(text, 5);
 
       expect(result.chunks.length).toBeGreaterThanOrEqual(1);
@@ -395,7 +398,11 @@ describe('token-counter', () => {
 
       const estimate = createTokenEstimate(inputText, expectedOutput, mockModel);
 
-      const expectedCost = estimateCost(estimate.inputTokens, estimate.outputTokens, mockModel);
+      const expectedCost = estimateCost(
+        estimate.inputTokens,
+        estimate.outputTokens,
+        mockModel
+      );
       expect(estimate.estimatedCost).toBe(expectedCost);
     });
 

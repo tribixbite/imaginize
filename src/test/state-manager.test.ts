@@ -10,7 +10,13 @@ import { join } from 'path';
 import { cwd } from 'process';
 
 // Test directory
-const testDir = join(cwd(), 'src', 'test', '.test-data', `state-manager-test-${Date.now()}`);
+const testDir = join(
+  cwd(),
+  'src',
+  'test',
+  '.test-data',
+  `state-manager-test-${Date.now()}`
+);
 
 describe('state-manager', () => {
   let manager: StateManager;
@@ -493,7 +499,9 @@ describe('state-manager', () => {
     });
 
     it('should include subPhase if set', () => {
-      manager.updatePhase('analyze', 'in_progress', { currentSubPhase: 'scene-extraction' });
+      manager.updatePhase('analyze', 'in_progress', {
+        currentSubPhase: 'scene-extraction',
+      });
 
       const current = manager.getCurrentPhase();
 
@@ -513,7 +521,9 @@ describe('state-manager', () => {
 
       const discrepancies = manager.validateConsistency(false, false);
 
-      expect(discrepancies).toContain('analyze phase marked complete but Contents.md is missing');
+      expect(discrepancies).toContain(
+        'analyze phase marked complete but Contents.md is missing'
+      );
     });
 
     it('should detect extract phase completed but Elements.md missing', () => {
@@ -521,7 +531,9 @@ describe('state-manager', () => {
 
       const discrepancies = manager.validateConsistency(false, false);
 
-      expect(discrepancies).toContain('extract phase marked complete but Elements.md is missing');
+      expect(discrepancies).toContain(
+        'extract phase marked complete but Elements.md is missing'
+      );
     });
 
     it('should detect chapter completed but not in TOC', () => {
@@ -530,7 +542,9 @@ describe('state-manager', () => {
 
       const discrepancies = manager.validateConsistency(true, true);
 
-      expect(discrepancies.some(d => d.includes('chapter 2 marked complete but not in TOC'))).toBe(true);
+      expect(
+        discrepancies.some((d) => d.includes('chapter 2 marked complete but not in TOC'))
+      ).toBe(true);
     });
 
     it('should not flag when files exist', () => {
@@ -539,8 +553,12 @@ describe('state-manager', () => {
 
       const discrepancies = manager.validateConsistency(true, true);
 
-      expect(discrepancies).not.toContain('analyze phase marked complete but Contents.md is missing');
-      expect(discrepancies).not.toContain('extract phase marked complete but Elements.md is missing');
+      expect(discrepancies).not.toContain(
+        'analyze phase marked complete but Contents.md is missing'
+      );
+      expect(discrepancies).not.toContain(
+        'extract phase marked complete but Elements.md is missing'
+      );
     });
   });
 

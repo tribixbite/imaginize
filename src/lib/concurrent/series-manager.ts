@@ -90,9 +90,7 @@ export function createSeriesManager(seriesRoot: string) {
   /**
    * Initialize new series
    */
-  async function initializeSeries(
-    initConfig: Partial<SeriesConfig>
-  ): Promise<void> {
+  async function initializeSeries(initConfig: Partial<SeriesConfig>): Promise<void> {
     const now = new Date().toISOString();
 
     const newConfig: SeriesConfig = {

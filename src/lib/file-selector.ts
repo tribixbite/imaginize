@@ -110,7 +110,7 @@ export async function selectBookFile(files: BookFile[]): Promise<BookFile | null
   }
 
   // Find first unprocessed file
-  const unprocessed = files.find(f => !f.processed);
+  const unprocessed = files.find((f) => !f.processed);
 
   if (unprocessed) {
     // Auto-select first unprocessed file

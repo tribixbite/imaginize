@@ -15,7 +15,13 @@ import { cwd } from 'process';
 import type { BookMetadata, ImageConcept, BookElement } from '../types/config.js';
 
 // Test directory
-const testDir = join(cwd(), 'src', 'test', '.test-data', `output-generator-test-${Date.now()}`);
+const testDir = join(
+  cwd(),
+  'src',
+  'test',
+  '.test-data',
+  `output-generator-test-${Date.now()}`
+);
 
 describe('output-generator', () => {
   let outputDir: string;
@@ -335,7 +341,9 @@ describe('output-generator', () => {
       await generateChaptersFile(outputDir, metadata, conceptsByChapter);
 
       const content = readFileSync(join(outputDir, 'Chapters.md'), 'utf-8');
-      expect(content).toContain('**Generated Image:** [View Image](https://example.com/image.png)');
+      expect(content).toContain(
+        '**Generated Image:** [View Image](https://example.com/image.png)'
+      );
     });
 
     it('should skip empty chapters', async () => {
@@ -554,7 +562,9 @@ describe('output-generator', () => {
       await generateElementsFile(outputDir, metadata, elements);
 
       const content = readFileSync(join(outputDir, 'Elements.md'), 'utf-8');
-      expect(content).toContain('**Generated Image:** [View Image](https://example.com/hero.png)');
+      expect(content).toContain(
+        '**Generated Image:** [View Image](https://example.com/hero.png)'
+      );
     });
 
     it('should include statistics section', async () => {

@@ -11,7 +11,7 @@ import { mkdir, rmdir } from 'fs/promises';
  * Sleep helper for retry logic
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -64,7 +64,7 @@ export class FileLock {
 
     throw new Error(
       `Failed to acquire lock for ${this.lockDir} after ${timeoutMs}ms. ` +
-      `Another process may be holding the lock.`
+        `Another process may be holding the lock.`
     );
   }
 

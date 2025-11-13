@@ -6,7 +6,12 @@
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import type { IllustrateState, PhaseStatus, PhaseState, ChapterState } from '../types/config.js';
+import type {
+  IllustrateState,
+  PhaseStatus,
+  PhaseState,
+  ChapterState,
+} from '../types/config.js';
 import { atomicWriteJSON } from './concurrent/atomic-write.js';
 
 const STATE_VERSION = '2.0.0';
@@ -15,7 +20,12 @@ export class StateManager {
   private statePath: string;
   private state: IllustrateState;
 
-  constructor(outputDir: string, bookFile: string, bookTitle: string, totalPages: number) {
+  constructor(
+    outputDir: string,
+    bookFile: string,
+    bookTitle: string,
+    totalPages: number
+  ) {
     this.statePath = join(outputDir, '.imaginize.state.json');
 
     // Initialize state
@@ -138,14 +148,21 @@ export class StateManager {
   /**
    * Update table of contents
    */
-  updateTOC(chapters: Array<{ number: number; title: string; pages: string; tokenCount?: number }>): void {
+  updateTOC(
+    chapters: Array<{ number: number; title: string; pages: string; tokenCount?: number }>
+  ): void {
     this.state.toc.chapters = chapters;
   }
 
   /**
    * Add or update element state
    */
-  updateElement(type: string, name: string, status: PhaseStatus, imageUrl?: string): void {
+  updateElement(
+    type: string,
+    name: string,
+    status: PhaseStatus,
+    imageUrl?: string
+  ): void {
     if (!this.state.elements) {
       this.state.elements = [];
     }
@@ -165,10 +182,12 @@ export class StateManager {
   /**
    * Check if specific chapter is completed for a phase
    */
-  isChapterCompleted(phase: keyof IllustrateState['phases'], chapterNumber: number): boolean {
+  isChapterCompleted(
+    phase: keyof IllustrateState['phases'],
+    chapterNumber: number
+  ): boolean {
     return (
-      this.state.phases[phase].chapters?.[chapterNumber]?.status === 'completed' ||
-      false
+      this.state.phases[phase].chapters?.[chapterNumber]?.status === 'completed' || false
     );
   }
 
@@ -288,16 +307,12 @@ export class StateManager {
 
     // Check if analyze phase is marked complete but Contents.md doesn't exist
     if (this.state.phases.analyze.status === 'completed' && !contentsExists) {
-      discrepancies.push(
-        'analyze phase marked complete but Contents.md is missing'
-      );
+      discrepancies.push('analyze phase marked complete but Contents.md is missing');
     }
 
     // Check if extract phase is marked complete but Elements.md doesn't exist
     if (this.state.phases.extract.status === 'completed' && !elementsExists) {
-      discrepancies.push(
-        'extract phase marked complete but Elements.md is missing'
-      );
+      discrepancies.push('extract phase marked complete but Elements.md is missing');
     }
 
     // Check for chapters marked complete but missing from TOC

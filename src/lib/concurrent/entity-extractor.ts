@@ -82,7 +82,8 @@ ${truncated}`;
       messages: [
         {
           role: 'system',
-          content: 'You are a literary analysis assistant that extracts story elements from text. Return valid JSON only.',
+          content:
+            'You are a literary analysis assistant that extracts story elements from text. Return valid JSON only.',
         },
         {
           role: 'user',
@@ -105,7 +106,9 @@ ${truncated}`;
       if (jsonMatch) {
         entities = JSON.parse(jsonMatch[1]);
       } else {
-        console.warn(`Failed to parse entities for chapter ${chapterNumber}: ${parseError}`);
+        console.warn(
+          `Failed to parse entities for chapter ${chapterNumber}: ${parseError}`
+        );
         entities = [];
       }
     }
@@ -116,7 +119,9 @@ ${truncated}`;
       chapterTitle,
     };
   } catch (error: any) {
-    console.warn(`Entity extraction failed for chapter ${chapterNumber}: ${error.message}`);
+    console.warn(
+      `Entity extraction failed for chapter ${chapterNumber}: ${error.message}`
+    );
     return {
       entities: [],
       chapterNumber,
@@ -190,10 +195,10 @@ export function generateElementsMarkdown(
 
   // Group by type
   const byType = {
-    character: entities.filter(e => e.type === 'character'),
-    creature: entities.filter(e => e.type === 'creature'),
-    place: entities.filter(e => e.type === 'place'),
-    object: entities.filter(e => e.type === 'object'),
+    character: entities.filter((e) => e.type === 'character'),
+    creature: entities.filter((e) => e.type === 'creature'),
+    place: entities.filter((e) => e.type === 'place'),
+    object: entities.filter((e) => e.type === 'object'),
   };
 
   // Characters section

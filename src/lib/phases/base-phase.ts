@@ -74,7 +74,10 @@ export abstract class BasePhase {
       stateManager.updatePhase(this.phaseName, 'failed', { error: error.message });
       await stateManager.save();
 
-      await progressTracker.log(`Failed phase: ${this.phaseName} - ${error.message}`, 'error');
+      await progressTracker.log(
+        `Failed phase: ${this.phaseName} - ${error.message}`,
+        'error'
+      );
       throw error;
     }
   }
@@ -156,10 +159,7 @@ export abstract class BasePhase {
   /**
    * Execute API call with retry logic
    */
-  protected async executeWithRetry<T>(
-    fn: () => Promise<T>,
-    context: string
-  ): Promise<T> {
+  protected async executeWithRetry<T>(fn: () => Promise<T>, context: string): Promise<T> {
     const { config, progressTracker } = this.context;
 
     return retryWithBackoff(fn, {
@@ -171,7 +171,10 @@ export abstract class BasePhase {
 
         if (isRateLimit) {
           // For rate limits, show wait time more clearly
-          const waitTime = attempt === 1 ? 65 : Math.min(config.retryTimeout * Math.pow(2, attempt - 1) / 1000, 120);
+          const waitTime =
+            attempt === 1
+              ? 65
+              : Math.min((config.retryTimeout * Math.pow(2, attempt - 1)) / 1000, 120);
           message = `⏳ Rate limit hit for ${context}. Waiting ${waitTime}s before retry ${attempt}/${config.maxRetries}...`;
         } else {
           message = `Retry ${attempt}/${config.maxRetries} for ${context}: ${error.message}`;
@@ -180,11 +183,7 @@ export abstract class BasePhase {
         await progressTracker.log(message, 'warning');
       },
     }).catch((error) => {
-      const errorMessage = formatRetryError(
-        error,
-        context,
-        config.maxRetries + 1
-      );
+      const errorMessage = formatRetryError(error, context, config.maxRetries + 1);
       throw new Error(errorMessage);
     });
   }

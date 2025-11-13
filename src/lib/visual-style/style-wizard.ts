@@ -11,7 +11,11 @@ import readline from 'readline';
 import type OpenAI from 'openai';
 import type { VisualStyleGuide } from './types.js';
 import { analyzeStyleFromImages } from './style-analyzer.js';
-import { saveStyleGuide, loadStyleGuide, formatStyleGuideForPrompt } from './style-guide.js';
+import {
+  saveStyleGuide,
+  loadStyleGuide,
+  formatStyleGuideForPrompt,
+} from './style-guide.js';
 import chalk from 'chalk';
 
 /**
@@ -35,7 +39,9 @@ export interface StyleWizardResult {
 /**
  * Run interactive style wizard
  */
-export async function runStyleWizard(options: StyleWizardOptions): Promise<StyleWizardResult> {
+export async function runStyleWizard(
+  options: StyleWizardOptions
+): Promise<StyleWizardResult> {
   const { outputDir, openai, bookGenre } = options;
 
   console.log(chalk.cyan('\n🎨 Visual Style Wizard\n'));
@@ -46,7 +52,9 @@ export async function runStyleWizard(options: StyleWizardOptions): Promise<Style
   if (existing) {
     console.log(chalk.yellow('⚠️  Existing style guide found.'));
     console.log(chalk.gray(`Created: ${existing.createdAt}`));
-    console.log(chalk.gray(`Consistency: ${(existing.consistencyScore * 100).toFixed(0)}%\n`));
+    console.log(
+      chalk.gray(`Consistency: ${(existing.consistencyScore * 100).toFixed(0)}%\n`)
+    );
 
     const overwrite = await promptYesNo('Overwrite existing style guide?', false);
     if (!overwrite) {
@@ -61,7 +69,9 @@ export async function runStyleWizard(options: StyleWizardOptions): Promise<Style
 
   // Ask for input method
   console.log('How would you like to define the visual style?\n');
-  console.log('  1. Plain text description (e.g., "watercolor, soft edges, pastel colors")');
+  console.log(
+    '  1. Plain text description (e.g., "watercolor, soft edges, pastel colors")'
+  );
   console.log('  2. Reference image(s) - analyze existing images');
   console.log('  3. Both - description + reference images\n');
 
@@ -120,9 +130,19 @@ async function createStyleGuideFromText(
   console.log(chalk.cyan('\n📝 Text Description Mode\n'));
   console.log('Describe the desired visual style for your book illustrations.');
   console.log(chalk.gray('Examples:'));
-  console.log(chalk.gray('  - "Watercolor painting, soft edges, pastel colors, dreamy atmosphere"'));
-  console.log(chalk.gray('  - "Digital art, vibrant colors, anime-style characters, dynamic composition"'));
-  console.log(chalk.gray('  - "Realistic oil painting, dark tones, dramatic lighting, detailed textures"\n'));
+  console.log(
+    chalk.gray('  - "Watercolor painting, soft edges, pastel colors, dreamy atmosphere"')
+  );
+  console.log(
+    chalk.gray(
+      '  - "Digital art, vibrant colors, anime-style characters, dynamic composition"'
+    )
+  );
+  console.log(
+    chalk.gray(
+      '  - "Realistic oil painting, dark tones, dramatic lighting, detailed textures"\n'
+    )
+  );
 
   const description = await promptText('Style description:', true);
 
@@ -279,10 +299,9 @@ Be specific and detailed. Extract or infer:
 /**
  * Parse AI response into VisualStyleGuide format
  */
-function parseStyleGuideResponse(content: string): Omit<
-  VisualStyleGuide,
-  'consistencyScore' | 'createdAt' | 'bootstrapCount'
-> {
+function parseStyleGuideResponse(
+  content: string
+): Omit<VisualStyleGuide, 'consistencyScore' | 'createdAt' | 'bootstrapCount'> {
   // Try direct JSON parse
   try {
     const parsed = JSON.parse(content);
@@ -336,7 +355,9 @@ function displayStyleGuide(styleGuide: VisualStyleGuide): void {
   if (styleGuide.bootstrapCount > 0) {
     console.log(chalk.gray(`Analyzed from ${styleGuide.bootstrapCount} images`));
   }
-  console.log(chalk.gray(`Consistency Score: ${(styleGuide.consistencyScore * 100).toFixed(0)}%`));
+  console.log(
+    chalk.gray(`Consistency Score: ${(styleGuide.consistencyScore * 100).toFixed(0)}%`)
+  );
 }
 
 /**
@@ -368,7 +389,10 @@ async function promptText(question: string, required: boolean = false): Promise<
 /**
  * Prompt user for yes/no
  */
-async function promptYesNo(question: string, defaultYes: boolean = true): Promise<boolean> {
+async function promptYesNo(
+  question: string,
+  defaultYes: boolean = true
+): Promise<boolean> {
   const hint = defaultYes ? '[Y/n]' : '[y/N]';
   const rl = readline.createInterface({
     input: process.stdin,

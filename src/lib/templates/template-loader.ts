@@ -88,10 +88,7 @@ export class TemplateLoader {
   /**
    * Replace variables in template
    */
-  renderTemplate(
-    template: string,
-    variables: TemplateVariables
-  ): string {
+  renderTemplate(template: string, variables: TemplateVariables): string {
     let rendered = template;
 
     // Handle conditionals first (before variable replacement)
@@ -114,10 +111,7 @@ export class TemplateLoader {
   /**
    * Process conditional blocks
    */
-  private processConditionals(
-    template: string,
-    variables: TemplateVariables
-  ): string {
+  private processConditionals(template: string, variables: TemplateVariables): string {
     let result = template;
 
     // {{#if varName}}content{{/if}}
@@ -145,7 +139,10 @@ export class TemplateLoader {
     extract: string;
     illustrate: string;
   } {
-    const presets: Record<string, { analyze: string; extract: string; illustrate: string }> = {
+    const presets: Record<
+      string,
+      { analyze: string; extract: string; illustrate: string }
+    > = {
       fantasy: {
         analyze: FANTASY_ANALYZE_TEMPLATE,
         extract: FANTASY_EXTRACT_TEMPLATE,
@@ -169,7 +166,9 @@ export class TemplateLoader {
     };
 
     if (!presets[preset]) {
-      throw new Error(`Unknown preset: ${preset}. Available: ${Object.keys(presets).join(', ')}`);
+      throw new Error(
+        `Unknown preset: ${preset}. Available: ${Object.keys(presets).join(', ')}`
+      );
     }
 
     return presets[preset];

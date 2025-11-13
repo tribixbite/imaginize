@@ -37,10 +37,7 @@ export async function parsePdf(filePath: string): Promise<{
  * Split PDF text into chapters using heuristics
  * Looks for common chapter markers like "Chapter N", "CHAPTER N", etc.
  */
-function splitIntoChapters(
-  text: string,
-  totalPages: number
-): ChapterContent[] {
+function splitIntoChapters(text: string, totalPages: number): ChapterContent[] {
   const chapters: ChapterContent[] = [];
 
   // Try to find chapter markers

@@ -92,7 +92,10 @@ export class ProgressTracker extends EventEmitter {
    * Thread-safe: Uses lock to prevent interleaved entries from concurrent processes
    * Real-time: Emits 'progress' event for dashboard
    */
-  async log(message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info'): Promise<void> {
+  async log(
+    message: string,
+    level: 'info' | 'success' | 'warning' | 'error' = 'info'
+  ): Promise<void> {
     const timestamp = new Date().toISOString();
     const emoji = {
       info: 'ℹ️',
@@ -142,10 +145,7 @@ export class ProgressTracker extends EventEmitter {
     this.currentChapter = chapterNum;
     this.emit('chapter-start', { chapterNum, chapterTitle });
 
-    await this.log(
-      `Starting analysis of Chapter ${chapterNum}: ${chapterTitle}`,
-      'info'
-    );
+    await this.log(`Starting analysis of Chapter ${chapterNum}: ${chapterTitle}`, 'info');
   }
 
   /**
@@ -200,10 +200,7 @@ export class ProgressTracker extends EventEmitter {
       this.updateAndEmitStats();
     }
 
-    await this.log(
-      `Generated image for: ${elementName}`,
-      success ? 'success' : 'error'
-    );
+    await this.log(`Generated image for: ${elementName}`, success ? 'success' : 'error');
   }
 
   /**
@@ -240,7 +237,13 @@ export class ProgressTracker extends EventEmitter {
   /**
    * Get current state for dashboard API
    */
-  getState(): { bookTitle: string; currentPhase: string; currentChapter: number | undefined; stats: ProgressStats; startTime: number } {
+  getState(): {
+    bookTitle: string;
+    currentPhase: string;
+    currentChapter: number | undefined;
+    stats: ProgressStats;
+    startTime: number;
+  } {
     return {
       bookTitle: this.bookTitle,
       currentPhase: this.currentPhase,

@@ -8,7 +8,10 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import type { IllustrateConfig } from '../types/config.js';
-import { getRecommendedFreeTextModel, getRecommendedFreeImageModel } from './provider-utils.js';
+import {
+  getRecommendedFreeTextModel,
+  getRecommendedFreeImageModel,
+} from './provider-utils.js';
 
 const DEFAULT_CONFIG: IllustrateConfig = {
   pagesPerImage: 10,
@@ -98,7 +101,11 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
 
   // Handle image endpoint env vars
   // If both OpenAI and OpenRouter exist but no image endpoint set, prefer OpenAI for images (DALL-E better quality)
-  if (process.env.OPENAI_API_KEY && process.env.OPENROUTER_API_KEY && !config.imageEndpoint?.apiKey) {
+  if (
+    process.env.OPENAI_API_KEY &&
+    process.env.OPENROUTER_API_KEY &&
+    !config.imageEndpoint?.apiKey
+  ) {
     config.imageEndpoint = {
       apiKey: process.env.OPENAI_API_KEY,
       baseUrl: 'https://api.openai.com/v1',

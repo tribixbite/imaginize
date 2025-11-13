@@ -27,7 +27,9 @@ export interface SceneIdentifier {
 /**
  * Parse Chapters.md to extract all image concepts
  */
-export async function loadImageConcepts(outputDir: string): Promise<Map<string, ImageConcept[]>> {
+export async function loadImageConcepts(
+  outputDir: string
+): Promise<Map<string, ImageConcept[]>> {
   const chaptersPath = join(outputDir, 'Chapters.md');
 
   if (!existsSync(chaptersPath)) {

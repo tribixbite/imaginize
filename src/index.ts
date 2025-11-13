@@ -20,7 +20,12 @@ import { ProgressTracker } from './lib/progress-tracker.js';
 import { DashboardServer } from './lib/dashboard/server.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
 import type { IllustrateConfig, IllustrateState } from './types/config.js';
-import { prepareConfiguration, parseChapterSelection, mapStoryChaptersToEpub, parseElementSelection } from './lib/provider-utils.js';
+import {
+  prepareConfiguration,
+  parseChapterSelection,
+  mapStoryChaptersToEpub,
+  parseElementSelection,
+} from './lib/provider-utils.js';
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
 import { IllustratePhase } from './lib/phases/illustrate-phase.js';
@@ -55,14 +60,22 @@ export async function main(): Promise<void> {
   program
     .name('imaginize')
     .version('2.6.0')
-    .description('AI-powered book illustration guide generator v2.6 with real-time dashboard')
+    .description(
+      'AI-powered book illustration guide generator v2.6 with real-time dashboard'
+    )
     // Phase selection
     .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')
-    .option('--images', 'Generate images with DALL-E and update Chapters.md (illustrate phase)')
+    .option(
+      '--images',
+      'Generate images with DALL-E and update Chapters.md (illustrate phase)'
+    )
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
-    .option('--elements-filter <filter>', 'Filter elements (e.g., "character:*,place:castle")')
+    .option(
+      '--elements-filter <filter>',
+      'Filter elements (e.g., "character:*,place:castle")'
+    )
     .option('--limit <n>', 'Limit number of items processed (for testing)', parseInt)
     // Control
     .option('--continue', 'Continue from saved progress')
@@ -95,9 +108,21 @@ export async function main(): Promise<void> {
     .command('compile')
     .description('Compile images into graphic novel PDF')
     .option('--input <dir>', 'Input directory (default: ./output)', './output')
-    .option('--output <file>', 'Output PDF path (default: graphic-novel.pdf)', 'graphic-novel.pdf')
-    .option('--layout <layout>', 'Images per page: 4x1, 2x2, 1x1, 6x2 (default: 4x1)', '4x1')
-    .option('--caption-style <style>', 'Caption style: modern, classic, minimal, none (default: modern)', 'modern')
+    .option(
+      '--output <file>',
+      'Output PDF path (default: graphic-novel.pdf)',
+      'graphic-novel.pdf'
+    )
+    .option(
+      '--layout <layout>',
+      'Images per page: 4x1, 2x2, 1x1, 6x2 (default: 4x1)',
+      '4x1'
+    )
+    .option(
+      '--caption-style <style>',
+      'Caption style: modern, classic, minimal, none (default: modern)',
+      'modern'
+    )
     .option('--no-toc', 'Exclude table of contents')
     .option('--no-glossary', 'Exclude elements glossary')
     .option('--no-page-numbers', 'Hide page numbers')
@@ -109,7 +134,11 @@ export async function main(): Promise<void> {
         inputDir: cmdOptions.input,
         outputPath: cmdOptions.output,
         layout: cmdOptions.layout as '4x1' | '2x2' | '1x1' | '6x2',
-        captionStyle: cmdOptions.captionStyle as 'modern' | 'classic' | 'minimal' | 'none',
+        captionStyle: cmdOptions.captionStyle as
+          | 'modern'
+          | 'classic'
+          | 'minimal'
+          | 'none',
         includeToc: cmdOptions.toc !== false,
         includeGlossary: cmdOptions.glossary !== false,
         pageNumbers: cmdOptions.pageNumbers !== false,
@@ -129,7 +158,11 @@ export async function main(): Promise<void> {
   program
     .command('regenerate')
     .description('Regenerate specific scenes without re-running analysis')
-    .option('--output-dir <dir>', 'Output directory (default: ./imaginize_output)', './imaginize_output')
+    .option(
+      '--output-dir <dir>',
+      'Output directory (default: ./imaginize_output)',
+      './imaginize_output'
+    )
     .option('--chapter <n>', 'Regenerate all scenes in chapter N', parseInt)
     .option('--scene <n>', 'Regenerate scene N (within chapter or globally)', parseInt)
     .option('--scene-id <id>', 'Regenerate scene by ID (e.g., "chapter_3_scene_2")')
@@ -140,7 +173,9 @@ export async function main(): Promise<void> {
     .option('--view', 'View scene details without regenerating')
     .action(async (cmdOptions) => {
       try {
-        const { findScenesToRegenerate, loadImageConcepts } = await import('./lib/regenerate.js');
+        const { findScenesToRegenerate, loadImageConcepts } = await import(
+          './lib/regenerate.js'
+        );
 
         // List mode
         if (cmdOptions.list) {
@@ -215,8 +250,14 @@ export async function main(): Promise<void> {
           console.log(chalk.cyan(`\n🔍 Would regenerate ${scenes.length} scene(s):\n`));
 
           for (const scene of scenes) {
-            console.log(chalk.yellow(`  Chapter ${scene.chapterNumber}: ${scene.chapterTitle}`));
-            console.log(chalk.gray(`    Scene ${scene.sceneNumber}: ${scene.concept.description.substring(0, 60)}...`));
+            console.log(
+              chalk.yellow(`  Chapter ${scene.chapterNumber}: ${scene.chapterTitle}`)
+            );
+            console.log(
+              chalk.gray(
+                `    Scene ${scene.sceneNumber}: ${scene.concept.description.substring(0, 60)}...`
+              )
+            );
             if (scene.imageFilename) {
               console.log(chalk.gray(`    Current image: ${scene.imageFilename}`));
             } else {
@@ -275,7 +316,6 @@ export async function main(): Promise<void> {
         console.log();
 
         process.exit(result.failed > 0 ? 1 : 0);
-
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
         process.exit(1);
@@ -286,7 +326,11 @@ export async function main(): Promise<void> {
   program
     .command('wizard')
     .description('Interactive wizard for creating custom visual style guides')
-    .option('--output-dir <dir>', 'Output directory (default: ./imaginize_output)', './imaginize_output')
+    .option(
+      '--output-dir <dir>',
+      'Output directory (default: ./imaginize_output)',
+      './imaginize_output'
+    )
     .option('--genre <genre>', 'Book genre (helps guide style suggestions)')
     .action(async (cmdOptions) => {
       try {
@@ -311,8 +355,14 @@ export async function main(): Promise<void> {
         });
 
         if (result.saved) {
-          console.log(chalk.gray('\nYou can now run imaginize to generate images with this style guide.'));
-          console.log(chalk.gray('The style will be automatically applied to all generated images.'));
+          console.log(
+            chalk.gray(
+              '\nYou can now run imaginize to generate images with this style guide.'
+            )
+          );
+          console.log(
+            chalk.gray('The style will be automatically applied to all generated images.')
+          );
         }
 
         process.exit(0);
@@ -368,7 +418,9 @@ export async function main(): Promise<void> {
       if (bookFiles.length === 0) {
         spinner.fail('No book files found');
         console.error(chalk.red('\n❌ No EPUB or PDF files found in current directory'));
-        console.log(chalk.yellow('\n💡 Tip: Run with --file <path> to specify a book file'));
+        console.log(
+          chalk.yellow('\n💡 Tip: Run with --file <path> to specify a book file')
+        );
         process.exit(1);
       }
 
@@ -397,7 +449,8 @@ export async function main(): Promise<void> {
 
     // Determine output directory
     const sanitizedName = sanitizeFilename(basename(bookFile));
-    const outputDir = options.outputDir || config.outputPattern.replace('{name}', sanitizedName);
+    const outputDir =
+      options.outputDir || config.outputPattern.replace('{name}', sanitizedName);
 
     // Check for existing state
     let stateManager: StateManager;
@@ -407,7 +460,12 @@ export async function main(): Promise<void> {
 
     if (existsSync(outputDir)) {
       // Try to load existing state
-      stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+      stateManager = new StateManager(
+        outputDir,
+        bookFile,
+        metadata.title,
+        metadata.totalPages || 0
+      );
       const hasState = await stateManager.load();
 
       if (hasState && !options.force) {
@@ -424,8 +482,14 @@ export async function main(): Promise<void> {
             shouldContinue = await promptToContinue();
 
             if (!shouldContinue) {
-              console.log(chalk.yellow('\n💡 Use --continue to resume or --force to restart'));
-              console.log(chalk.yellow('   Use --force --chapters <range> to regenerate specific chapters\n'));
+              console.log(
+                chalk.yellow('\n💡 Use --continue to resume or --force to restart')
+              );
+              console.log(
+                chalk.yellow(
+                  '   Use --force --chapters <range> to regenerate specific chapters\n'
+                )
+              );
               process.exit(0);
             }
           }
@@ -435,14 +499,24 @@ export async function main(): Promise<void> {
       if (options.force && !shouldContinue) {
         console.log(chalk.yellow('⚠️  Force mode: Will regenerate content'));
         // Reset state
-        stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+        stateManager = new StateManager(
+          outputDir,
+          bookFile,
+          metadata.title,
+          metadata.totalPages || 0
+        );
       }
 
       progressTracker = new ProgressTracker(outputDir);
     } else {
       // Create new output directory and state
-      await mkdir(outputDir, { recursive: true});
-      stateManager = new StateManager(outputDir, bookFile, metadata.title, metadata.totalPages || 0);
+      await mkdir(outputDir, { recursive: true });
+      stateManager = new StateManager(
+        outputDir,
+        bookFile,
+        metadata.title,
+        metadata.totalPages || 0
+      );
       progressTracker = new ProgressTracker(outputDir);
     }
 
@@ -484,27 +558,41 @@ export async function main(): Promise<void> {
       // Map story chapter numbers to EPUB chapter numbers
       const epubChapterNums = mapStoryChaptersToEpub(
         storyChapterNums,
-        chapters.map((c) => ({ chapterNumber: c.chapterNumber, chapterTitle: c.chapterTitle }))
+        chapters.map((c) => ({
+          chapterNumber: c.chapterNumber,
+          chapterTitle: c.chapterTitle,
+        }))
       );
 
-      chaptersToProcess = chapters.filter((c) => epubChapterNums.includes(c.chapterNumber));
+      chaptersToProcess = chapters.filter((c) =>
+        epubChapterNums.includes(c.chapterNumber)
+      );
 
       if (chaptersToProcess.length === 0) {
         throw new Error(`No chapters found matching: ${options.chapters}`);
       }
 
       // Show mapping information
-      console.log(chalk.cyan(`📋 Processing ${chaptersToProcess.length} story chapters:`));
+      console.log(
+        chalk.cyan(`📋 Processing ${chaptersToProcess.length} story chapters:`)
+      );
       chaptersToProcess.forEach((ch, idx) => {
         const storyNum = storyChapterNums[idx];
-        console.log(chalk.gray(`   Story Ch ${storyNum} → EPUB Ch ${ch.chapterNumber}: ${ch.chapterTitle}`));
+        console.log(
+          chalk.gray(
+            `   Story Ch ${storyNum} → EPUB Ch ${ch.chapterNumber}: ${ch.chapterTitle}`
+          )
+        );
       });
       console.log('');
     }
 
     // Prepare API configuration
     spinner.start('Preparing API configuration...');
-    const { textConfig, imageConfig, warnings } = await prepareConfiguration(config, needsImages);
+    const { textConfig, imageConfig, warnings } = await prepareConfiguration(
+      config,
+      needsImages
+    );
 
     for (const warning of warnings) {
       spinner.warn(warning);
@@ -561,17 +649,27 @@ export async function main(): Promise<void> {
           totalCleared += cleared;
         }
         if (totalCleared > 0) {
-          console.log(chalk.yellow(`🔄 Cleared ${totalCleared} failed chapter(s) for retry\n`));
+          console.log(
+            chalk.yellow(`🔄 Cleared ${totalCleared} failed chapter(s) for retry\n`)
+          );
           await stateManager.save();
         }
       }
 
       if (runtimeConfig.retryControl?.skipFailed) {
-        console.log(chalk.yellow('⚠️  Skip-failed mode: Will continue processing even if chapters fail\n'));
+        console.log(
+          chalk.yellow(
+            '⚠️  Skip-failed mode: Will continue processing even if chapters fail\n'
+          )
+        );
       }
 
       if (runtimeConfig.retryControl?.retryFailed) {
-        console.log(chalk.yellow('🔁 Retry-failed mode: Only processing chapters that previously failed\n'));
+        console.log(
+          chalk.yellow(
+            '🔁 Retry-failed mode: Only processing chapters that previously failed\n'
+          )
+        );
       }
 
       // Use v2 phases if --concurrent flag is set
@@ -624,7 +722,11 @@ export async function main(): Promise<void> {
 
         await generateContentsFile(
           outputDir,
-          { title: metadata.title, author: metadata.author, totalPages: metadata.totalPages },
+          {
+            title: metadata.title,
+            author: metadata.author,
+            totalPages: metadata.totalPages,
+          },
           chaptersCount,
           elementsCount
         );
@@ -650,7 +752,6 @@ export async function main(): Promise<void> {
       console.log('');
       console.log(stateManager.getSummary());
       console.log('');
-
     } catch (error: any) {
       console.error(chalk.red(`\n❌ Error during processing:\n`));
       console.error(error.message);
@@ -663,13 +764,20 @@ export async function main(): Promise<void> {
         await dashboardServer.stop();
       }
     }
-
   } catch (error: any) {
     console.error(chalk.red('\n❌ Error:'), error.message);
 
     if (error.message.includes('API key')) {
-      console.log(chalk.yellow('\n💡 Tip: Run "imaginize --init-config" to create a configuration file'));
-      console.log(chalk.yellow('   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable\n'));
+      console.log(
+        chalk.yellow(
+          '\n💡 Tip: Run "imaginize --init-config" to create a configuration file'
+        )
+      );
+      console.log(
+        chalk.yellow(
+          '   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable\n'
+        )
+      );
     }
 
     process.exit(1);

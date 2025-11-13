@@ -32,13 +32,17 @@ import {
   createCharacterRegistry,
   extractCharacterNames,
 } from '../visual-style/index.js';
-import { TemplateLoader, DEFAULT_ILLUSTRATE_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
+import {
+  TemplateLoader,
+  DEFAULT_ILLUSTRATE_TEMPLATE,
+  type TemplateVariables,
+} from '../templates/template-loader.js';
 
 /**
  * Sleep helper for polling
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -101,7 +105,8 @@ export class IllustratePhaseV2 extends BasePhase {
    * Sub-phase 2: Prepare - Load Elements.md and generate style guide
    */
   protected async prepare(): Promise<SubPhaseResult> {
-    const { imageOpenai, progressTracker, chapters, stateManager, config, outputDir } = this.context;
+    const { imageOpenai, progressTracker, chapters, stateManager, config, outputDir } =
+      this.context;
 
     if (!imageOpenai) {
       await progressTracker.log(
@@ -155,7 +160,11 @@ export class IllustratePhaseV2 extends BasePhase {
   private async generateStyleGuide(chapters: any[], stateManager: any): Promise<string> {
     const { openai } = this.context;
 
-    const sampleText = chapters.slice(0, 3).map(ch => ch.content).join('\n\n').substring(0, 8000);
+    const sampleText = chapters
+      .slice(0, 3)
+      .map((ch) => ch.content)
+      .join('\n\n')
+      .substring(0, 8000);
     const state = stateManager.getState();
     const bookTitle = state.bookTitle;
 
@@ -177,14 +186,20 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are a visual style analyst for book illustrations.' },
-        { role: 'user', content: prompt }
+        {
+          role: 'system',
+          content: 'You are a visual style analyst for book illustrations.',
+        },
+        { role: 'user', content: prompt },
       ],
       temperature: 0.7,
       max_tokens: 200,
     });
 
-    return response.choices[0]?.message?.content || 'Detailed fantasy illustration with rich atmospheric detail.';
+    return (
+      response.choices[0]?.message?.content ||
+      'Detailed fantasy illustration with rich atmospheric detail.'
+    );
   }
 
   /**
@@ -246,7 +261,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
         if (manifest.analyze_complete) {
           // Error summary reporting
           const { stateManager } = this.context;
-          const failedChaptersWithErrors = stateManager.getFailedChaptersWithErrors('illustrate');
+          const failedChaptersWithErrors =
+            stateManager.getFailedChaptersWithErrors('illustrate');
 
           await progressTracker.log(
             `✅ All chapters processed. Generated images for ${processedCount} chapters.`,
@@ -259,7 +275,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
               'warning'
             );
             for (const { chapterNumber, error } of failedChaptersWithErrors) {
-              await progressTracker.log(`   • Chapter ${chapterNumber}: ${error}`, 'warning');
+              await progressTracker.log(
+                `   • Chapter ${chapterNumber}: ${error}`,
+                'warning'
+              );
             }
           }
 
@@ -324,15 +343,19 @@ Return ONLY the style guide text, no JSON or formatting.`;
    * Process single chapter atomically
    */
   private async processChapter(chapterNum: number): Promise<void> {
-    const { chapters, imageOpenai, config, outputDir, stateManager, progressTracker } = this.context;
+    const { chapters, imageOpenai, config, outputDir, stateManager, progressTracker } =
+      this.context;
 
     // Atomically claim chapter
     await this.manifestManager.updateChapter(chapterNum, 'illustration_inprogress');
 
-    await progressTracker.log(`🎨 Starting illustration for chapter ${chapterNum}`, 'info');
+    await progressTracker.log(
+      `🎨 Starting illustration for chapter ${chapterNum}`,
+      'info'
+    );
 
     // Find chapter data
-    const chapter = chapters.find(c => c.chapterNumber === chapterNum);
+    const chapter = chapters.find((c) => c.chapterNumber === chapterNum);
     if (!chapter) {
       throw new Error(`Chapter ${chapterNum} not found in chapter list`);
     }
@@ -360,7 +383,8 @@ Return ONLY the style guide text, no JSON or formatting.`;
     // Generate images for all concepts in this chapter
     // Use model string directly for image generation (don't resolve it)
     const imageModelValue = config.imageEndpoint?.model || 'dall-e-3';
-    const imageModel = typeof imageModelValue === 'string' ? imageModelValue : imageModelValue.name;
+    const imageModel =
+      typeof imageModelValue === 'string' ? imageModelValue : imageModelValue.name;
 
     for (let sceneNum = 0; sceneNum < concepts.length; sceneNum++) {
       const concept = concepts[sceneNum];
@@ -435,7 +459,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
   /**
    * Load concepts for specific chapter from Chapters.md
    */
-  private async loadConceptsForChapter(chapterNum: number, chapterTitle: string): Promise<ImageConcept[]> {
+  private async loadConceptsForChapter(
+    chapterNum: number,
+    chapterTitle: string
+  ): Promise<ImageConcept[]> {
     const { outputDir } = this.context;
     const chaptersPath = join(outputDir, 'Chapters.md');
 
@@ -526,7 +553,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
       } else if (config.customTemplates.illustrateTemplate) {
         // Use custom template file
         const templatePath = config.customTemplates.templatesDir
-          ? join(config.customTemplates.templatesDir, config.customTemplates.illustrateTemplate)
+          ? join(
+              config.customTemplates.templatesDir,
+              config.customTemplates.illustrateTemplate
+            )
           : config.customTemplates.illustrateTemplate;
 
         illustrateTemplate = await this.templateLoader.loadTemplate(
@@ -547,7 +577,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
       const mentions = this.elementsLookup.findMentions(concept.description);
       if (mentions.length > 0) {
         const charactersList = mentions
-          .map(entity => `${entity.name} (${entity.type}): ${entity.description}`)
+          .map((entity) => `${entity.name} (${entity.type}): ${entity.description}`)
           .join('\n');
         templateVars.characters = charactersList;
       }
@@ -577,30 +607,36 @@ Return ONLY the style guide text, no JSON or formatting.`;
     const isGemini = model.toLowerCase().includes('gemini');
 
     // Debug: log the model being used
-    await this.context.progressTracker.log(`Image model: "${model}" (isGemini: ${isGemini})`, 'info');
+    await this.context.progressTracker.log(
+      `Image model: "${model}" (isGemini: ${isGemini})`,
+      'info'
+    );
 
     if (isGemini) {
       // Gemini 2.5 Flash Image via OpenRouter
       const response = await imageOpenai.chat.completions.create({
         model,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
         modalities: ['image', 'text'],
         temperature: config.imageEndpoint?.temperature || 1.5,
         max_tokens: config.imageEndpoint?.maxTokens || 8000,
         ...(config.imageEndpoint?.aspectRatio && {
           image_config: {
-            aspect_ratio: config.imageEndpoint.aspectRatio
-          }
-        })
+            aspect_ratio: config.imageEndpoint.aspectRatio,
+          },
+        }),
       });
 
       // Check multiple possible response formats
-      const imageUrl = response.choices[0]?.message?.images?.[0]?.image_url?.url ||
-                      response.choices[0]?.message?.image_url ||
-                      response.data?.[0]?.url;
+      const imageUrl =
+        response.choices[0]?.message?.images?.[0]?.image_url?.url ||
+        response.choices[0]?.message?.image_url ||
+        response.data?.[0]?.url;
 
       if (!imageUrl) {
         // Log the actual response for debugging
@@ -708,10 +744,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
               description
             );
 
-            await progressTracker.log(
-              `Registered first appearance: ${charName}`,
-              'info'
-            );
+            await progressTracker.log(`Registered first appearance: ${charName}`, 'info');
           }
         } else {
           // Subsequent appearance - record
@@ -775,7 +808,9 @@ Return ONLY the style guide text, no JSON or formatting.`;
     for (const [chapterNum, chapterState] of Object.entries(manifest.chapters)) {
       if (chapterState.status === 'illustration_inprogress') {
         // Check timestamp
-        const analyzedAt = chapterState.analyzed_at ? new Date(chapterState.analyzed_at).getTime() : 0;
+        const analyzedAt = chapterState.analyzed_at
+          ? new Date(chapterState.analyzed_at).getTime()
+          : 0;
         const elapsed = now - analyzedAt;
 
         if (elapsed > this.stuckTimeout) {
@@ -792,10 +827,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
     }
 
     if (recoveredCount > 0) {
-      await progressTracker.log(
-        `Recovered ${recoveredCount} stuck chapters`,
-        'success'
-      );
+      await progressTracker.log(`Recovered ${recoveredCount} stuck chapters`, 'success');
     }
   }
 

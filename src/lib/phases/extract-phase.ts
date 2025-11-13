@@ -6,9 +6,17 @@
 import { join } from 'path';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { BookElement } from '../../types/config.js';
-import { estimateTokens, createTokenEstimate, resolveModelConfig } from '../token-counter.js';
+import {
+  estimateTokens,
+  createTokenEstimate,
+  resolveModelConfig,
+} from '../token-counter.js';
 import { generateElementsFile } from '../output-generator.js';
-import { TemplateLoader, DEFAULT_EXTRACT_TEMPLATE, type TemplateVariables } from '../templates/template-loader.js';
+import {
+  TemplateLoader,
+  DEFAULT_EXTRACT_TEMPLATE,
+  type TemplateVariables,
+} from '../templates/template-loader.js';
 
 export class ExtractPhase extends BasePhase {
   private elements: BookElement[] = [];
@@ -36,7 +44,7 @@ export class ExtractPhase extends BasePhase {
     await progressTracker.log('Planning element extraction...', 'info');
 
     // Combine all chapter content
-    const fullText = chapters.map(c => c.content).join('\n\n');
+    const fullText = chapters.map((c) => c.content).join('\n\n');
 
     // Estimate tokens (limit to 50k chars for initial extraction)
     const textToAnalyze = fullText.substring(0, 50000);
@@ -114,7 +122,10 @@ export class ExtractPhase extends BasePhase {
 
     await progressTracker.startElementExtraction();
 
-    const fullText = chapters.map(c => c.content).join('\n\n').substring(0, 50000);
+    const fullText = chapters
+      .map((c) => c.content)
+      .join('\n\n')
+      .substring(0, 50000);
     const modelConfig = resolveModelConfig(config.model, config);
 
     try {
@@ -215,7 +226,10 @@ export class ExtractPhase extends BasePhase {
       } else if (config.customTemplates.extractTemplate) {
         // Use custom template file
         const templatePath = config.customTemplates.templatesDir
-          ? join(config.customTemplates.templatesDir, config.customTemplates.extractTemplate)
+          ? join(
+              config.customTemplates.templatesDir,
+              config.customTemplates.extractTemplate
+            )
           : config.customTemplates.extractTemplate;
 
         extractTemplate = await this.templateLoader.loadTemplate(
@@ -257,7 +271,8 @@ export class ExtractPhase extends BasePhase {
       messages: [
         {
           role: 'system',
-          content: 'You are a comprehensive literary analyst expert at identifying and cataloging ALL significant story elements. Be thorough and extract all named entities, characters, creatures, places, and items. Return only valid JSON.',
+          content:
+            'You are a comprehensive literary analyst expert at identifying and cataloging ALL significant story elements. Be thorough and extract all named entities, characters, creatures, places, and items. Return only valid JSON.',
         },
         { role: 'user', content: prompt },
       ],

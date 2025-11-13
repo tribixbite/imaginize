@@ -69,13 +69,22 @@ Return your response as a JSON array with this structure:
     const parsed = JSON.parse(content);
     const concepts = Array.isArray(parsed) ? parsed : parsed.concepts || [];
 
-    return concepts.map((c: any) => ({
-      chapter: chapter.chapterTitle,
-      pageRange: chapter.pageRange,
-      quote: c.quote || '',
-      description: c.description || '',
-      reasoning: c.reasoning || '',
-    }));
+    interface RawConcept {
+      quote?: string;
+      description?: string;
+      reasoning?: string;
+    }
+
+    return concepts.map((c: unknown) => {
+      const concept = c as RawConcept;
+      return {
+        chapter: chapter.chapterTitle,
+        pageRange: chapter.pageRange,
+        quote: concept.quote || '',
+        description: concept.description || '',
+        reasoning: concept.reasoning || '',
+      };
+    });
   } catch (error) {
     console.error(`Error analyzing chapter ${chapter.chapterTitle}:`, error);
     return [];
@@ -173,12 +182,12 @@ export async function generateImage(
 /**
  * Process chapters with rate limiting
  */
-export async function processChaptersInBatches<T>(
+export async function processChaptersInBatches<T, R>(
   items: T[],
-  processor: (item: T) => Promise<any>,
+  processor: (item: T) => Promise<R>,
   maxConcurrency: number
-): Promise<any[]> {
-  const results: any[] = [];
+): Promise<R[]> {
+  const results: R[] = [];
 
   for (let i = 0; i < items.length; i += maxConcurrency) {
     const batch = items.slice(i, i + maxConcurrency);

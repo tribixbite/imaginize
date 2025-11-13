@@ -7,7 +7,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { writeFile, appendFile, readFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import { FileLock } from './concurrent/file-lock.js';
 import { atomicWrite } from './concurrent/atomic-write.js';
@@ -109,9 +109,10 @@ export class ProgressTracker extends EventEmitter {
       let current = '';
       try {
         current = await readFile(this.progressFile, 'utf-8');
-      } catch (error: any) {
+      } catch (error) {
         // File doesn't exist yet - will be created by initialize()
-        if (error.code !== 'ENOENT') {
+        const err = error as NodeJS.ErrnoException;
+        if (err.code !== 'ENOENT') {
           throw error;
         }
       }
@@ -239,7 +240,7 @@ export class ProgressTracker extends EventEmitter {
   /**
    * Get current state for dashboard API
    */
-  getState(): any {
+  getState(): { bookTitle: string; currentPhase: string; currentChapter: number | undefined; stats: ProgressStats; startTime: number } {
     return {
       bookTitle: this.bookTitle,
       currentPhase: this.currentPhase,

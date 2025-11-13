@@ -55,16 +55,13 @@ export function willExceedLimit(
 export function calculateSplits(
   text: string,
   maxTokensPerChunk: number,
-  overlapTokens: number = 200
+  _overlapTokens: number = 200
 ): { chunks: string[]; tokenCounts: number[] } {
   const totalTokens = estimateTokens(text);
 
   if (totalTokens <= maxTokensPerChunk) {
     return { chunks: [text], tokenCounts: [totalTokens] };
   }
-
-  // Calculate number of chunks needed
-  const numChunks = Math.ceil(totalTokens / (maxTokensPerChunk - overlapTokens));
 
   // Split by paragraphs first for cleaner breaks
   const paragraphs = text.split(/\n\n+/);
@@ -131,7 +128,7 @@ export function calculateSplits(
  */
 export function resolveModelConfig(
   model: string | ModelConfig,
-  config: Required<IllustrateConfig>
+  _config: Required<IllustrateConfig>
 ): ModelConfig {
   if (typeof model === 'string') {
     return getDefaultModelConfig(model);

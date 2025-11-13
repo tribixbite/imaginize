@@ -110,8 +110,6 @@ export async function prepareConfiguration(
 }> {
   const warnings: string[] = [];
 
-  // Detect text provider
-  const textProvider = detectProvider(config.baseUrl);
   const textModel =
     typeof config.model === 'string'
       ? getDefaultModelConfig(config.model)

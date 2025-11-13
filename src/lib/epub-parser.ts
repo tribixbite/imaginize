@@ -44,12 +44,14 @@ export async function parseEpub(filePath: string): Promise<{
   const metadataNode = opfData.package.metadata[0];
 
   // Helper to extract text from xml2js objects
-  const extractText = (value: any): string | undefined => {
+  const extractText = (value: unknown): string | undefined => {
     if (!value) return undefined;
     if (typeof value === 'string') return value;
-    if (value._) return value._;
+    if (typeof value === 'object' && value !== null && '_' in value) {
+      return (value as { _: string })._;
+    }
     if (typeof value === 'object' && !Array.isArray(value)) return undefined;
-    return value;
+    return String(value);
   };
 
   const metadata: BookMetadata = {
@@ -60,9 +62,15 @@ export async function parseEpub(filePath: string): Promise<{
   };
 
   // Get spine (reading order) and manifest (file locations)
-  const spine = opfData.package.spine[0].itemref.map((item: any) => item.$.idref);
+  interface ItemRef {
+    $: { idref: string };
+  }
+  interface ManifestItem {
+    $: { id: string; href: string };
+  }
+  const spine = opfData.package.spine[0].itemref.map((item: ItemRef) => item.$.idref);
   const manifest = new Map(
-    opfData.package.manifest[0].item.map((item: any) => [item.$.id, item.$.href])
+    opfData.package.manifest[0].item.map((item: ManifestItem) => [item.$.id, item.$.href])
   );
 
   // Get the base directory for content files

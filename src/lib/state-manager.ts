@@ -3,7 +3,7 @@
  * Manages .imaginize.state.json and coordinates with progress.md
  */
 
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import type { IllustrateState, PhaseStatus, PhaseState, ChapterState } from '../types/config.js';
@@ -56,8 +56,9 @@ export class StateManager {
       }
 
       return true;
-    } catch (error: any) {
-      throw new Error(`Failed to load state: ${error.message}`);
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Failed to load state: ${err.message}`);
     }
   }
 

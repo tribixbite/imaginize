@@ -7,7 +7,7 @@ import { cosmiconfig } from 'cosmiconfig';
 import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import type { IllustrateConfig, ModelConfig } from '../types/config.js';
+import type { IllustrateConfig } from '../types/config.js';
 import { getRecommendedFreeTextModel, getRecommendedFreeImageModel } from './provider-utils.js';
 
 const DEFAULT_CONFIG: IllustrateConfig = {

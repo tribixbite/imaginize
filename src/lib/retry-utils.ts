@@ -2,6 +2,14 @@
  * Retry logic with exponential backoff for API calls
  */
 
+/**
+ * Error object with optional HTTP status and code properties
+ */
+interface RetryableError extends Error {
+  status?: number;
+  code?: string | number;
+}
+
 export interface RetryOptions {
   maxRetries: number;
   initialTimeout: number;
@@ -29,8 +37,8 @@ export async function retryWithBackoff<T>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
-      lastError = error;
+    } catch (error) {
+      lastError = error as Error;
 
       // Don't retry on last attempt
       if (attempt === maxRetries) {
@@ -48,7 +56,7 @@ export async function retryWithBackoff<T>(
 
       // Call retry callback if provided
       if (onRetry) {
-        onRetry(attempt + 1, error);
+        onRetry(attempt + 1, lastError);
       }
 
       // Wait with exponential backoff
@@ -72,14 +80,16 @@ function sleep(ms: number): Promise<void> {
 /**
  * Check if error is a rate limit error (429 status)
  */
-export function isRateLimitError(error: any): boolean {
+export function isRateLimitError(error: unknown): boolean {
+  const err = error as RetryableError;
+
   // Check for 429 status
-  if (error.status === 429 || (error as any).code === 429) {
+  if (err.status === 429 || err.code === 429) {
     return true;
   }
 
   // Check error message for rate limit indicators
-  const message = error.message?.toLowerCase() || '';
+  const message = err.message?.toLowerCase() || '';
   if (
     message.includes('rate limit') ||
     message.includes('too many requests') ||
@@ -94,15 +104,16 @@ export function isRateLimitError(error: any): boolean {
 /**
  * Check if error is retryable (rate limit, timeout, network issues)
  */
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
+  const err = error as RetryableError;
   // HTTP status codes that should be retried
   const retryableStatuses = [408, 429, 500, 502, 503, 504];
 
-  if (error.status && retryableStatuses.includes(error.status)) {
+  if (err.status && retryableStatuses.includes(err.status)) {
     return true;
   }
 
-  if (error.code) {
+  if (err.code) {
     const retryableCodes = [
       'ECONNRESET',
       'ENOTFOUND',
@@ -114,13 +125,13 @@ export function isRetryableError(error: any): boolean {
       'EAI_AGAIN',
     ];
 
-    if (retryableCodes.includes(error.code)) {
+    if (typeof err.code === 'string' && retryableCodes.includes(err.code)) {
       return true;
     }
   }
 
   // Check error message for rate limit indicators
-  const message = error.message?.toLowerCase() || '';
+  const message = err.message?.toLowerCase() || '';
   if (
     message.includes('rate limit') ||
     message.includes('too many requests') ||
@@ -160,21 +171,22 @@ export function formatRetryError(
   context: string,
   attempts: number
 ): string {
+  const err = error as RetryableError;
   const lines: string[] = [];
 
   lines.push(`❌ Error: Failed to ${context} after ${attempts} attempt(s)`);
   lines.push('');
 
   // Extract useful error info
-  if ((error as any).status) {
-    lines.push(`HTTP Status: ${(error as any).status}`);
+  if (err.status) {
+    lines.push(`HTTP Status: ${err.status}`);
   }
 
-  if ((error as any).code) {
-    lines.push(`Error Code: ${(error as any).code}`);
+  if (err.code) {
+    lines.push(`Error Code: ${err.code}`);
   }
 
-  lines.push(`Message: ${error.message}`);
+  lines.push(`Message: ${err.message}`);
 
   return lines.join('\n');
 }

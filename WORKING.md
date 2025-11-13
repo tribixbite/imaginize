@@ -4,7 +4,7 @@
 
 **Status:** Production-ready, all critical work complete
 
-**Latest Update (2025-11-13):** Comprehensive health check completed
+**Latest Update (2025-11-13):** Comprehensive health check completed + contributor documentation added
 
 **Health Check Results:**
 - ✅ Code Quality: 0 TypeScript errors, 86% test pass rate
@@ -15,6 +15,19 @@
 - ✅ Git: Clean working tree, all commits pushed
 
 **See:** PROJECT_HEALTH_CHECK_20251113.md for detailed analysis
+
+**Contributor Documentation (2025-11-13):**
+- ✅ Created CONTRIBUTING.md (479 lines) - comprehensive guide for contributors
+  - Development setup and prerequisites
+  - Project structure and key components
+  - Code style guidelines (TypeScript, naming, JSDoc)
+  - Testing instructions (Bun test runner, 86% coverage)
+  - Pull request process with conventional commits
+  - Issue reporting templates (bugs and feature requests)
+  - Dashboard development guide references
+- ✅ Updated package.json to include CHANGELOG.md and CONTRIBUTING.md in npm package
+  - Will be available to npm users in future publishes (v2.7.0+)
+  - Improves offline documentation accessibility
 
 **Project State:**
 - ✅ v2.6.2 published to npm (fully functional)

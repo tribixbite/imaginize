@@ -645,13 +645,22 @@ npm run format
 
 ## Contributing
 
-Contributions welcome! Please:
+Contributions are welcome! We love community contributions.
 
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines including:
+- Development setup and prerequisites
+- Code style and conventions
+- Testing requirements (86% coverage)
+- Pull request process
+- Issue reporting templates
+
+**Quick Start for Contributors:**
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Clone and install: `npm install && npm run build`
+3. Make your changes with tests
+4. Submit a pull request with conventional commits
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions.
 
 ## License
 

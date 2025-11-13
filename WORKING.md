@@ -1,5 +1,26 @@
 # imaginize - Development Status
 
+## 🔨 v2.6.1 Development (In Progress)
+
+**Status:** Post-publication enhancements
+
+**Recent Improvements:**
+- ✅ **Error Boundaries** - Added React Error Boundaries for dashboard resilience (2025-11-12)
+  - ErrorBoundary component catches rendering errors in individual components
+  - Prevents entire dashboard from crashing due to single component failures
+  - Graceful fallback UI with error details and recovery options
+  - Wrapped all major components: OverallProgress, Pipeline, ChapterGrid, LogStream
+  - Bundle size: 206.98 kB (64.28 kB gzipped) - +0.75 kB overhead
+  - Phase 4 optional enhancement: Enhanced Error Handling (70% → 85%)
+
+**Planned for v2.6.1:**
+- [ ] Toast notifications for connection events
+- [ ] Accessibility improvements (ARIA labels, keyboard navigation)
+- [ ] Performance profiling and optimization
+- [ ] Dashboard screenshots for README
+
+---
+
 ## 🎉 v2.6.0 Published to npm (2025-11-12)
 
 **Status:** ✅ PUBLISHED - Available on npm registry

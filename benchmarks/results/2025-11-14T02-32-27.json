@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-11-14T02:32:27.796Z",
+  "version": "2.7.0",
+  "commit": "126a40d",
+  "totalBenchmarks": 0,
+  "results": [],
+  "summary": {
+    "totalTime": 0,
+    "avgTime": null,
+    "totalMemory": 0,
+    "totalTokens": 0,
+    "totalCost": 0
+  }
+}

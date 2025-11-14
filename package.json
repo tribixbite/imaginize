@@ -13,6 +13,7 @@
     "prepublishOnly": "npm run build",
     "test": "bun test",
     "test:watch": "bun test --watch",
+    "bench": "tsx src/test/benchmarks/run-benchmarks.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -78,6 +79,7 @@
     "bun-types": "latest",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
+    "tsx": "^4.20.6",
     "typescript": "^5.4.5"
   },
   "files": [

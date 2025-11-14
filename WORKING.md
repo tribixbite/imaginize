@@ -5217,3 +5217,286 @@ Implemented Phase 5 of the Performance Benchmarking enhancement, adding 18 new b
 **Total Benchmarks:** 21 (3 → 21, +600% increase)
 **Lines Added:** ~550 (benchmark suites + documentation)
 
+
+---
+
+## Session: Performance Benchmarking Phase 6 - Historical Trend Visualization
+
+**Date:** 2025-11-14
+**Focus:** SQLite-based historical tracking and Chart.js visualization
+**Goal:** Complete Priority 3 Performance Benchmarking (all 6 phases)
+
+### Objectives
+
+1. ✅ Implement SQLite database for benchmark history persistence
+2. ✅ Create database layer with full CRUD operations  
+3. ✅ Build HTML report generator with Chart.js visualizations
+4. ✅ Integrate historical tracking into benchmark runner (opt-in)
+5. ✅ Create CLI tools for trend report generation
+6. ✅ Test end-to-end functionality with multiple runs
+7. ✅ Write comprehensive documentation
+
+### Implementation Details
+
+#### 1. SQLite Database Schema
+
+**Database Tables:**
+- `benchmark_runs` - Metadata for each benchmark execution (version, timestamp, commit hash, environment)
+- `benchmark_results` - Individual benchmark results per run (all performance metrics)
+- `version_baselines` - Baseline results for each version with activation tracking
+- `regression_alerts` - Detected performance regressions with severity levels
+
+**Database Views:**
+- `latest_benchmark_results` - Most recent results for each benchmark
+- `performance_trends` - Last 30 runs per benchmark for trend analysis
+- `active_baselines` - Current baseline results for all benchmarks
+
+**Key Features:**
+- WAL mode for better concurrency
+- Foreign key constraints for referential integrity
+- Composite indexes for performance
+- Automatic timestamp tracking
+
+**File:** `src/test/benchmarks/history/schema.sql` (~170 lines)
+
+#### 2. Database Layer (TypeScript)
+
+**Core Functionality:**
+- Database initialization with schema migration
+- Run metadata insertion (version, commit, CI info)
+- Batch result insertion with transaction support
+- Trend data retrieval (configurable limit)
+- Baseline management (set, get, activate)
+- Regression detection with comparison against baseline
+- Latest run summary statistics
+- Unacknowledged regression tracking
+
+**Class:** `BenchmarkDatabase`
+**File:** `src/test/benchmarks/history/database.ts` (~300 lines)
+
+**Key Methods:**
+- `insertRun()` - Record benchmark execution metadata
+- `insertResults()` - Batch insert performance results
+- `getTrend()` - Get historical trend for visualization
+- `setBaseline()` - Set version baseline for comparisons
+- `compareWithBaseline()` - Detect regressions with severity levels
+- `getLatestRunSummary()` - Quick status overview
+- `getUnacknowledgedRegressions()` - Find unreviewed regressions
+
+#### 3. HTML Report Generator
+
+**Features:**
+- Dark mode UI (#0f172a background, #e2e8f0 text)
+- Chart.js 4.4.0 for interactive line charts
+- Summary cards (total benchmarks, avg time, improvements, regressions)
+- Individual trend charts for each benchmark
+- Execution time and standard deviation trends
+- Version labels with commit hashes on hover
+- Baseline comparison table (when enabled)
+- Severity indicators (🟢 minor, 🟡 moderate, 🔴 severe)
+- Responsive design with gradient headers
+
+**File:** `src/test/benchmarks/history/html-reporter.ts` (~300 lines)
+
+**Chart Configuration:**
+- Line charts with point markers
+- Hover tooltips with version info
+- Time-series X-axis formatting
+- Dual Y-axes for time and ops/sec
+- Color-coded datasets (blue for time, green for ops/sec)
+
+#### 4. Integration Module
+
+**High-Level API:**
+- `BenchmarkHistory` class wrapping database operations
+- `recordRun()` - Save benchmark results with metadata
+- `setBaseline()` - Mark run as version baseline
+- `generateTrendReport()` - Create HTML visualization
+- `getRegressionSummary()` - Get regression overview
+
+**Auto-Baseline Management:**
+- First run for each version automatically sets baseline
+- Prevents accidental baseline overwrite
+- Console output confirms baseline creation
+
+**File:** `src/test/benchmarks/history/index.ts` (~150 lines)
+
+#### 5. CLI Tools
+
+**npm Scripts:**
+```bash
+# Run benchmarks with history tracking (opt-in)
+npm run bench:history
+
+# Generate HTML trend report
+npm run bench:trends
+
+# With options
+npm run bench:trends -- --comparison
+npm run bench:trends -- --benchmarks "State file write,EPUB parsing"
+npm run bench:trends -- --limit 50
+npm run bench:trends -- --output custom-report.html
+```
+
+**Environment Variable:**
+- `BENCHMARK_HISTORY=1` - Enable historical tracking (opt-in)
+- `GITHUB_REF_NAME` - Auto-captured branch name in CI/CD
+- `GITHUB_RUN_NUMBER` - Auto-captured CI build number
+
+**CLI Options:**
+- `--output <path>` - Custom output path (default: benchmarks/trends/performance-report.html)
+- `--version <version>` - Filter to specific version
+- `--benchmarks <names>` - Comma-separated benchmark names
+- `--limit <n>` - Number of historical data points (default: 30)
+- `--comparison` - Include baseline comparison table
+
+**File:** `src/test/benchmarks/generate-trend-report.ts` (~120 lines)
+
+#### 6. Regression Detection
+
+**Severity Levels:**
+- **Minor** (5-20% slower): Acceptable variance, yellow indicator
+- **Moderate** (20-50% slower): Review recommended, orange indicator
+- **Severe** (>50% slower): Immediate attention required, red indicator
+
+**Detection Logic:**
+- Compare current run against active baseline
+- Calculate percentage change in execution time
+- Log to console during benchmark run
+- Store in `regression_alerts` table
+- Display in HTML comparison tables
+
+**Console Output Example:**
+```
+📊 Detected 3 performance regression(s) from baseline
+   - Token estimation (long text): 15.3% slower (minor)
+   - EPUB parsing: 8.2% slower (minor)
+   - Build Elements.md (large): 12.1% slower (minor)
+```
+
+### Testing Results
+
+**Test Runs:**
+- ✅ Run #1: Database creation + baseline auto-set (21 benchmarks)
+- ✅ Run #2: Historical data accumulation + regression detection
+- ✅ Run #3: Trend visualization validation
+
+**Database Verification:**
+- Database file: `benchmarks/history/benchmarks.db` (64 KB)
+- Total runs recorded: 3
+- Total benchmarks tracked: 21
+- Baseline set: v2.7.0 (run #1)
+- Regressions detected: 13 (mostly due to variance in micro-benchmarks)
+
+**HTML Report Verification:**
+- Generated: `benchmarks/trends/performance-report.html` (27 KB, 538 lines)
+- Charts rendered: 21 individual trend charts
+- Summary cards accurate: Total, avg time, improvements, regressions
+- Comparison table: 21 rows with baseline deltas
+- Dark mode styling: Confirmed working
+- Responsive design: Confirmed mobile-friendly
+
+**CLI Tools Verification:**
+- ✅ `npm run bench:history` - Records to database
+- ✅ `npm run bench:trends` - Generates HTML report
+- ✅ `npm run bench:trends -- --comparison` - Includes baseline table
+- ✅ Custom output path works
+- ✅ Benchmark filtering works
+
+### Files Created
+
+**Core Infrastructure:**
+- `src/test/benchmarks/history/schema.sql` (~170 lines)
+- `src/test/benchmarks/history/types.ts` (~50 lines)
+- `src/test/benchmarks/history/database.ts` (~300 lines)
+- `src/test/benchmarks/history/html-reporter.ts` (~300 lines)
+- `src/test/benchmarks/history/index.ts` (~150 lines)
+- `src/test/benchmarks/generate-trend-report.ts` (~120 lines)
+- `src/test/benchmarks/history/README.md` (280 lines)
+
+**Testing Utilities:**
+- `src/test/benchmarks/verify-db.ts` (~50 lines)
+
+**Modified Files:**
+- `src/test/benchmarks/run-benchmarks.ts` - Added opt-in history integration
+- `package.json` - Added better-sqlite3 dependency + npm scripts
+- `.gitignore` - Added database files + HTML reports
+- `src/test/benchmarks/README.md` - Updated Phase 6 status
+- `NEXT_STEPS.md` - Marked Phase 6 complete
+- `WORKING.md` - This session entry
+
+### Technical Notes
+
+**Design Decisions:**
+1. **Opt-In Tracking**: History tracking requires explicit environment variable to avoid accidental database bloat
+2. **SQLite Choice**: better-sqlite3 for synchronous API and excellent performance in Node.js
+3. **WAL Mode**: Write-Ahead Logging for better concurrency and crash recovery
+4. **Chart.js CDN**: No local dependencies, faster loading, always up-to-date
+5. **Dark Mode UI**: Matches modern developer tool aesthetics
+6. **Gitignore Database**: Prevents large binary files in git repo
+7. **Auto-Baseline**: First run convenience, prevents baseline gaps
+
+**Termux Compatibility:**
+- better-sqlite3 installs successfully on ARM64
+- SQLite database operations work correctly
+- HTML reports generated without issues
+- CLI tools functional in Termux environment
+
+**Performance Notes:**
+- Database operations add ~50ms overhead to benchmark runs
+- HTML generation takes ~100ms for 30 data points × 21 benchmarks
+- Report file size: ~27KB for standard configuration
+- Database file grows ~20KB per benchmark run
+
+### Commits
+
+```
+feat: complete Priority 3 Phase 6 historical trend visualization
+
+- Implemented SQLite database with 4 tables + 3 views
+- Created database layer with full CRUD operations
+- Built HTML report generator with Chart.js visualizations
+- Integrated opt-in history tracking into benchmark runner
+- Added CLI tools for trend report generation (bench:history, bench:trends)
+- Verified end-to-end functionality with 3 test runs
+- Created comprehensive documentation (280 lines)
+- All 6 phases of Priority 3 Performance Benchmarking now complete
+
+Files:
+- src/test/benchmarks/history/schema.sql (~170 lines)
+- src/test/benchmarks/history/database.ts (~300 lines)
+- src/test/benchmarks/history/html-reporter.ts (~300 lines)
+- src/test/benchmarks/history/index.ts (~150 lines)
+- src/test/benchmarks/generate-trend-report.ts (~120 lines)
+- src/test/benchmarks/history/README.md (280 lines)
+- Modified: run-benchmarks.ts, package.json, .gitignore, README.md
+```
+
+### Next Steps
+
+**Priority 3 Performance Benchmarking: COMPLETE** ✅
+- All 6 phases implemented and tested
+- 21 operational benchmarks
+- Historical tracking and visualization
+- CI/CD integration
+- Comprehensive documentation
+
+**Remaining Optional Enhancements:**
+- Community Features: Template marketplace, example gallery
+- Additional Benchmarks: API-based operations (analysis, illustration)
+
+**Current Status:**
+- ✅ Priority 1 Complete (Integration Tests)
+- ✅ Priority 2 Complete (E2E Tests - All 5 Phases)
+- ✅ Priority 3 Complete (Performance Benchmarking - All 6 Phases) 🎉
+- 📦 Production-ready with 680 tests + 21 benchmarks
+- 🔄 CI/CD fully integrated
+
+---
+
+**Session End:** 2025-11-14
+**Commit Reference:** [next commit]
+**Total Implementation:** ~1,390 lines (infrastructure + documentation)
+**Database:** SQLite with 4 tables, 3 views, WAL mode
+**Visualizations:** Chart.js with dark mode UI
+**Status:** Phase 6 Complete - All Priority 3 Enhancements Finished

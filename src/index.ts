@@ -101,7 +101,11 @@ export async function main(): Promise<void> {
     // Dashboard
     .option('--dashboard', 'Start web dashboard for real-time progress monitoring')
     .option('--dashboard-port <port>', 'Dashboard server port (default: 3000)', parseInt)
-    .option('--dashboard-host <host>', 'Dashboard server host (default: localhost)');
+    .option('--dashboard-host <host>', 'Dashboard server host (default: localhost)')
+    .action(async () => {
+      // Main command action - actual logic runs after program.parse()
+      // This action handler ensures Commander doesn't show help when no subcommand is provided
+    });
 
   // Compile command - generate graphic novel PDF
   program

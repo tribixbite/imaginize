@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-11-14T03:16:52.413Z",
+  "version": "2.7.0",
+  "commit": "4432946",
+  "totalBenchmarks": 3,
+  "results": [
+    {
+      "name": "State file write",
+      "suite": "State Management",
+      "avgTime": 0.4857968000000028,
+      "minTime": 0.3546360000000277,
+      "maxTime": 0.6202600000001439,
+      "stdDev": 0.07893898184778897,
+      "p50": 0.46125000000006366,
+      "p90": 0.5516660000000684,
+      "p95": 0.6202600000001439,
+      "p99": 0.6202600000001439,
+      "opsPerSecond": 2058.473831033869,
+      "memory": {
+        "peakHeapUsed": 17773696,
+        "peakHeapTotal": 31649792,
+        "peakRss": 95350784,
+        "growthRate": 26098.4
+      },
+      "timestamp": "2025-11-14T03:16:51.931Z",
+      "version": "2.7.0"
+    },
+    {
+      "name": "State file read",
+      "suite": "State Management",
+      "avgTime": 0.2837084999999888,
+      "minTime": 0.24140600000009727,
+      "maxTime": 0.3524999999999636,
+      "stdDev": 0.03756194953739423,
+      "p50": 0.2729690000001028,
+      "p90": 0.3502610000000459,
+      "p95": 0.3524999999999636,
+      "p99": 0.3524999999999636,
+      "opsPerSecond": 3524.744588195417,
+      "memory": {
+        "peakHeapUsed": 18260760,
+        "peakHeapTotal": 31649792,
+        "peakRss": 95744000,
+        "growthRate": 35747.2
+      },
+      "timestamp": "2025-11-14T03:16:51.941Z",
+      "version": "2.7.0"
+    },
+    {
+      "name": "EPUB parsing",
+      "suite": "Parsing",
+      "avgTime": 4.011854199999971,
+      "minTime": 3.3575519999999415,
+      "maxTime": 5.779530999999906,
+      "stdDev": 0.8938366071098839,
+      "p50": 3.7098439999999755,
+      "p90": 5.779530999999906,
+      "p95": 5.779530999999906,
+      "p99": 5.779530999999906,
+      "opsPerSecond": 249.26130166943935,
+      "memory": {
+        "peakHeapUsed": 22264920,
+        "peakHeapTotal": 33222656,
+        "peakRss": 104792064,
+        "growthRate": 446380.8
+      },
+      "timestamp": "2025-11-14T03:16:52.005Z",
+      "version": "2.7.0"
+    }
+  ],
+  "summary": {
+    "totalTime": 4.7813594999999625,
+    "avgTime": 1.5937864999999876,
+    "totalMemory": 58299376,
+    "totalTokens": 0,
+    "totalCost": 0
+  }
+}

@@ -72,7 +72,7 @@ async function main() {
   // Run all suites
   const suites = [
     stateSuite,
-    // parsingSuite, // TODO: Add when fixtures are available
+    parsingSuite,
   ];
 
   const results = await runSuites(suites, config, version);

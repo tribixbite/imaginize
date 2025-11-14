@@ -12,9 +12,10 @@
 - ✅ Phase 1: Benchmark Harness (benchmark-runner, metrics-collector, reporter)
 - ✅ Phase 2: State Management Benchmarks (write/read operations)
 - ✅ Phase 3: CI/CD Integration (.github/workflows/benchmarks.yml)
-- ✅ Baseline established and updated for v2.7.0
-- 📋 Phase 4: Additional Suites (parsing, analysis, etc. - as needed)
-- 📋 Phase 5: Historical trend visualization (optional enhancement)
+- ✅ Phase 4: Parsing Benchmarks (EPUB parsing - 4.17ms avg, 240 ops/sec)
+- ✅ Baseline established and updated for v2.7.0 (now includes 3 benchmarks)
+- 📋 Phase 5: Additional Suites (analysis, extraction, illustration - as needed)
+- 📋 Phase 6: Historical trend visualization (optional enhancement)
 
 **Previous Updates:**
 - V2.6.2 Roadmap: All 7 code quality fixes verified complete
@@ -278,6 +279,98 @@ Priority 3 Performance Benchmarking is now **fully complete** (Phase 1-3):
 - Optional Phase 4: Additional benchmark suites (parsing, analysis, etc.)
 - Optional Phase 5: Historical trend visualization and tracking
 - Monitor first PR to verify workflow functions correctly
+
+---
+
+## Performance Benchmarking Phase 4: Parsing Benchmarks (2025-11-13)
+
+**Goal:** Implement Phase 4 - Add EPUB/PDF parsing benchmarks using integration test fixtures
+
+**Implementation:** Phase 4 Complete - Parsing benchmark suite operational
+
+### What Was Implemented
+
+**Parsing Benchmark Suite** (`src/test/benchmarks/suites/parsing.bench.ts`)
+- EPUB parsing benchmark using `simple.epub` fixture from integration tests
+- Leverages existing `src/test/integration/fixtures/epub/simple.epub` (2.0 KB)
+- PDF parsing benchmark disabled due to fixture compression issues
+
+**Implementation Details:**
+- Uses `parseEpub()` from `src/lib/epub-parser.js`
+- Fixture path: `src/test/integration/fixtures/epub/simple.epub`
+- Configuration: 2 warmup iterations, 5 measured iterations
+- Memory tracking enabled
+
+**Results:**
+- EPUB parsing: 4.17ms ± 710μs (240 ops/sec)
+- Memory usage: 20.64 MB peak
+- Successfully integrated into benchmark suite
+
+**PDF Parsing Note:**
+- PDF parsing benchmark created but disabled with comment
+- Issue: `simple.pdf` fixture works in integration tests but fails in benchmarks
+- Error: "Invalid PDF structure" due to compression method incompatibilities
+- Future: Need dedicated benchmark fixture or real-world PDF sample
+
+### Changes Made
+
+**Files Modified:**
+1. `src/test/benchmarks/suites/parsing.bench.ts`
+   - Implemented EPUB parsing benchmark using integration test fixture
+   - Added detailed comment explaining PDF benchmark disability
+   - Configured for 2 warmup + 5 measured iterations
+
+2. `src/test/benchmarks/run-benchmarks.ts`
+   - Enabled `parsingSuite` in suites array
+   - Changed from comment to active benchmark suite
+
+3. `benchmarks/baselines/v2.7.0.json`
+   - Updated baseline to include EPUB parsing results
+   - Now contains 3 benchmarks (2 state + 1 parsing)
+
+4. `src/test/benchmarks/README.md`
+   - Updated Benchmark Suites section with EPUB results
+   - Updated Implementation Status (Phase 4 complete)
+   - Added PDF parsing note about fixture issues
+
+### Testing Results
+
+```bash
+✅ npm run bench completes successfully
+✅ EPUB parsing benchmark passes (1/1)
+✅ Parsing suite: 1/1 benchmarks passed
+✅ Total benchmarks: 3 (2 state + 1 parsing)
+✅ All benchmarks operational
+```
+
+**Benchmark Performance:**
+- State file write: 485μs ± 79μs (2,058 ops/sec)
+- State file read: 284μs ± 38μs (3,525 ops/sec)
+- EPUB parsing: 4.17ms ± 711μs (240 ops/sec)
+
+### Benefits Achieved
+
+**✅ Phase 4 Complete:**
+1. Parsing benchmark suite operational
+2. EPUB parsing performance measured (4.17ms avg)
+3. Integration test fixtures reused successfully
+4. Baseline updated with parsing results
+5. Documentation updated
+
+### Future Work
+
+- Create dedicated PDF benchmark fixture without compression issues
+- Add analysis/extraction/illustration benchmarks (Phase 5)
+- Historical trend visualization (Phase 6)
+
+### Conclusion
+
+Priority 3 Phase 4 parsing benchmarks successfully implemented. The benchmark suite now covers:
+- ✅ State management (write/read)
+- ✅ Parsing (EPUB)
+- ✅ CI/CD integration with automated regression detection
+
+Total: 3 operational benchmarks with comprehensive coverage of core operations.
 
 ---
 

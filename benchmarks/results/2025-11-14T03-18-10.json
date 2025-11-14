@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-11-14T03:18:10.215Z",
+  "version": "2.7.0",
+  "commit": "4432946",
+  "totalBenchmarks": 3,
+  "results": [
+    {
+      "name": "State file write",
+      "suite": "State Management",
+      "avgTime": 0.4593855000000076,
+      "minTime": 0.32161500000006527,
+      "maxTime": 0.6245839999999134,
+      "stdDev": 0.08979979268708993,
+      "p50": 0.4555729999999585,
+      "p90": 0.5590099999999438,
+      "p95": 0.6245839999999134,
+      "p99": 0.6245839999999134,
+      "opsPerSecond": 2176.820992390886,
+      "memory": {
+        "peakHeapUsed": 18429480,
+        "peakHeapTotal": 30601216,
+        "peakRss": 95494144,
+        "growthRate": 26093.6
+      },
+      "timestamp": "2025-11-14T03:18:10.093Z",
+      "version": "2.7.0"
+    },
+    {
+      "name": "State file read",
+      "suite": "State Management",
+      "avgTime": 0.31753139999996166,
+      "minTime": 0.25119699999982004,
+      "maxTime": 0.4864070000000993,
+      "stdDev": 0.07192359821677702,
+      "p50": 0.2856249999999818,
+      "p90": 0.4028650000000198,
+      "p95": 0.4864070000000993,
+      "p99": 0.4864070000000993,
+      "opsPerSecond": 3149.294841392444,
+      "memory": {
+        "peakHeapUsed": 19119008,
+        "peakHeapTotal": 30601216,
+        "peakRss": 96149504,
+        "growthRate": 35748
+      },
+      "timestamp": "2025-11-14T03:18:10.105Z",
+      "version": "2.7.0"
+    },
+    {
+      "name": "EPUB parsing",
+      "suite": "Parsing",
+      "avgTime": 4.96973939999998,
+      "minTime": 3.4081249999999272,
+      "maxTime": 8.242030999999997,
+      "stdDev": 1.7824560768441688,
+      "p50": 4.191040999999814,
+      "p90": 8.242030999999997,
+      "p95": 8.242030999999997,
+      "p99": 8.242030999999997,
+      "opsPerSecond": 201.21779423685757,
+      "memory": {
+        "peakHeapUsed": 21732528,
+        "peakHeapTotal": 35057664,
+        "peakRss": 106373120,
+        "growthRate": -377379.2
+      },
+      "timestamp": "2025-11-14T03:18:10.172Z",
+      "version": "2.7.0"
+    }
+  ],
+  "summary": {
+    "totalTime": 5.74665629999995,
+    "avgTime": 1.9155520999999833,
+    "totalMemory": 59281016,
+    "totalTokens": 0,
+    "totalCost": 0
+  }
+}

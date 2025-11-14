@@ -65,12 +65,12 @@ benchmarks/              # Benchmark data storage
 ## Benchmark Suites
 
 ### State Management
-- State file write performance
-- State file read performance
+- State file write performance (485μs avg)
+- State file read performance (296μs avg)
 
-### Parsing (TODO: Add fixtures)
-- EPUB parsing (small/medium/large)
-- PDF parsing (small/medium/large)
+### Parsing
+- EPUB parsing (4.17ms avg, 240 ops/sec)
+- PDF parsing (disabled - fixture compression issues)
 
 ## Creating New Benchmarks
 
@@ -279,14 +279,21 @@ For long-running benchmarks:
   - Artifact uploads with 30-day retention
   - Manual workflow dispatch support
 
+- ✅ **Phase 4**: Parsing Benchmark Suite (Complete)
+  - EPUB parsing benchmark (4.17ms avg, 240 ops/sec)
+  - Uses integration test fixtures
+  - PDF parsing disabled (fixture compression issues)
+  - Baseline updated with parsing results
+
 ## Future Enhancements
 
-- [ ] Phase 4: Additional benchmark suites (parsing, analysis, extraction, illustration)
-- [ ] Phase 5: Historical trend visualization
+- [ ] Phase 5: Additional benchmark suites (analysis, extraction, illustration)
+- [ ] Phase 6: Historical trend visualization
   - SQLite database for trend tracking
   - HTML report generation with charts
   - Performance graphs over time
   - Automated baseline updates
+- [ ] Fix PDF parsing fixture for benchmarks
 
 ---
 

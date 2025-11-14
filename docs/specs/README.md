@@ -13,14 +13,14 @@ Comprehensive architecture and feature documentation for the imaginize project.
 ### Features
 - [CLI Interface](./cli-interface.md) - Command-line options, flags, and usage patterns
 - [Configuration System](./configuration.md) - Config file structure, providers, and defaults
-- [Book Parsing](./book-parsing.md) - EPUB and PDF parsing with metadata extraction
 - [AI Integration](./ai-integration.md) - OpenAI, OpenRouter, and custom endpoint support
 - [Token Management](./token-management.md) - Counting, estimation, and cost tracking
 - [Visual Style System](./visual-style-system.md) - Style consistency and character tracking
 - [Dashboard System](./dashboard.md) - Real-time WebSocket monitoring UI
-- [Multi-Book Series](./multi-book-series.md) - Series-wide element sharing and style inheritance
+- [Multi-Book Series](./multi-book-series.md) - Series-wide element sharing and style inheritance (Spec only)
 - [Graphic Novel Compilation](./graphic-novel-compilation.md) - PDF generation with layouts and smart captions
 - [Custom Prompt Templates](./custom-prompt-templates.md) - Per-phase prompt customization with variables and presets
+- [GitHub Pages Demo](./github-pages-demo.md) - Browser-based demo with E2E testing
 
 ### Data Formats
 - [Output Files](./output-files.md) - Contents.md, Chapters.md, Elements.md formats
@@ -45,13 +45,13 @@ Comprehensive architecture and feature documentation for the imaginize project.
 
 ## Quick Reference
 
-### Current Status (v2.6.2)
+### Current Status (v2.7.0+)
 - **Code Quality**: 0 TypeScript errors, 0 ESLint warnings
-- **Test Coverage**: 86.0% (37/43 tests passing)
+- **Test Coverage**: 100% (527/527 main tests passing, 34 integration tests, 68 E2E tests)
 - **Security**: 0 vulnerabilities in production dependencies
-- **Documentation**: 4,820+ lines across 14 primary documents
+- **Documentation**: 10,000+ lines across 24 primary documents + specs
 - **npm Package**: Published and fully functional
-- **CI/CD**: Automated testing and publishing
+- **CI/CD**: Automated testing, E2E testing, and publishing
 
 ### Key Metrics
 - **Lines of Code**: ~3,850+
@@ -71,32 +71,45 @@ Comprehensive architecture and feature documentation for the imaginize project.
 8. ✅ Automatic rate limit handling
 9. ✅ Token counting and cost estimation
 10. ✅ Multi-provider configuration
+11. ✅ Graphic novel PDF compilation (`imaginize compile`)
+12. ✅ Interactive style wizard (`imaginize wizard`)
+13. ✅ Scene regeneration system (`imaginize regenerate`)
+14. ✅ GitHub Pages demo with E2E tests (68 tests)
 
 ## Document Status
 
 ### Complete ✅
 - System Architecture
 - Pipeline Architecture
-- Concurrent Processing
 - CLI Interface
 - Configuration System
-- Book Parsing
 - AI Integration
 - Token Management
 - Visual Style System
 - Dashboard System
+- Graphic Novel Compilation
+- Custom Prompt Templates
+- GitHub Pages Demo
 
-### In Progress 🚧
-- Output Files (partial)
+### Spec Only (Not Yet Implemented) 📋
+- Multi-Book Series (spec complete, implementation pending)
+- Concurrent Processing (documented but may need updates)
+
+### Missing Documentation 🚧
+- Output Files (needs examples)
 - State File Format (needs JSON schema)
-- Test Suite (needs coverage details)
+- Test Suite (needs detailed coverage report)
 - CI/CD Pipeline (needs workflow details)
-
-### Planned 📋
+- Book Parsing (needs EPUB/PDF parser documentation)
 - Error Recovery (needs detailed scenarios)
 - Parallel Processing (needs performance benchmarks)
 - Provider Detection (needs decision tree)
 - Installation Methods (needs platform-specific guides)
+- Rate Limiting (needs implementation details)
+- Manifest Format (needs schema documentation)
+- npm Publishing (needs release process)
+- GitHub Releases (needs automation details)
+- Code Quality (needs linting/formatting rules)
 
 ## Contributing
 
@@ -118,5 +131,5 @@ When adding new specifications:
 ---
 
 **Last Updated**: 2025-11-13
-**Version**: 2.6.2
-**Status**: Active Development
+**Version**: 2.7.0+
+**Status**: Production-Ready with Optional Enhancements

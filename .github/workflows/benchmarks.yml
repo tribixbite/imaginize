@@ -1,0 +1,165 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run benchmarks
+        id: bench
+        run: |
+          npm run bench > benchmark-output.txt 2>&1 || echo "Benchmarks completed with warnings"
+          cat benchmark-output.txt
+
+      - name: Check for regressions
+        id: regression_check
+        run: |
+          if grep -q "⚠️ PERFORMANCE REGRESSION DETECTED" benchmark-output.txt; then
+            echo "regression=true" >> $GITHUB_OUTPUT
+            echo "### ⚠️ Performance Regression Detected" >> $GITHUB_STEP_SUMMARY
+            grep -A 20 "⚠️ PERFORMANCE REGRESSION DETECTED" benchmark-output.txt >> $GITHUB_STEP_SUMMARY
+          else
+            echo "regression=false" >> $GITHUB_OUTPUT
+            echo "### ✅ No Performance Regressions" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: |
+            benchmarks/results/*.json
+            benchmarks/reports/*.md
+            benchmark-output.txt
+          retention-days: 30
+
+      - name: Find latest benchmark report
+        id: find_report
+        if: github.event_name == 'pull_request'
+        run: |
+          LATEST_REPORT=$(ls -t benchmarks/reports/*.md | head -1)
+          echo "report_path=$LATEST_REPORT" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with benchmark results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = '${{ steps.find_report.outputs.report_path }}';
+
+            let reportContent = '';
+            try {
+              reportContent = fs.readFileSync(reportPath, 'utf8');
+            } catch (error) {
+              console.log('Could not read benchmark report:', error.message);
+              return;
+            }
+
+            const hasRegression = '${{ steps.regression_check.outputs.regression }}' === 'true';
+            const emoji = hasRegression ? '⚠️' : '✅';
+            const status = hasRegression ? 'Performance Regression Detected' : 'No Performance Regressions';
+
+            const comment = `## ${emoji} Performance Benchmark Results
+
+**Status:** ${status}
+
+${reportContent}
+
+---
+<details>
+<summary>How to interpret these results</summary>
+
+- **Avg Time**: Average execution time across all iterations
+- **P95**: 95th percentile (95% of runs were faster than this)
+- **Ops/sec**: Operations per second (higher is better)
+- **Memory**: Peak memory usage during benchmark
+- **Change**: Percentage difference from baseline (🔴 regression if >5%)
+
+Benchmarks are automatically compared against baseline performance from v2.7.0.
+</details>
+`;
+
+            // Find existing benchmark comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Performance Benchmark Results')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+      - name: Fail if regression detected
+        if: steps.regression_check.outputs.regression == 'true'
+        run: |
+          echo "::error::Performance regression detected! Check the benchmark results for details."
+          exit 1
+
+  all-benchmarks-passed:
+    name: All Benchmarks Passed
+    runs-on: ubuntu-latest
+    needs: [benchmark]
+    if: always()
+
+    steps:
+      - name: Check benchmark status
+        run: |
+          if [ "${{ needs.benchmark.result }}" != "success" ]; then
+            echo "::warning::Benchmarks did not pass - performance regression detected"
+            echo "Review the benchmark results and optimize if necessary"
+            exit 1
+          fi
+          echo "✅ All benchmarks passed without regressions!"

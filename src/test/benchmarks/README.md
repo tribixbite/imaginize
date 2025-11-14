@@ -140,37 +140,45 @@ When a baseline exists for the current version, benchmarks will automatically:
 
 ### GitHub Actions Workflow
 
-```yaml
-name: Benchmarks
+The `.github/workflows/benchmarks.yml` workflow provides automated performance testing:
 
-on:
-  pull_request:
-  push:
-    branches: [main]
+**Features:**
+- ✅ Runs on every push to main and all pull requests
+- ✅ Compares results against baseline (v2.7.0)
+- ✅ Posts benchmark results as PR comments
+- ✅ Detects performance regressions (>5% threshold)
+- ✅ Fails builds if regressions detected
+- ✅ Uploads results as artifacts (30-day retention)
 
-jobs:
-  benchmark:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm ci
-      - run: npm run bench
-      - name: Comment PR with results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('benchmarks/reports/latest.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+**Workflow Triggers:**
+- Push to `main` branch
+- Pull requests to `main` branch
+- Manual dispatch via GitHub Actions UI
+
+**PR Comment Features:**
+- Automatic benchmark results posting
+- Emoji indicators (🟢 improvement, 🔴 regression, ⚪ no change)
+- Comparison with baseline performance
+- Interactive "How to interpret" section
+- Updates existing comments instead of creating duplicates
+
+**Regression Detection:**
+When regressions are detected:
+1. Console output: `⚠️ PERFORMANCE REGRESSION DETECTED`
+2. Detailed list of slower benchmarks with percentages
+3. PR comment highlights regressions in red 🔴
+4. Build fails with error code 1
+5. GitHub Actions summary shows warning
+
+**Artifacts Uploaded:**
+- `benchmark-results/` (30-day retention)
+  - JSON results files
+  - Markdown reports
+  - Console output
+
+**Manual Trigger:**
+```bash
+gh workflow run benchmarks.yml
 ```
 
 ## Output Formats
@@ -251,17 +259,36 @@ For long-running benchmarks:
 - Split into smaller benchmarks
 - Use setup to prepare expensive data
 
+## Implementation Status
+
+- ✅ **Phase 1**: Benchmark Harness (Complete)
+  - types.ts, benchmark-runner.ts, metrics-collector.ts, reporter.ts
+  - Statistical analysis (avg, min, max, stdDev, P50/P90/P95/P99)
+  - Memory profiling and token tracking
+  - Multi-format reporting (JSON, Markdown, Console)
+
+- ✅ **Phase 2**: Initial Benchmark Suites (Complete)
+  - State management benchmarks (write/read)
+  - Baseline v2.7.0 established
+  - Regression detection with 5% threshold
+
+- ✅ **Phase 3**: CI/CD Integration (Complete)
+  - GitHub Actions workflow (`.github/workflows/benchmarks.yml`)
+  - Automated PR comments with results
+  - Regression detection and build failures
+  - Artifact uploads with 30-day retention
+  - Manual workflow dispatch support
+
 ## Future Enhancements
 
-- [ ] Phase 2: Additional benchmark suites (analysis, extraction, illustration)
-- [ ] Phase 3: GitHub Actions integration
-- [ ] Phase 4: Historical trend visualization
-- [ ] SQLite database for trend tracking
-- [ ] HTML report generation with charts
-- [ ] Automated baseline updates
-- [ ] Performance regression alerts
+- [ ] Phase 4: Additional benchmark suites (parsing, analysis, extraction, illustration)
+- [ ] Phase 5: Historical trend visualization
+  - SQLite database for trend tracking
+  - HTML report generation with charts
+  - Performance graphs over time
+  - Automated baseline updates
 
 ---
 
 **Last Updated**: 2025-11-13
-**Status**: Phase 1 Complete (Harness + Basic Suites)
+**Status**: Phase 1-3 Complete (Harness + Suites + CI/CD)

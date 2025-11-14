@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-11-14T02:58:10.518Z",
+  "version": "2.7.0",
+  "commit": "1fc9ad4",
+  "totalBenchmarks": 2,
+  "results": [
+    {
+      "name": "State file write",
+      "suite": "State Management",
+      "avgTime": 0.3102031999999781,
+      "minTime": 0.25026100000002316,
+      "maxTime": 0.3742189999999255,
+      "stdDev": 0.041419832712833636,
+      "p50": 0.3068230000000085,
+      "p90": 0.3691149999999652,
+      "p95": 0.3742189999999255,
+      "p99": 0.3742189999999255,
+      "opsPerSecond": 3223.6933726024445,
+      "memory": {
+        "peakHeapUsed": 9680888,
+        "peakHeapTotal": 16019456,
+        "peakRss": 78921728,
+        "growthRate": 26099.2
+      },
+      "timestamp": "2025-11-14T02:58:10.468Z",
+      "version": "2.7.0"
+    },
+    {
+      "name": "State file read",
+      "suite": "State Management",
+      "avgTime": 0.31914569999999004,
+      "minTime": 0.22536400000001322,
+      "maxTime": 0.38890700000001743,
+      "stdDev": 0.05671336523969195,
+      "p50": 0.31104199999992943,
+      "p90": 0.38536499999997886,
+      "p95": 0.38890700000001743,
+      "p99": 0.38890700000001743,
+      "opsPerSecond": 3133.3651056556023,
+      "memory": {
+        "peakHeapUsed": 9815088,
+        "peakHeapTotal": 16019456,
+        "peakRss": 79577088,
+        "growthRate": 35836.8
+      },
+      "timestamp": "2025-11-14T02:58:10.479Z",
+      "version": "2.7.0"
+    }
+  ],
+  "summary": {
+    "totalTime": 0.6293488999999681,
+    "avgTime": 0.31467444999998406,
+    "totalMemory": 19495976,
+    "totalTokens": 0,
+    "totalCost": 0
+  }
+}

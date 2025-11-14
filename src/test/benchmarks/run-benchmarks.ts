@@ -77,17 +77,21 @@ async function main() {
 
   const results = await runSuites(suites, config, version);
 
-  // Console output
-  generateConsoleReport(results);
-
   // Load baseline for comparison
   const baseline = await loadBaseline(version);
   const comparisons = baseline ? compareWithBaseline(results, baseline) : undefined;
 
+  // Console output with comparisons
+  generateConsoleReport(results, comparisons);
+
   if (comparisons) {
     const regressions = comparisons.filter((c) => c.isRegression);
     if (regressions.length > 0) {
-      console.log(`\n⚠️  ${regressions.length} performance regression(s) detected!`);
+      console.log(`\n⚠️ PERFORMANCE REGRESSION DETECTED`);
+      console.log(`   ${regressions.length} benchmark(s) slower than baseline:`);
+      for (const reg of regressions) {
+        console.log(`   - ${reg.name}: ${reg.change.toFixed(1)}% slower`);
+      }
     }
   }
 

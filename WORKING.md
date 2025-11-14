@@ -210,6 +210,61 @@
 
 ---
 
+## ✅ Priority 3: Performance Benchmarking - Implementation Planning (2025-11-13)
+
+**Implementation**: Comprehensive performance benchmarking plan for automated regression detection
+
+**Completed:**
+- ✅ Created `docs/PERFORMANCE_BENCHMARKING_PLAN.md` (593 lines)
+  - 4-phase implementation plan (2.5 days total)
+  - Comprehensive metrics tracking (time, tokens, memory, API, I/O)
+  - 6 benchmark suites (parsing, analysis, extraction, illustration, concurrent, state)
+  - CI/CD integration with automated regression detection
+  - Historical trend tracking and visualization
+
+**Plan Overview:**
+
+**Phase 1: Benchmark Harness** (1 day):
+- `benchmark-runner.ts` - Core execution framework with timing and warmup
+- `metrics-collector.ts` - Performance, memory, token, API tracking
+- `reporter.ts` - JSON/Markdown/HTML output with visualization
+
+**Phase 2: Benchmark Suites** (1 day):
+- `parsing.bench.ts` - EPUB/PDF parsing (small/medium/large)
+- `analysis.bench.ts` - Pass 1/2 analysis with token tracking
+- `extraction.bench.ts` - Element identification and deduplication
+- `illustration.bench.ts` - Image generation and concurrency
+- `concurrent.bench.ts` - Batch size variations and efficiency
+- `state.bench.ts` - State persistence and recovery
+
+**Phase 3: CI/CD Integration** (0.5 days):
+- GitHub Actions workflow for automated benchmarks
+- Baseline storage (v2.7.0.json)
+- Regression detection with configurable thresholds
+- PR comments on performance changes
+
+**Phase 4: Visualization** (0.5 days):
+- HTML reports with Chart.js
+- SQLite historical tracking database
+- Trend analysis (week/month/year)
+
+**Metrics Tracked:**
+- Processing time (per chapter, percentiles, overall)
+- Token usage (prompt/completion, cost breakdown)
+- Memory consumption (peak, growth, GC pressure)
+- API latency (response time, throughput, retries)
+- State I/O performance (atomic writes, recovery)
+
+**Success Criteria:**
+- Detect 10%+ performance regressions automatically
+- Baseline metrics captured for v2.7.0
+- Historical trends tracked in SQLite database
+- Data-driven optimization decisions enabled
+
+**Status**: Planning Complete - Ready for Phase 1 Implementation
+
+---
+
 ## ✅ CLAUDE.md Final Checklist Review & Status Report (2025-11-13)
 
 **Implementation**: Comprehensive review of CLAUDE.md final checklist against current implementation

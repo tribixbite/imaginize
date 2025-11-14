@@ -19,6 +19,7 @@ import { stateSuite } from './suites/state.bench.js';
 import { processingSuite } from './suites/processing.bench.js';
 import { outputSuite } from './suites/output.bench.js';
 import type { BenchmarkConfig, BenchmarkResult } from './harness/types.js';
+import { BenchmarkHistory } from './history/index.js';
 
 // Get version from package.json
 async function getVersion(): Promise<string> {
@@ -106,6 +107,29 @@ async function main() {
 
   await generateJsonReport(results, resultsPath, version, commit);
   await generateMarkdownReport(results, reportPath, version, comparisons);
+
+  // Historical tracking (opt-in via BENCHMARK_HISTORY=1)
+  if (process.env.BENCHMARK_HISTORY === '1') {
+    try {
+      const history = new BenchmarkHistory();
+      const runId = await history.recordRun(version, results, {
+        commitHash: commit,
+        branchName: process.env.GITHUB_REF_NAME,
+        ciBuildNumber: process.env.GITHUB_RUN_NUMBER,
+      });
+      console.log(`\n📊 Recorded benchmark run #${runId} to history database`);
+
+      // Auto-set baseline if not exists for this version
+      const baseline = history['db'].getBaseline(version);
+      if (!baseline) {
+        history.setBaseline(version, runId, `Auto-generated baseline for v${version}`);
+      }
+
+      history.close();
+    } catch (error) {
+      console.warn('\n⚠️ Failed to record benchmark history:', error);
+    }
+  }
 
   // Exit with error code if regressions detected
   if (comparisons && comparisons.some((c) => c.isRegression)) {

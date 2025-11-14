@@ -54,3 +54,11 @@ temp/
 .test-locks/
 # Test artifacts
 src/test/.test-data/
+
+# Benchmark history database
+benchmarks/history/*.db
+benchmarks/history/*.db-shm
+benchmarks/history/*.db-wal
+
+# Generated trend reports
+benchmarks/trends/*.html

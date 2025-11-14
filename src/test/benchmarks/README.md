@@ -309,7 +309,7 @@ For long-running benchmarks:
   - PDF parsing disabled (fixture compression issues)
   - Baseline updated with parsing results
 
-- ✅ **Phase 5**: Processing & Output Benchmarks (Complete) 🆕
+- ✅ **Phase 5**: Processing & Output Benchmarks (Complete)
   - Processing suite (10 benchmarks):
     - Token estimation (4 variations from 200 chars to 40k chars)
     - Cost calculation (gpt-4o-mini, gpt-4o)
@@ -321,17 +321,53 @@ For long-running benchmarks:
     - Elements.md generation (20/50/100 elements)
   - Baseline updated with 21 total benchmarks
 
+- 🚧 **Phase 6**: Historical Trend Visualization (Infrastructure Complete - Testing Required) 🆕
+  - SQLite database schema and implementation (`history/schema.sql`, `history/database.ts`)
+  - Benchmark history recorder with automatic baseline management
+  - HTML report generator with Chart.js visualizations (`history/html-reporter.ts`)
+  - Performance trend analysis and regression detection
+  - CLI tools: `npm run bench:history` and `npm run bench:trends`
+  - **Status**: Core infrastructure implemented, needs end-to-end testing
+  - **Remaining**: Integration testing, documentation, example reports
+
+## Usage (Phase 6)
+
+### Enable Historical Tracking
+
+```bash
+# Run benchmarks with history tracking (opt-in)
+npm run bench:history
+
+# Or set environment variable
+BENCHMARK_HISTORY=1 npm run bench
+```
+
+### Generate Trend Reports
+
+```bash
+# Generate HTML trend report for all benchmarks
+npm run bench:trends
+
+# Generate with baseline comparison
+npm run bench:trends -- --comparison
+
+# Generate for specific benchmarks
+npm run bench:trends -- --benchmarks "State file write,EPUB parsing"
+
+# Generate with more history
+npm run bench:trends -- --limit 50
+```
+
 ## Future Enhancements
 
-- [ ] Phase 6: Historical trend visualization
-  - SQLite database for trend tracking
-  - HTML report generation with charts
-  - Performance graphs over time
-  - Automated baseline updates
+- [ ] Phase 6 Testing & Validation
+  - End-to-end integration tests
+  - Example trend reports
+  - Performance regression alert system
 - [ ] Fix PDF parsing fixture for benchmarks
 - [ ] Additional analysis/illustration benchmarks (API-based operations)
 
 ---
 
 **Last Updated**: 2025-11-14
-**Status**: Phase 1-5 Complete (Harness + Suites + CI/CD + Processing + Output)
+**Status**: Phase 1-5 Complete | Phase 6 Infrastructure Complete (Testing Required)

@@ -16,6 +16,8 @@ import {
 } from './harness/reporter.js';
 import { parsingSuite } from './suites/parsing.bench.js';
 import { stateSuite } from './suites/state.bench.js';
+import { processingSuite } from './suites/processing.bench.js';
+import { outputSuite } from './suites/output.bench.js';
 import type { BenchmarkConfig, BenchmarkResult } from './harness/types.js';
 
 // Get version from package.json
@@ -73,6 +75,8 @@ async function main() {
   const suites = [
     stateSuite,
     parsingSuite,
+    processingSuite,
+    outputSuite,
   ];
 
   const results = await runSuites(suites, config, version);

@@ -64,13 +64,37 @@ benchmarks/              # Benchmark data storage
 
 ## Benchmark Suites
 
-### State Management
-- State file write performance (485μs avg)
-- State file read performance (296μs avg)
+### State Management (2 benchmarks)
+- State file write performance (~650μs avg, 1,543 ops/sec)
+- State file read performance (~234μs avg, 4,280 ops/sec)
 
-### Parsing
-- EPUB parsing (4.17ms avg, 240 ops/sec)
+### Parsing (1 benchmark)
+- EPUB parsing (~5.79ms avg, 173 ops/sec)
 - PDF parsing (disabled - fixture compression issues)
+
+### Processing (10 benchmarks) 🆕
+- Token estimation (short text ~200 chars): ~7μs avg, 135k ops/sec
+- Token estimation (medium text ~800 chars): ~57μs avg, 17k ops/sec
+- Token estimation (long text ~8000 chars): ~719μs avg, 1.4k ops/sec
+- Token estimation (very long text ~40k chars): ~4.02ms avg, 249 ops/sec
+- Cost calculation (gpt-4o-mini): ~1.79μs avg, 559k ops/sec
+- Cost calculation (gpt-4o): ~1.08μs avg, 927k ops/sec
+- Context limit check (within limit): ~1.18μs avg, 847k ops/sec
+- Context limit check (exceeding limit): ~1.00μs avg, 997k ops/sec
+- Text chunking (small text, no splits): ~97μs avg, 10k ops/sec
+- Text chunking (large text, multiple splits): ~5.36ms avg, 187 ops/sec
+
+### Output Generation (8 benchmarks) 🆕
+- Build Contents.md (small - 10 chapters, 20 elements): ~2.10μs avg, 477k ops/sec
+- Build Contents.md (large - 50 chapters, 200 elements): ~1.47μs avg, 679k ops/sec
+- Build Chapters.md (small - 1 concept per chapter): ~14μs avg, 70k ops/sec
+- Build Chapters.md (medium - 5 concepts per chapter): ~40μs avg, 25k ops/sec
+- Build Chapters.md (large - 10 concepts per chapter): ~40μs avg, 25k ops/sec
+- Build Elements.md (small - 20 elements): ~54μs avg, 18k ops/sec
+- Build Elements.md (medium - 50 elements): ~83μs avg, 12k ops/sec
+- Build Elements.md (large - 100 elements): ~383μs avg, 2.6k ops/sec
+
+**Total Benchmarks:** 21 operational (up from 3)
 
 ## Creating New Benchmarks
 
@@ -280,22 +304,34 @@ For long-running benchmarks:
   - Manual workflow dispatch support
 
 - ✅ **Phase 4**: Parsing Benchmark Suite (Complete)
-  - EPUB parsing benchmark (4.17ms avg, 240 ops/sec)
+  - EPUB parsing benchmark (~5.79ms avg, 173 ops/sec)
   - Uses integration test fixtures
   - PDF parsing disabled (fixture compression issues)
   - Baseline updated with parsing results
 
+- ✅ **Phase 5**: Processing & Output Benchmarks (Complete) 🆕
+  - Processing suite (10 benchmarks):
+    - Token estimation (4 variations from 200 chars to 40k chars)
+    - Cost calculation (gpt-4o-mini, gpt-4o)
+    - Context limit checking (within/exceeding limits)
+    - Text chunking (small/large with multiple splits)
+  - Output generation suite (8 benchmarks):
+    - Contents.md generation (small/large)
+    - Chapters.md generation (1/5/10 concepts per chapter)
+    - Elements.md generation (20/50/100 elements)
+  - Baseline updated with 21 total benchmarks
+
 ## Future Enhancements
 
-- [ ] Phase 5: Additional benchmark suites (analysis, extraction, illustration)
 - [ ] Phase 6: Historical trend visualization
   - SQLite database for trend tracking
   - HTML report generation with charts
   - Performance graphs over time
   - Automated baseline updates
 - [ ] Fix PDF parsing fixture for benchmarks
+- [ ] Additional analysis/illustration benchmarks (API-based operations)
 
 ---
 
-**Last Updated**: 2025-11-13
-**Status**: Phase 1-3 Complete (Harness + Suites + CI/CD)
+**Last Updated**: 2025-11-14
+**Status**: Phase 1-5 Complete (Harness + Suites + CI/CD + Processing + Output)

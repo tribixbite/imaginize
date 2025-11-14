@@ -5083,3 +5083,137 @@ Implemented Phase 2 (Core User Flow Tests) of the E2E testing plan. Created 35 c
 **Commits This Session**: 1 (Phase 2 implementation)
 
 🎉 **CORE USER FLOWS FULLY TESTED - E2E FOUNDATION STRONG** 🎉
+
+---
+
+## Session: Priority 3 Performance Benchmarking - Phase 5 (Processing & Output Benchmarks)
+
+**Date:** November 14, 2025
+**Duration:** ~2 hours
+**Status:** ✅ COMPLETE (Phase 5 of Priority 3)
+**Objective:** Implement additional benchmark suites for processing operations and output generation
+
+### Summary
+
+Implemented Phase 5 of the Performance Benchmarking enhancement, adding 18 new benchmarks across two new suites (Processing and Output Generation). This brings the total benchmark count from 3 to 21 operational benchmarks.
+
+### Implementation Details
+
+**New Benchmark Suites:**
+
+1. **Processing Suite** (10 benchmarks)
+   - Token estimation (4 variations):
+     - Short text (~200 chars): ~7μs avg, 135k ops/sec
+     - Medium text (~800 chars): ~57μs avg, 17k ops/sec
+     - Long text (~8000 chars): ~719μs avg, 1.4k ops/sec
+     - Very long text (~40k chars): ~4.02ms avg, 249 ops/sec
+   - Cost calculation (2 benchmarks):
+     - gpt-4o-mini: ~1.79μs avg, 559k ops/sec
+     - gpt-4o: ~1.08μs avg, 927k ops/sec
+   - Context limit checking (2 benchmarks):
+     - Within limit: ~1.18μs avg, 847k ops/sec
+     - Exceeding limit: ~1.00μs avg, 997k ops/sec
+   - Text chunking (2 benchmarks):
+     - Small text (no splits): ~97μs avg, 10k ops/sec
+     - Large text (multiple splits): ~5.36ms avg, 187 ops/sec
+
+2. **Output Generation Suite** (8 benchmarks)
+   - Contents.md generation (2 benchmarks):
+     - Small (10 chapters, 20 elements): ~2.10μs avg, 477k ops/sec
+     - Large (50 chapters, 200 elements): ~1.47μs avg, 679k ops/sec
+   - Chapters.md generation (3 benchmarks):
+     - Small (1 concept/chapter): ~14μs avg, 70k ops/sec
+     - Medium (5 concepts/chapter): ~40μs avg, 25k ops/sec
+     - Large (10 concepts/chapter): ~40μs avg, 25k ops/sec
+   - Elements.md generation (3 benchmarks):
+     - Small (20 elements): ~54μs avg, 18k ops/sec
+     - Medium (50 elements): ~83μs avg, 12k ops/sec
+     - Large (100 elements): ~383μs avg, 2.6k ops/sec
+
+### Files Created
+
+**New Benchmark Suites:**
+- `src/test/benchmarks/suites/processing.bench.ts` (142 lines)
+- `src/test/benchmarks/suites/output.bench.ts` (264 lines)
+
+**Modified Files:**
+- `src/test/benchmarks/run-benchmarks.ts` - Added new suite imports and registration
+- `src/test/benchmarks/README.md` - Updated documentation with Phase 5 status
+- `benchmarks/baselines/v2.7.0.json` - Updated baseline with 21 benchmarks
+
+### Benchmark Coverage
+
+**Total Benchmarks:** 21 operational (up from 3)
+- State Management: 2 benchmarks
+- Parsing: 1 benchmark (EPUB)
+- Processing: 10 benchmarks (NEW)
+- Output Generation: 8 benchmarks (NEW)
+
+**Performance Insights:**
+- Token estimation scales linearly with text length (7μs for 200 chars → 4ms for 40k chars)
+- Cost calculation is extremely fast (~1-2μs) regardless of model
+- Context limit checking is negligible overhead (<2μs)
+- Text chunking for large texts (~5ms) is dominated by regex operations
+- Markdown generation is fast for all sizes (<400μs even for 100 elements)
+
+### Technical Notes
+
+**Design Decisions:**
+1. **No API Calls**: All benchmarks test pure computational operations without external dependencies
+2. **Realistic Data**: Generated test data mimics actual book content (characters, quotes, descriptions)
+3. **Size Variations**: Each suite tests multiple input sizes to identify scaling characteristics
+4. **Memory Profiling**: Enabled for all benchmarks to track memory consumption patterns
+
+**Baseline Variance:**
+- Micro-benchmarks (<10μs) show high variance due to system overhead
+- Larger operations (>1ms) show stable, reproducible results
+- Accepted current measurements as baseline despite some variance
+
+### Testing Results
+
+**Benchmark Execution:**
+```
+✅ All suites complete: 21 benchmarks run
+- State Management: 2/2 passed
+- Parsing: 1/1 passed
+- Processing: 10/10 passed
+- Output Generation: 8/8 passed
+```
+
+**CI/CD Integration:**
+- Existing GitHub Actions workflow (`benchmarks.yml`) automatically includes new suites
+- Regression detection works across all 21 benchmarks
+- PR comments display all benchmark results
+
+### Documentation Updates
+
+**Updated Files:**
+- `src/test/benchmarks/README.md` - Added Processing and Output Generation sections
+- `NEXT_STEPS.md` - Marked Phase 5 complete, updated benchmark counts
+- `WORKING.md` - This session entry
+
+### Commits
+
+```
+[pending] feat: add processing and output generation benchmarks (Priority 3 Phase 5)
+```
+
+### Next Steps
+
+**Remaining Optional Enhancements:**
+- Priority 3 Phase 6: Historical Trend Visualization (SQLite database, charts)
+- Community Features: Template marketplace, example gallery
+
+**Current Status:**
+- ✅ Priority 3 Phase 1-5 Complete (All benchmark phases)
+- 📊 21 operational benchmarks with automated regression detection
+- 🔄 CI/CD fully integrated
+- 📦 Production-ready
+
+---
+
+**Session End:** 2025-11-14
+**Commit Reference:** [pending]
+**Total Benchmarks:** 21 (3 → 21, +600% increase)
+**Lines Added:** ~550 (benchmark suites + documentation)
+

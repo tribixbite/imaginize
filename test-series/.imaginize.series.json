@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "Test Fantasy Series",
+  "books": [
+    {
+      "id": "book1",
+      "title": "Impossible Creatures",
+      "path": "./book1-impossible-creatures.epub",
+      "order": 1,
+      "status": "pending"
+    },
+    {
+      "id": "book2",
+      "title": "Piranesi",
+      "path": "./book2-piranesi.epub",
+      "order": 2,
+      "status": "pending"
+    }
+  ],
+  "sharedElements": {
+    "enabled": true,
+    "mode": "progressive",
+    "mergeStrategy": "enrich"
+  },
+  "createdAt": "2025-11-16T11:45:31.508Z",
+  "lastUpdated": "2025-11-16T11:56:33.763Z"
+}

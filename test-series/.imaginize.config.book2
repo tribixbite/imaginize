@@ -1,0 +1,27 @@
+{
+  "apiKey": "$OPENAI_API_KEY",
+  "model": {
+    "name": "gpt-4o-mini",
+    "temperature": 0.7,
+    "maxTokens": 4000
+  },
+  "imageModel": "dall-e-3",
+  "imageEndpoint": {
+    "provider": "openai",
+    "apiKey": "$OPENAI_API_KEY",
+    "model": "dall-e-3",
+    "size": "1024x1024",
+    "quality": "standard",
+    "style": "vivid"
+  },
+  "maxConcurrency": 3,
+  "maxRetries": 2,
+  "outputDir": "./output-book2",
+  "series": {
+    "enabled": true,
+    "seriesRoot": ".",
+    "bookId": "book2",
+    "bookTitle": "Piranesi"
+  },
+  "genre": "fantasy"
+}

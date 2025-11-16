@@ -4,7 +4,7 @@
  */
 
 import { mkdir } from 'fs/promises';
-import { extname, basename } from 'path';
+import { extname, basename, join } from 'path';
 import { existsSync } from 'fs';
 import OpenAI from 'openai';
 import chalk from 'chalk';
@@ -375,6 +375,160 @@ export async function main(): Promise<void> {
         if (error.stack) {
           console.error(chalk.gray(error.stack));
         }
+        process.exit(1);
+      }
+    });
+
+  // Series management command
+  const seriesCmd = program
+    .command('series')
+    .description('Multi-book series management');
+
+  // series init - Initialize a new series
+  seriesCmd
+    .command('init')
+    .description('Initialize a new multi-book series')
+    .argument('[series-root]', 'Series root directory (default: current directory)')
+    .option('--name <name>', 'Series name')
+    .option('--shared-elements', 'Enable shared elements (default: true)', true)
+    .option('--mode <mode>', 'Shared elements mode: progressive or manual (default: progressive)', 'progressive')
+    .option('--merge-strategy <strategy>', 'Merge strategy: enrich, union, or override (default: enrich)', 'enrich')
+    .action(async (seriesRoot, cmdOptions) => {
+      try {
+        const { createSeriesManager } = await import('./lib/series/series-manager.js');
+        const resolvedRoot = seriesRoot || process.cwd();
+
+        const manager = createSeriesManager(resolvedRoot);
+
+        const config = await manager.initializeSeries({
+          name: cmdOptions.name || basename(resolvedRoot),
+        });
+
+        console.log(chalk.green(`\n✅ Series "${config.name}" initialized`));
+        console.log(chalk.gray(`   Location: ${resolvedRoot}`));
+        console.log(chalk.gray(`   Shared elements: ${config.sharedElements.enabled ? 'enabled' : 'disabled'}`));
+        console.log(chalk.gray(`   Mode: ${config.sharedElements.mode}`));
+        console.log(chalk.gray(`   Merge strategy: ${config.sharedElements.mergeStrategy}`));
+        console.log(chalk.cyan('\nNext steps:'));
+        console.log(chalk.gray('  1. Add books using: imaginize series add-book <book-id> <title> <path>'));
+        console.log(chalk.gray('  2. Process each book with series integration enabled'));
+
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`\n❌ Error: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
+  // series add-book - Add a book to the series
+  seriesCmd
+    .command('add-book')
+    .description('Add a book to the series')
+    .argument('<book-id>', 'Book ID (unique identifier)')
+    .argument('<title>', 'Book title')
+    .argument('<file-path>', 'Path to book file (EPUB/PDF)')
+    .option('--series-root <dir>', 'Series root directory (default: current directory)')
+    .option('--output-dir <dir>', 'Book output directory')
+    .action(async (bookId, title, filePath, cmdOptions) => {
+      try {
+        const { createSeriesManager } = await import('./lib/series/series-manager.js');
+        const resolvedRoot = cmdOptions.seriesRoot || process.cwd();
+
+        const manager = createSeriesManager(resolvedRoot);
+
+        await manager.addBook({
+          id: bookId,
+          title,
+          path: filePath,
+        });
+
+        console.log(chalk.green(`\n✅ Book "${title}" added to series`));
+        console.log(chalk.gray(`   ID: ${bookId}`));
+        console.log(chalk.gray(`   File: ${filePath}`));
+        console.log(chalk.gray(`   Status: pending`));
+        console.log(chalk.cyan('\nNext steps:'));
+        console.log(chalk.gray(`  Process this book with: imaginize --file "${filePath}"`));
+
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`\n❌ Error: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
+  // series stats - Show series statistics
+  seriesCmd
+    .command('stats')
+    .description('Show series statistics')
+    .option('--series-root <dir>', 'Series root directory (default: current directory)')
+    .action(async (cmdOptions) => {
+      try {
+        const { createSeriesManager } = await import('./lib/series/series-manager.js');
+        const resolvedRoot = cmdOptions.seriesRoot || process.cwd();
+
+        const manager = createSeriesManager(resolvedRoot);
+        const stats = await manager.getStats();
+
+        if (!stats) {
+          console.log(chalk.yellow('\n⚠️  No series configuration found'));
+          console.log(chalk.gray('   Initialize a series with: imaginize series init'));
+          process.exit(0);
+        }
+
+        console.log(chalk.cyan(`\n📚 Series: ${stats.name}`));
+        console.log(chalk.gray(`   Total books: ${stats.totalBooks}`));
+        console.log(chalk.gray(`   Completed: ${stats.completedBooks}`));
+        console.log(chalk.gray(`   In Progress: ${stats.inProgressBooks}`));
+        console.log(chalk.gray(`   Pending: ${stats.pendingBooks}`));
+
+        console.log(chalk.cyan('\n🔗 Shared Elements:'));
+        console.log(chalk.gray(`   Total entities: ${stats.totalEntities}`));
+        console.log(chalk.gray(`   Total enrichments: ${stats.totalEnrichments}`));
+
+        if (Object.keys(stats.entitiesByType).length > 0) {
+          console.log(chalk.cyan('\n📊 Entities by type:'));
+          for (const [type, count] of Object.entries(stats.entitiesByType)) {
+            console.log(chalk.gray(`   ${type}: ${count}`));
+          }
+        }
+
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`\n❌ Error: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
+  // series catalog - Generate series-wide element catalog
+  seriesCmd
+    .command('catalog')
+    .description('Generate series-wide element catalog')
+    .option('--series-root <dir>', 'Series root directory (default: current directory)')
+    .option('--output <file>', 'Output file path (default: ./SeriesCatalog.md)')
+    .action(async (cmdOptions) => {
+      try {
+        const { createSeriesElementsManager } = await import('./lib/series/series-elements.js');
+        const { createSeriesManager } = await import('./lib/series/series-manager.js');
+        const resolvedRoot = cmdOptions.seriesRoot || process.cwd();
+
+        const manager = createSeriesManager(resolvedRoot);
+        const config = await manager.loadConfig();
+
+        if (!config) {
+          console.log(chalk.yellow('\n⚠️  No series configuration found'));
+          console.log(chalk.gray('   Initialize a series with: imaginize series init'));
+          process.exit(0);
+        }
+
+        const elementsManager = createSeriesElementsManager(resolvedRoot);
+        await elementsManager.generateSeriesCatalog(config.name);
+
+        const outputPath = cmdOptions.output || join(resolvedRoot, 'SeriesCatalog.md');
+        console.log(chalk.green(`\n✅ Series catalog generated: ${outputPath}`));
+
+        process.exit(0);
+      } catch (error: any) {
+        console.error(chalk.red(`\n❌ Error: ${error.message}`));
         process.exit(1);
       }
     });

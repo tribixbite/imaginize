@@ -17,6 +17,7 @@
 - 🔗 **Character Cross-Referencing** - Automatic entity matching with full visual details in every scene
 - 🎨 **Image Generation** - Generate illustrations with DALL-E or Gemini
 - ✨ **Visual Consistency** - Automatic style extraction and character tracking across all images (v2.4.0+)
+- 📖 **Multi-Book Series** - Share character descriptions and elements across books in a series (v2.7.0+)
 - ⚡ **Parallel Processing** - Up to 50% faster with concurrent chapter analysis (paid tier)
 - ⚙️ **Highly Configurable** - Customize pages per image, models, and more
 - 📊 **Progress Tracking** - Real-time progress.md file with detailed logs
@@ -256,6 +257,55 @@ consistencyThreshold: 0.7
 - `data/character-registry.json` - Character appearance tracking with visual features
 
 **Note:** Visual consistency requires GPT-4 Vision for style analysis (uses your OpenAI API key). If analysis fails, falls back to text-based style guide.
+
+## Multi-Book Series (v2.7.0+)
+
+Process multiple books in a series with shared character descriptions and story elements. Perfect for book series like Harry Potter, Lord of the Rings, or any multi-book collection where consistency matters.
+
+### Key Features
+
+- **Progressive Entity Discovery** - Characters and elements discovered in earlier books are automatically available in later books
+- **Cross-Book Enrichment** - Entity descriptions grow richer with each book in the series
+- **Series-Wide Catalog** - Unified `Elements.md` tracking all entities across the entire series
+- **Multiple Merge Strategies** - Choose between `enrich` (default), `union`, or `override` for handling entity updates
+
+### Quick Start
+
+```bash
+# Initialize a new series
+cd my-series-directory
+npx imaginize series init --name "My Fantasy Series"
+
+# Add books to the series
+npx imaginize series add-book book1 "The Beginning" ./book1.epub
+npx imaginize series add-book book2 "The Journey" ./book2.epub
+
+# Enable series mode in book config (.imaginize.config)
+{
+  "series": {
+    "enabled": true,
+    "seriesRoot": ".",
+    "bookId": "book1",
+    "bookTitle": "The Beginning"
+  }
+}
+
+# Process books - entities are automatically shared
+cd book1/
+npx imaginize --file ../book1.epub --text
+
+cd ../book2/
+npx imaginize --file ../book2.epub --text  # Reuses characters from book1!
+```
+
+### Series Commands
+
+- `npx imaginize series init [--name <name>]` - Initialize a new series
+- `npx imaginize series add-book <id> <title> <path>` - Add a book to the series
+- `npx imaginize series stats` - View series statistics (total entities, enrichments, books)
+- `npx imaginize series catalog` - Generate series-wide Elements.md
+
+**See also:** [Multi-Book Series Specification](./docs/specs/multi-book-series.md)
 
 ## Real-Time Dashboard (v2.6.0+)
 

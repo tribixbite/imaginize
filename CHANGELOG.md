@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Multi-Book Series Support (v2.7.0)
+- **Cross-Book Entity Sharing** - Share character descriptions and story elements across multiple books in a series
+- **Progressive Entity Discovery** - Characters discovered in earlier books automatically available in later books
+- **Entity Enrichment System** - Descriptions grow richer with each book, tracking source of each detail
+- **3 Merge Strategies** - `enrich` (default), `union`, or `override` for handling entity updates
+- **Series CLI Commands** - `init`, `add-book`, `stats`, `catalog` for managing multi-book series
+- **Series-Wide Catalog** - Unified `Elements.md` tracking all entities across the entire series
+- **Appearance Tracking** - Track which books and chapters each entity appears in
+- **Non-Breaking** - Series features are opt-in, existing single-book workflows unchanged
+
+**Implementation Files**:
+- `src/lib/series/types.ts` (210 lines) - TypeScript interfaces for series configuration
+- `src/lib/series/series-manager.ts` (225 lines) - Series configuration management
+- `src/lib/series/series-elements.ts` (410 lines) - Entity import/export/merge logic
+- `src/lib/phases/analyze-phase.ts` (+55 lines) - Series import/export hooks in analysis pipeline
+- `src/index.ts` (+159 lines) - Series CLI subcommands
+
+**Configuration Files**:
+- `.imaginize.series.json` - Series master configuration with book registry
+- `.series-elements-memory.json` - Cross-book entity storage with enrichments
+- `Elements.md` - Series-wide element catalog (auto-generated)
+
+**Documentation**:
+- `docs/specs/multi-book-series.md` - Comprehensive specification with examples
+- `CHECKLIST-STATUS.md` - Complete verification of all 11 CLAUDE.md items
+- `SESSION-COMPLETE.md` - Development session summary
+- `PROJECT-STATUS-2025-11-16.md` - Final project status document
+- Updated README.md with Multi-Book Series section and quickstart
+
+**Testing**:
+- Manual testing with 2-book test series
+- Verified all 4 CLI commands (init, add-book, stats, catalog)
+- Integration testing confirmed entity import/export during processing
+
 #### Integration Tests for EPUB/PDF Parsers
 - **34 Integration Tests** - Real file validation for EPUB and PDF parsers (17 tests each)
 - **Programmatic Test Fixtures** - `scripts/generate-test-fixtures.ts` creates minimal valid test files

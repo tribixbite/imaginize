@@ -188,3 +188,23 @@ export interface BookSeriesConfig {
   /** Book ID (must match series config) */
   bookId: string;
 }
+
+/**
+ * Book-level entity memory (loaded from .elements-memory.json)
+ * This is different from EntityMemory in concurrent/elements-memory.ts
+ * as it includes additional tracking fields needed for series integration
+ */
+export interface BookEntityMemory {
+  /** Entity name */
+  name: string;
+  /** Entity type */
+  type: 'character' | 'creature' | 'place' | 'item' | 'event' | 'other';
+  /** Full description */
+  description: string;
+  /** Chapter where first mentioned */
+  firstMentionedIn: number;
+  /** Chapters where entity appears */
+  appearsIn: number[];
+  /** Additional details discovered */
+  enrichments: string[];
+}

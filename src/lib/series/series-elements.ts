@@ -11,8 +11,8 @@ import type {
   ImportExportResult,
   MergeResult,
   EntityEnrichment,
+  BookEntityMemory,
 } from './types.js';
-import type { EntityMemory } from '../types/config.js';
 
 const SERIES_ELEMENTS_FILE = '.series-elements-memory.json';
 const BOOK_ELEMENTS_FILE = '.elements-memory.json';
@@ -77,7 +77,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
   /**
    * Load book-specific elements memory
    */
-  async function loadBookElements(bookOutputDir: string): Promise<Map<string, EntityMemory>> {
+  async function loadBookElements(bookOutputDir: string): Promise<Map<string, BookEntityMemory>> {
     const bookElementsPath = join(bookOutputDir, BOOK_ELEMENTS_FILE);
 
     if (!existsSync(bookElementsPath)) {
@@ -118,7 +118,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
           : '');
 
       // Create book entity memory
-      const bookEntity: EntityMemory = {
+      const bookEntity: BookEntityMemory = {
         name: seriesEntity.name,
         type: seriesEntity.type,
         description: fullDescription,
@@ -187,7 +187,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
   async function mergeElements(
     bookId: string,
     bookTitle: string,
-    bookElements: Map<string, EntityMemory>,
+    bookElements: Map<string, BookEntityMemory>,
     strategy: 'enrich' | 'union' | 'override' = 'enrich'
   ): Promise<MergeResult> {
     const seriesMemory = await loadSeriesElements();
@@ -216,7 +216,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
               chapters: bookEntity.appearsIn || [],
             },
           ],
-          enrichments: bookEntity.enrichments?.map((detail) => ({
+          enrichments: bookEntity.enrichments?.map((detail: string) => ({
             detail,
             sourceBook: bookId,
             sourceChapter: 0, // Could be enhanced to track chapter

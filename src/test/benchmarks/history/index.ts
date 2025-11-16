@@ -62,7 +62,7 @@ export class BenchmarkHistory {
       peak_heap_total: r.memory?.peakHeapTotal,
       peak_rss: r.memory?.peakRss,
       memory_growth_rate: r.memory?.growthRate,
-      total_tokens: r.tokens?.total,
+      total_tokens: r.tokens?.totalTokens,
       estimated_cost: r.tokens?.estimatedCost,
     }));
 

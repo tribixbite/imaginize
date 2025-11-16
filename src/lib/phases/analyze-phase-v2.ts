@@ -28,8 +28,8 @@ import {
 import { createManifestManager } from '../concurrent/manifest-manager.js';
 import { createElementsLookup } from '../concurrent/elements-lookup.js';
 import { createElementsMemory } from '../concurrent/elements-memory.js';
-import { createSeriesManager } from '../concurrent/series-manager.js';
-import { createSeriesElementsManager } from '../concurrent/series-elements.js';
+import { createSeriesManager } from '../series/series-manager.js';
+import { createSeriesElementsManager } from '../series/series-elements.js';
 import {
   TemplateLoader,
   DEFAULT_ANALYZE_TEMPLATE,
@@ -233,17 +233,15 @@ export class AnalyzePhaseV2 extends BasePhase {
         );
 
         const bookId = config.series.bookId || 'unknown';
-        const bookTitle = stateManager.getState().bookTitle;
 
         const importResult = await this.seriesElements.importToBook(
           bookId,
-          bookTitle,
           outputDir
         );
 
-        if (importResult.imported > 0) {
+        if (importResult.count > 0) {
           await progressTracker.log(
-            `📚 Imported ${importResult.imported} element(s) from series: ${importResult.entities.slice(0, 3).join(', ')}${importResult.entities.length > 3 ? '...' : ''}`,
+            `📚 Imported ${importResult.count} element(s) from series: ${importResult.entities.slice(0, 3).join(', ')}${importResult.entities.length > 3 ? '...' : ''}`,
             'success'
           );
         } else {
@@ -384,23 +382,16 @@ export class AnalyzePhaseV2 extends BasePhase {
 
         const bookId = config.series.bookId || 'unknown';
         const bookTitle = stateManager.getState().bookTitle;
-        const mergeStrategy = 'enrich'; // Default merge strategy
 
         const exportResult = await this.seriesElements.exportFromBook(
           bookId,
           bookTitle,
-          outputDir,
-          mergeStrategy
+          outputDir
         );
 
-        if (exportResult.exported > 0) {
-          const stats: string[] = [];
-          if (exportResult.added > 0) stats.push(`${exportResult.added} new`);
-          if (exportResult.updated > 0) stats.push(`${exportResult.updated} updated`);
-          if (exportResult.enriched > 0) stats.push(`${exportResult.enriched} enriched`);
-
+        if (exportResult.count > 0) {
           await progressTracker.log(
-            `📚 Exported ${exportResult.exported} element(s) to series (${stats.join(', ')})`,
+            `📚 Exported ${exportResult.count} element(s) to series: ${exportResult.entities.slice(0, 3).join(', ')}${exportResult.entities.length > 3 ? '...' : ''}`,
             'success'
           );
         }
@@ -565,18 +556,16 @@ export class AnalyzePhaseV2 extends BasePhase {
         const { stateManager, outputDir } = this.context;
         const bookId = config.series.bookId || 'unknown';
         const bookTitle = stateManager.getState().bookTitle;
-        const mergeStrategy = 'enrich'; // Default merge strategy
 
         const exportResult = await this.seriesElements.exportFromBook(
           bookId,
           bookTitle,
-          outputDir,
-          mergeStrategy
+          outputDir
         );
 
-        if (exportResult.enriched > 0) {
+        if (exportResult.count > 0) {
           await progressTracker.log(
-            `📚 Exported ${exportResult.enriched} enrichment(s) to series catalog`,
+            `📚 Exported ${exportResult.count} enrichment(s) to series catalog`,
             'success'
           );
         }

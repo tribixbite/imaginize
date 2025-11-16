@@ -62,3 +62,7 @@ benchmarks/history/*.db-wal
 
 # Generated trend reports
 benchmarks/trends/*.html
+
+# Benchmark reports and results
+benchmarks/reports/
+benchmarks/results/

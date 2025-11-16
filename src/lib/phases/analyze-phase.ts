@@ -130,11 +130,35 @@ export class AnalyzePhase extends BasePhase {
    * Sub-phase 3: Prepare context and prompts
    */
   protected async prepare(): Promise<SubPhaseResult> {
+    const { config, outputDir, progressTracker } = this.context;
+
     if (!this.planData || this.planData.chaptersToProcess.length === 0) {
       return { success: true };
     }
 
-    // Nothing specific to prepare for analyze phase
+    // If series mode is enabled, import existing entities from series
+    if (config.series?.enabled && config.series.seriesRoot && config.series.bookId) {
+      try {
+        const { createSeriesElementsManager } = await import('../series/series-elements.js');
+        const elementsManager = createSeriesElementsManager(config.series.seriesRoot);
+
+        await progressTracker.log('Importing series elements...', 'info');
+        const result = await elementsManager.importToBook(config.series.bookId, outputDir);
+
+        if (result.count > 0) {
+          await progressTracker.log(
+            `Imported ${result.count} entities from series: ${result.entities.join(', ')}`,
+            'success'
+          );
+        } else {
+          await progressTracker.log('No existing series entities to import', 'info');
+        }
+      } catch (error: any) {
+        await progressTracker.log(`Series import warning: ${error.message}`, 'warning');
+        // Don't fail the phase, just continue without series import
+      }
+    }
+
     return { success: true };
   }
 
@@ -202,7 +226,7 @@ export class AnalyzePhase extends BasePhase {
    * Sub-phase 5: Save results to Chapters.md
    */
   protected async save(): Promise<SubPhaseResult> {
-    const { outputDir, stateManager, progressTracker } = this.context;
+    const { config, outputDir, stateManager, progressTracker } = this.context;
 
     if (this.conceptsByChapter.size === 0) {
       return { success: true };
@@ -219,6 +243,33 @@ export class AnalyzePhase extends BasePhase {
     await generateChaptersFile(outputDir, metadata, this.conceptsByChapter);
 
     await progressTracker.log('Chapters.md generated', 'success');
+
+    // If series mode is enabled, export discovered entities to series
+    if (config.series?.enabled && config.series.seriesRoot && config.series.bookId) {
+      try {
+        const { createSeriesElementsManager } = await import('../series/series-elements.js');
+        const elementsManager = createSeriesElementsManager(config.series.seriesRoot);
+
+        await progressTracker.log('Exporting entities to series...', 'info');
+        const result = await elementsManager.exportFromBook(
+          config.series.bookId,
+          config.series.bookTitle || state.bookTitle,
+          outputDir
+        );
+
+        if (result.count > 0) {
+          await progressTracker.log(
+            `Exported ${result.count} entities to series`,
+            'success'
+          );
+        } else {
+          await progressTracker.log('No new entities to export', 'info');
+        }
+      } catch (error: any) {
+        await progressTracker.log(`Series export warning: ${error.message}`, 'warning');
+        // Don't fail the phase, just continue without series export
+      }
+    }
 
     return { success: true };
   }

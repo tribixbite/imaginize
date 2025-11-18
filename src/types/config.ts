@@ -272,6 +272,7 @@ export interface CommandOptions {
   text?: boolean;
   elements?: boolean;
   images?: boolean;
+  pdf?: boolean;
 
   // Filtering
   chapters?: string; // e.g., "1,2,5-10"

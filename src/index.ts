@@ -3,9 +3,10 @@
  * Main entry point with phase-based orchestration
  */
 
-import { mkdir } from 'fs/promises';
+import { mkdir, readdir } from 'fs/promises';
 import { extname, basename, join } from 'path';
 import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 import OpenAI from 'openai';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -70,6 +71,7 @@ export async function main(): Promise<void> {
       '--images',
       'Generate images with DALL-E and update Chapters.md (illustrate phase)'
     )
+    .option('--pdf', 'Compile a graphic novel PDF after image generation')
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
     .option(
@@ -888,6 +890,50 @@ export async function main(): Promise<void> {
           chaptersCount,
           elementsCount
         );
+      }
+
+      // Post-processing: PDF Compilation
+      if (options.pdf) {
+        spinner.start('Checking for images to compile...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into a PDF. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting PDF compilation...`
+          );
+          console.log(chalk.cyan('\n📦 Compiling graphic novel PDF...\n'));
+
+          const pdfSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const pdfOutputPath = join(outputDir, '..', `${pdfSanitizedName}.pdf`);
+          const scriptPath = join('scripts', 'compile_pdf.py');
+          const title = metadata.title || 'Illustrated Book';
+          const author = metadata.author || 'Unknown';
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${pdfOutputPath}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ PDF successfully generated at: ${pdfOutputPath}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ PDF compilation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
+            console.error(
+              chalk.yellow(
+                '   Please ensure Python 3 and required packages (Pillow, reportlab, qrcode, openai) are installed.'
+              )
+            );
+          }
+          console.log('');
+        }
       }
 
       // Success summary

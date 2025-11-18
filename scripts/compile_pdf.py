@@ -114,7 +114,7 @@ def generate_qr_code(url, size=150):
 
 def load_scene_descriptions(imaginize_dir):
     """
-    Load scene descriptions from progress.md file.
+    Load scene descriptions from Chapters.md file.
 
     Args:
         imaginize_dir: Path to imaginize output directory
@@ -123,16 +123,26 @@ def load_scene_descriptions(imaginize_dir):
         dict mapping (chapter, scene) tuples to descriptions
     """
     descriptions = {}
-    progress_file = Path(imaginize_dir) / 'progress.md'
+    chapters_file = Path(imaginize_dir) / 'Chapters.md'
 
-    if not progress_file.exists():
+    if not chapters_file.exists():
+        print(f"⚠️  Chapters.md not found in {imaginize_dir}")
         return descriptions
 
     try:
-        with open(progress_file, 'r', encoding='utf-8') as f:
+        with open(chapters_file, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Parse markdown to find image generation sections
+        # Parse markdown to extract Visual Elements descriptions
+        import re
+
+        # Pattern to match chapter headers: ### [chapter_name or number]
+        chapter_pattern = re.compile(r'^###\s+(.+)$', re.MULTILINE)
+        # Pattern to match scene headers: #### Scene [number]
+        scene_pattern = re.compile(r'^####\s+Scene\s+(\d+)', re.MULTILINE)
+        # Pattern to match Visual Elements line
+        visual_pattern = re.compile(r'\*\*Visual Elements:\*\*\s*(.+?)(?:\n\n|\n\*\*|$)', re.DOTALL)
+
         current_chapter = None
         lines = content.split('\n')
         i = 0
@@ -140,54 +150,61 @@ def load_scene_descriptions(imaginize_dir):
         while i < len(lines):
             line = lines[i].strip()
 
-            # Match chapter headers like "## Chapter 10"
-            if line.startswith('## Chapter '):
-                try:
-                    current_chapter = line.split('## Chapter ')[1].strip()
-                except:
-                    pass
+            # Match chapter headers (### [chapter])
+            chapter_match = re.match(r'^###\s+(.+)$', line)
+            if chapter_match:
+                current_chapter = chapter_match.group(1).strip()
+                # Try to extract numeric chapter if possible
+                # Some chapters are "1", "2", others are "[04-04-2002:version1", "ENDYMION" etc
+                # We'll keep the original and try to match with filenames later
+                i += 1
+                continue
 
-            # Match image generation lines with prompts
-            # Format: "**[2025-11-18T11:33:05.123Z]** ℹ️ ⏳ Generating: 45 (399-414 (Lines 35-35))"
-            # Followed by prompt details
-            elif '⏳ Generating:' in line and current_chapter:
-                # Try to extract scene number from the line number or next lines
-                # Look ahead for the actual prompt which contains the description
-                for j in range(i+1, min(i+10, len(lines))):
-                    prompt_line = lines[j]
+            # Match scene headers (#### Scene [number])
+            scene_match = re.match(r'^####\s+Scene\s+(\d+)', line)
+            if scene_match and current_chapter:
+                scene_num = scene_match.group(1)
 
-                    # Skip metadata lines
-                    if 'Trying OpenRouter' in prompt_line or 'Using OpenRouter' in prompt_line:
-                        continue
+                visual_desc = None
+                img_filename = None
 
-                    # Look for lines that might contain the scene description
-                    # These are usually after "Generating:" and before "✅ Saved:"
-                    if prompt_line.strip() and not prompt_line.startswith('**['):
-                        # This might be our description
-                        # Try to extract scene number from saved filename
-                        saved_idx = j
-                        while saved_idx < min(i+20, len(lines)):
-                            if '✅ Saved:' in lines[saved_idx] or '✅ ✅ Saved:' in lines[saved_idx]:
-                                # Extract filename like "chapter_10_scene_1.png"
-                                match_line = lines[saved_idx]
-                                if 'chapter_' in match_line and '_scene_' in match_line:
-                                    try:
-                                        parts = match_line.split('chapter_')[1].split('_scene_')
-                                        ch = parts[0]
-                                        sc = parts[1].split('.png')[0]
+                # Look ahead for **Visual Elements:** and **Generated Image:** sections
+                for j in range(i+1, min(i+20, len(lines))):
+                    # Extract Visual Elements description
+                    if '**Visual Elements:**' in lines[j] and not visual_desc:
+                        # Extract description from this line
+                        desc_line = lines[j].split('**Visual Elements:**', 1)[1].strip()
 
-                                        # Use the chapter/scene
-                                        descriptions[(ch, sc)] = prompt_line.strip()
-                                        break
-                                    except:
-                                        pass
-                            saved_idx += 1
-                        break
+                        # If description continues on next lines, collect them
+                        full_desc = desc_line
+                        k = j + 1
+                        while k < len(lines) and lines[k].strip() and not lines[k].startswith('**'):
+                            full_desc += ' ' + lines[k].strip()
+                            k += 1
+
+                        visual_desc = full_desc.strip()
+
+                    # Extract the actual image filename for mapping
+                    if '**Generated Image:**' in lines[j] or 'View Image' in lines[j]:
+                        # Extract filename from patterns like:
+                        # **Generated Image:** [View Image](./chapter_4_scene_1.png)
+                        match = re.search(r'chapter_(\d+)_scene_(\d+)\.png', lines[j])
+                        if match:
+                            img_chapter = match.group(1)
+                            img_scene = match.group(2)
+                            # Store using the ACTUAL filename chapter/scene numbers
+                            if visual_desc:
+                                descriptions[(img_chapter, img_scene)] = visual_desc
+                            break
 
             i += 1
 
+        print(f"✅ Loaded {len(descriptions)} scene descriptions from Chapters.md")
+
     except Exception as e:
-        print(f"⚠️  Warning: Could not parse progress.md: {e}")
+        print(f"⚠️  Warning: Could not parse Chapters.md: {e}")
+        import traceback
+        traceback.print_exc()
 
     return descriptions
 

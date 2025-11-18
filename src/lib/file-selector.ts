@@ -53,7 +53,7 @@ export async function findBookFiles(outputPattern?: string): Promise<BookFile[]>
   for (const file of files) {
     const ext = extname(file).toLowerCase();
 
-    if (ext === '.epub' || ext === '.pdf') {
+    if (ext === '.epub' || ext === '.pdf' || ext === '.mobi' || ext === '.azw3' || ext === '.azw') {
       try {
         const stats = await stat(file);
         const processed = isProcessed(file, outputPattern);

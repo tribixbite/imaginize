@@ -161,6 +161,8 @@ export function sanitizeFilename(filename: string): string {
   return filename
     .replace(/\.epub$/i, '')
     .replace(/\.pdf$/i, '')
+    .replace(/\.mobi$/i, '')
+    .replace(/\.azw3?$/i, '')
     .replace(/[^a-z0-9]/gi, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '');

@@ -16,6 +16,7 @@ import readline from 'readline';
 import { loadConfig, getSampleConfig } from './lib/config.js';
 import { parseEpub, sanitizeFilename } from './lib/epub-parser.js';
 import { parsePdf } from './lib/pdf-parser.js';
+import { parseMobi } from './lib/mobi-parser.js';
 import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
 import { DashboardServer } from './lib/dashboard/server.js';
@@ -33,7 +34,7 @@ import { IllustratePhase } from './lib/phases/illustrate-phase.js';
 import { AnalyzePhaseV2 } from './lib/phases/analyze-phase-v2.js';
 import { IllustratePhaseV2 } from './lib/phases/illustrate-phase-v2.js';
 import { generateContentsFile } from './lib/output-generator.js';
-import type { CommandOptions, ChapterContent } from './types/config.js';
+import type { CommandOptions, ChapterContent, BookMetadata } from './types/config.js';
 
 /**
  * Prompt user to continue from saved state
@@ -600,8 +601,17 @@ export async function main(): Promise<void> {
     // Parse the book
     spinner.start('Parsing book file...');
     const ext = extname(bookFile).toLowerCase();
-    const { metadata, chapters, fullText } =
-      ext === '.epub' ? await parseEpub(bookFile) : await parsePdf(bookFile);
+    let parseResult: { metadata: BookMetadata; chapters: ChapterContent[]; fullText: string };
+
+    if (ext === '.epub') {
+      parseResult = await parseEpub(bookFile);
+    } else if (ext === '.mobi' || ext === '.azw3' || ext === '.azw') {
+      parseResult = await parseMobi(bookFile);
+    } else {
+      parseResult = await parsePdf(bookFile);
+    }
+
+    const { metadata, chapters, fullText } = parseResult;
 
     spinner.succeed(
       `Parsed "${metadata.title}" - ${chapters.length} chapters, ${metadata.totalPages || '?'} pages`

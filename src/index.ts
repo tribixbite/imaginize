@@ -4,9 +4,14 @@
  */
 
 import { mkdir, readdir } from 'fs/promises';
-import { extname, basename, join } from 'path';
+import { extname, basename, join, dirname } from 'path';
 import { existsSync } from 'fs';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+// Get package directory for ESM modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import OpenAI from 'openai';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -918,7 +923,8 @@ export async function main(): Promise<void> {
 
           const pdfSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
           const pdfOutputPath = join(outputDir, '..', `${pdfSanitizedName}.pdf`);
-          const scriptPath = join('scripts', 'compile_pdf.py');
+          // Resolve script path relative to package directory (../ from dist to scripts)
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_pdf.py');
           const title = metadata.title || 'Illustrated Book';
           const author = metadata.author || 'Unknown';
 

@@ -90,7 +90,17 @@ function App() {
     setSelectedFile(null);
   };
 
-  const canStartProcessing = selectedFile !== null && apiKey !== null && apiKey.trim().startsWith('sk-') && !isProcessing;
+  // API key validation depends on selected provider
+  const isValidApiKey = (key: string | null, provider: string): boolean => {
+    if (!key || !key.trim()) return false;
+    // OpenAI keys start with sk-
+    if (provider === 'openai') return key.trim().startsWith('sk-');
+    // OpenRouter and custom endpoints accept any non-empty key
+    return true;
+  };
+
+  const currentProvider = processingOptions.provider || 'openai';
+  const canStartProcessing = selectedFile !== null && isValidApiKey(apiKey, currentProvider) && !isProcessing;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -270,7 +280,7 @@ function App() {
             >
               imaginize
             </a>
-            . Powered by OpenAI.
+            . Supports OpenAI, OpenRouter, and custom endpoints.
           </p>
         </div>
       </footer>

@@ -237,12 +237,16 @@ def parse_image_metadata(image_path, imaginize_dir, scene_descriptions=None):
 
     if scene_descriptions and (chapter, scene) in scene_descriptions:
         desc = scene_descriptions[(chapter, scene)]
-        # Clean up and truncate to fit caption (~80 chars for better readability)
+        # Clean up description
         desc = desc.replace('**', '').replace('ℹ️', '').replace('⏳', '').strip()
-        # Take up to 80 characters, truncating at word boundary
-        if len(desc) > 80:
-            desc = desc[:80].rsplit(' ', 1)[0] + '...'
-        description = desc
+        # Extract 2-5 key words for concise caption
+        words = desc.split()
+        # Filter out common words and keep meaningful ones
+        skip_words = {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'and', 'or', 'is', 'are', 'was', 'were'}
+        key_words = [w for w in words if w.lower() not in skip_words][:5]
+        if len(key_words) < 2:
+            key_words = words[:3]  # Fallback to first 3 words if filtering removed too much
+        description = ' '.join(key_words[:5]) if key_words else desc.split()[0]
     elif imaginize_dir:
         # Fallback: try to parse from log file
         log_file = Path(imaginize_dir).parent / f"{Path(imaginize_dir).stem.replace('imaginize_', '')}-full.log"

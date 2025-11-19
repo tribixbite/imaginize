@@ -7,6 +7,8 @@ import type OpenAI from 'openai';
 import { parseBook, type BookParseResult } from './book-parser';
 import { analyzeChapter, generateSceneImage, type AnalysisResult, type ImageGenerationResult } from './api-client';
 import type { BookFile, ProcessingState, ProcessingResult, ActivityLog, GeneratedImage } from '../types';
+import type { ProcessingOptions } from './pipeline-config';
+import { DEFAULT_OPTIONS, getModelInfo } from './pipeline-config';
 
 export interface ProcessorCallbacks {
   onStateChange: (state: ProcessingState) => void;
@@ -20,13 +22,27 @@ export class BookProcessor {
   private bookFile: BookFile;
   private openai: OpenAI;
   private callbacks: ProcessorCallbacks;
+  private options: ProcessingOptions;
   private cancelled: boolean = false;
   private startTime: number = 0;
 
-  constructor(bookFile: BookFile, openai: OpenAI, callbacks: ProcessorCallbacks) {
+  constructor(
+    bookFile: BookFile,
+    openai: OpenAI,
+    callbacks: ProcessorCallbacks,
+    options?: Partial<ProcessingOptions>
+  ) {
     this.bookFile = bookFile;
     this.openai = openai;
     this.callbacks = callbacks;
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+  }
+
+  /**
+   * Get current processing options
+   */
+  getOptions(): ProcessingOptions {
+    return this.options;
   }
 
   /**
@@ -45,17 +61,25 @@ export class BookProcessor {
         throw new Error('Processing cancelled');
       }
 
-      // Phase 2: Analyze chapters
-      this.updateState('analyzing', 0, 'Analyzing chapters...');
-      const analyses = await this.analyzeChapters(bookData);
+      // Phase 2: Analyze chapters (if enabled)
+      let analyses: AnalysisResult[] = [];
+      if (this.options.enableAnalysis) {
+        this.updateState('analyzing', 0, 'Analyzing chapters...');
+        analyses = await this.analyzeChapters(bookData);
 
-      if (this.cancelled) {
-        throw new Error('Processing cancelled');
+        if (this.cancelled) {
+          throw new Error('Processing cancelled');
+        }
       }
 
-      // Phase 3: Generate images
-      this.updateState('illustrating', 0, 'Generating images...');
-      const images = await this.generateImages(analyses);
+      // Phase 3: Generate images (if enabled)
+      let images: GeneratedImage[] = [];
+      if (this.options.enableIllustration && analyses.length > 0) {
+        this.updateState('illustrating', 0, 'Generating images...');
+        images = await this.generateImages(analyses);
+      } else if (!this.options.enableIllustration) {
+        this.logActivity('Image generation disabled', 'info');
+      }
 
       if (this.cancelled) {
         throw new Error('Processing cancelled');
@@ -120,15 +144,20 @@ export class BookProcessor {
       this.logActivity(`Analyzing Chapter ${chapter.number}: ${chapter.title}`, 'info');
 
       try {
-        const analysis = await analyzeChapter(this.openai, chapter, bookData.metadata.title);
+        const analysis = await analyzeChapter(this.openai, chapter, bookData.metadata.title, this.options);
         analyses.push(analysis);
 
         this.callbacks.onChapterComplete(chapter.number, analysis);
         this.logActivity(`✓ Chapter ${chapter.number} analyzed (${analysis.scenes.length} scenes)`, 'success');
       } catch (error) {
-        this.logActivity(`✗ Failed to analyze Chapter ${chapter.number}`, 'error');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logActivity(`✗ Failed to analyze Chapter ${chapter.number}: ${errorMessage}`, 'error');
         console.error(`Chapter ${chapter.number} analysis failed:`, error);
-        // Continue with next chapter
+
+        // Continue with next chapter if skipFailed is enabled
+        if (!this.options.skipFailed) {
+          throw error;
+        }
       }
     }
 
@@ -162,7 +191,13 @@ export class BookProcessor {
         this.logActivity(`Generating Chapter ${analysis.chapterNumber}, Scene ${scene.sceneNumber}`, 'info');
 
         try {
-          const imgResult = await generateSceneImage(this.openai, scene, analysis.chapterNumber);
+          const imgResult = await generateSceneImage(
+            this.openai,
+            scene,
+            analysis.chapterNumber,
+            this.options.styleGuide,
+            this.options
+          );
 
           // Convert ImageGenerationResult to GeneratedImage
           const image: GeneratedImage = {
@@ -179,12 +214,17 @@ export class BookProcessor {
           this.callbacks.onImageComplete(imgResult);
           this.logActivity(`✓ Image generated for Chapter ${analysis.chapterNumber}, Scene ${scene.sceneNumber}`, 'success');
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.logActivity(
-            `✗ Failed to generate image for Chapter ${analysis.chapterNumber}, Scene ${scene.sceneNumber}`,
+            `✗ Failed to generate image for Chapter ${analysis.chapterNumber}, Scene ${scene.sceneNumber}: ${errorMessage}`,
             'error'
           );
           console.error('Image generation failed:', error);
-          // Continue with next scene
+
+          // Continue with next scene if skipFailed is enabled
+          if (!this.options.skipFailed) {
+            throw error;
+          }
         }
 
         completedScenes++;
@@ -244,13 +284,16 @@ export class BookProcessor {
   }
 
   /**
-   * Estimate total cost
+   * Estimate total cost based on configured models
    */
   private estimateCost(chaptersAnalyzed: number, imagesGenerated: number): number {
-    // Rough estimates
-    const analysisTokensPerChapter = 5000; // Input + output
-    const costPerToken = 0.00003; // GPT-4 average
-    const costPerImage = 0.04; // DALL-E 3 standard
+    // Get model costs from configuration
+    const textModel = getModelInfo(this.options.provider, this.options.textModel);
+    const imageModel = getModelInfo(this.options.provider, this.options.imageModel);
+
+    const analysisTokensPerChapter = 5000; // Input + output estimate
+    const costPerToken = (textModel?.costPer1kTokens || 0.01) / 1000;
+    const costPerImage = imageModel?.costPerImage || 0.04;
 
     const analysisCost = chaptersAnalyzed * analysisTokensPerChapter * costPerToken;
     const imageCost = imagesGenerated * costPerImage;

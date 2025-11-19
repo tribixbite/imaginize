@@ -1,9 +1,12 @@
 /**
  * OpenAI API client wrapper for browser-based processing
+ * Supports multiple providers (OpenAI, OpenRouter, custom endpoints)
  */
 
 import OpenAI from 'openai';
 import type { BookChapter } from './book-parser';
+import type { ProcessingOptions } from './pipeline-config';
+import { getBaseUrl } from './pipeline-config';
 
 export interface AnalysisResult {
   chapterNumber: number;
@@ -33,7 +36,8 @@ export interface ImageGenerationResult {
 export async function analyzeChapter(
   openai: OpenAI,
   chapter: BookChapter,
-  bookTitle: string
+  bookTitle: string,
+  options?: Partial<ProcessingOptions>
 ): Promise<AnalysisResult> {
   const prompt = `You are analyzing Chapter ${chapter.number} of "${bookTitle}" titled "${chapter.title}".
 
@@ -60,8 +64,11 @@ Return your analysis in this JSON format:
   ]
 }`;
 
+  // Use configured model or default to gpt-4o-mini
+  const model = options?.textModel || 'gpt-4o-mini';
+
   const response = await openai.chat.completions.create({
-    model: 'gpt-4',
+    model,
     messages: [
       {
         role: 'system',
@@ -98,7 +105,8 @@ export async function generateSceneImage(
   openai: OpenAI,
   scene: SceneDescription,
   chapterNumber: number,
-  styleGuide?: string
+  styleGuide?: string,
+  options?: Partial<ProcessingOptions>
 ): Promise<ImageGenerationResult> {
   // Construct image prompt
   let prompt = scene.description;
@@ -116,13 +124,18 @@ export async function generateSceneImage(
     prompt += `. Style: ${styleGuide}`;
   }
 
+  // Use configured model and settings
+  const model = options?.imageModel || 'dall-e-3';
+  const size = options?.imageSize || '1024x1024';
+  const quality = options?.imageQuality || 'standard';
+
   // Generate image
   const response = await openai.images.generate({
-    model: 'dall-e-3',
+    model,
     prompt: prompt,
     n: 1,
-    size: '1024x1024',
-    quality: 'standard',
+    size,
+    quality,
   });
 
   const imageUrl = response.data?.[0]?.url;
@@ -253,11 +266,14 @@ export async function testAPIKey(apiKey: string): Promise<{ valid: boolean; erro
 }
 
 /**
- * Create OpenAI client instance
+ * Create OpenAI client instance with configurable options
  */
-export function createOpenAIClient(apiKey: string): OpenAI {
+export function createOpenAIClient(apiKey: string, options?: Partial<ProcessingOptions>): OpenAI {
+  const baseURL = options ? getBaseUrl(options) : 'https://api.openai.com/v1';
+
   return new OpenAI({
     apiKey,
+    baseURL,
     dangerouslyAllowBrowser: true, // Required for browser usage
   });
 }

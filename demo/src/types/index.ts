@@ -72,3 +72,7 @@ export interface ActivityLog {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
 }
+
+// Re-export pipeline config types
+export type { ProcessingOptions, ModelProvider, ModelOption, PipelinePhase } from '../lib/pipeline-config';
+export { DEFAULT_OPTIONS, MODEL_PROVIDERS, PIPELINE_PHASES, IMAGE_SIZES } from '../lib/pipeline-config';

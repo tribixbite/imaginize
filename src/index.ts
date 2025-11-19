@@ -78,6 +78,12 @@ export async function main(): Promise<void> {
       'Generate images with DALL-E and update Chapters.md (illustrate phase)'
     )
     .option('--pdf', 'Compile a graphic novel PDF after image generation')
+    .option('--cbz', 'Compile a CBZ comic book archive after image generation')
+    .option('--epub', 'Compile an EPUB eBook after image generation')
+    .option('--html', 'Generate an HTML gallery after image generation')
+    .option('--webp-album', 'Compile WebP album (smaller than PDF)')
+    .option('--webp-strip', 'Create single vertical strip WebP image')
+    .option('--all-formats', 'Generate all output formats (PDF, CBZ, EPUB, HTML, WebP)')
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
     .option(
@@ -947,6 +953,201 @@ export async function main(): Promise<void> {
                 '   Please ensure Python 3 and required packages (Pillow, reportlab, qrcode, openai) are installed.'
               )
             );
+          }
+          console.log('');
+        }
+      }
+
+      // Post-processing: CBZ Compilation
+      if (options.cbz || options.allFormats) {
+        spinner.start('Checking for images to compile into CBZ...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into a CBZ. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting CBZ compilation...`
+          );
+          console.log(chalk.cyan('\n📦 Compiling CBZ archive...\n'));
+
+          const cbzSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const cbzOutputPath = join(outputDir, '..', `${cbzSanitizedName}.cbz`);
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_cbz.py');
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${cbzOutputPath}"`,
+              `--title="${metadata.title || 'Illustrated Book'}"`,
+              `--author="${metadata.author || 'Unknown'}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ CBZ successfully generated at: ${cbzOutputPath}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ CBZ compilation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
+          }
+          console.log('');
+        }
+      }
+
+      // Post-processing: EPUB Compilation
+      if (options.epub || options.allFormats) {
+        spinner.start('Checking for images to compile into EPUB...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into an EPUB. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting EPUB compilation...`
+          );
+          console.log(chalk.cyan('\n📖 Compiling EPUB eBook...\n'));
+
+          const epubSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const epubOutputPath = join(outputDir, '..', `${epubSanitizedName}.epub`);
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_epub.py');
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${epubOutputPath}"`,
+              `--title="${metadata.title || 'Illustrated Book'}"`,
+              `--author="${metadata.author || 'Unknown'}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ EPUB successfully generated at: ${epubOutputPath}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ EPUB compilation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
+          }
+          console.log('');
+        }
+      }
+
+      // Post-processing: HTML Gallery
+      if (options.html || options.allFormats) {
+        spinner.start('Checking for images to compile into HTML gallery...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into HTML. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting HTML gallery generation...`
+          );
+          console.log(chalk.cyan('\n🌐 Generating HTML gallery...\n'));
+
+          const htmlSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const htmlOutputPath = join(outputDir, '..', `${htmlSanitizedName}.html`);
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_html.py');
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${htmlOutputPath}"`,
+              `--title="${metadata.title || 'Illustrated Book'}"`,
+              `--author="${metadata.author || 'Unknown'}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ HTML gallery successfully generated at: ${htmlOutputPath}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ HTML gallery generation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
+          }
+          console.log('');
+        }
+      }
+
+      // Post-processing: WebP Album
+      if (options.webpAlbum || options.allFormats) {
+        spinner.start('Checking for images to compile into WebP album...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into WebP album. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting WebP album compilation...`
+          );
+          console.log(chalk.cyan('\n🖼️ Compiling WebP album...\n'));
+
+          const webpSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const webpOutputDir = join(outputDir, '..', `${webpSanitizedName}_webp`);
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_webp_album.py');
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${webpOutputDir}"`,
+              `--title="${metadata.title || 'Illustrated Book'}"`,
+              `--author="${metadata.author || 'Unknown'}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ WebP album successfully generated at: ${webpOutputDir}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ WebP album compilation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
+          }
+          console.log('');
+        }
+      }
+
+      // Post-processing: WebP Strip
+      if (options.webpStrip || options.allFormats) {
+        spinner.start('Checking for images to compile into WebP strip...');
+        const filesInOutputDir = await readdir(outputDir).catch(() => []);
+        const imageFiles = filesInOutputDir.filter((f) => f.endsWith('.png'));
+
+        if (imageFiles.length === 0) {
+          spinner.warn('No images found to compile into WebP strip. Skipping.');
+        } else {
+          spinner.succeed(
+            `${imageFiles.length} images found. Starting WebP strip compilation...`
+          );
+          console.log(chalk.cyan('\n🎞️ Creating WebP strip...\n'));
+
+          const stripSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const stripOutputPath = join(outputDir, '..', `${stripSanitizedName}_strip.webp`);
+          const scriptPath = join(__dirname, '..', 'scripts', 'compile_webp_strip.py');
+
+          try {
+            const command = [
+              'python3',
+              `"${scriptPath}"`,
+              `"${outputDir}"`,
+              `"${stripOutputPath}"`,
+              `--title="${metadata.title || 'Illustrated Book'}"`,
+              `--author="${metadata.author || 'Unknown'}"`,
+            ].join(' ');
+
+            console.log(chalk.gray(`> ${command}\n`));
+            execSync(command, { stdio: 'inherit' });
+            console.log(chalk.green(`\n✅ WebP strip successfully generated at: ${stripOutputPath}`));
+          } catch (error: any) {
+            console.error(chalk.red('\n❌ WebP strip compilation failed.'));
+            console.error(chalk.yellow(`   ${error.message || error}`));
           }
           console.log('');
         }

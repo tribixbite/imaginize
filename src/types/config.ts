@@ -273,6 +273,12 @@ export interface CommandOptions {
   elements?: boolean;
   images?: boolean;
   pdf?: boolean;
+  cbz?: boolean;
+  epub?: boolean;
+  html?: boolean;
+  webpAlbum?: boolean;
+  webpStrip?: boolean;
+  allFormats?: boolean;
 
   // Filtering
   chapters?: string; // e.g., "1,2,5-10"

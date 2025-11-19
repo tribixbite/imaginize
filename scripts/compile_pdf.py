@@ -237,12 +237,12 @@ def parse_image_metadata(image_path, imaginize_dir, scene_descriptions=None):
 
     if scene_descriptions and (chapter, scene) in scene_descriptions:
         desc = scene_descriptions[(chapter, scene)]
-        # Clean up and truncate to 1-6 words
+        # Clean up and truncate to fit caption (~80 chars for better readability)
         desc = desc.replace('**', '').replace('ℹ️', '').replace('⏳', '').strip()
-        words = desc.split()[:6]
-        description = ' '.join(words)
-        if len(desc.split()) > 6:
-            description += '...'
+        # Take up to 80 characters, truncating at word boundary
+        if len(desc) > 80:
+            desc = desc[:80].rsplit(' ', 1)[0] + '...'
+        description = desc
     elif imaginize_dir:
         # Fallback: try to parse from log file
         log_file = Path(imaginize_dir).parent / f"{Path(imaginize_dir).stem.replace('imaginize_', '')}-full.log"
@@ -270,7 +270,7 @@ def collect_images(base_dir):
     Collect all PNG images from book directories.
 
     Returns:
-        List of image paths sorted by chapter and scene
+        List of image paths sorted by chapter and scene (numerically)
     """
     images = []
     base_path = Path(base_dir)
@@ -286,8 +286,17 @@ def collect_images(base_dir):
                 for img_file in img_dir.glob('*.png'):
                     images.append(str(img_file))
 
-    # Sort by filename (chapter_X_scene_Y.png)
-    images.sort()
+    # Sort numerically by chapter and scene (chapter_X_scene_Y.png)
+    def sort_key(path):
+        import re
+        filename = Path(path).stem
+        # Extract chapter and scene numbers
+        match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+        if match:
+            return (int(match.group(1)), int(match.group(2)))
+        return (999, 999)  # Put non-matching files at end
+
+    images.sort(key=sort_key)
     return images
 
 def create_pdf(images, output_path, title="Illustrated Book", author="Unknown", imaginize_dir=None):

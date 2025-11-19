@@ -75,17 +75,14 @@ def load_scene_descriptions(imaginize_dir):
     return descriptions
 
 def get_caption(img_path, descriptions):
-    """Get caption for image from descriptions."""
+    """Get full caption for image from descriptions."""
     filename = Path(img_path).stem
     match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
     if match:
         chapter, scene = match.group(1), match.group(2)
         if (chapter, scene) in descriptions:
-            desc = descriptions[(chapter, scene)]
-            words = desc.split()
-            skip_words = {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'and', 'or', 'is', 'are'}
-            key_words = [w for w in words if w.lower() not in skip_words][:5]
-            return ' '.join(key_words) if key_words else ''
+            # Return full description for metadata
+            return descriptions[(chapter, scene)]
         return f"Chapter {chapter}, Scene {scene}"
     return ""
 

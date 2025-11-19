@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compile images into a CBZ (Comic Book Zip) archive.
+Compile images into a CBZ (Comic Book Zip) archive with metadata pages.
 CBZ is a widely supported format for comic readers.
 """
 
@@ -9,11 +9,24 @@ import sys
 import json
 import zipfile
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import re
 
+def get_font(size, bold=False):
+    """Get a font, falling back to default if custom fonts unavailable."""
+    font_paths = [
+        "/system/fonts/Roboto-Bold.ttf" if bold else "/system/fonts/Roboto-Regular.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ]
+    for font_path in font_paths:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except:
+            continue
+    return ImageFont.load_default()
+
 def load_scene_descriptions(imaginize_dir):
-    """Load scene descriptions from Chapters.md file."""
+    """Load full scene descriptions from Chapters.md file."""
     descriptions = {}
     chapters_file = Path(imaginize_dir) / 'Chapters.md'
 
@@ -30,28 +43,40 @@ def load_scene_descriptions(imaginize_dir):
         while i < len(lines):
             line = lines[i].strip()
 
-            scene_match = re.match(r'^####\s+Scene\s+(\d+)', line)
-            if scene_match:
-                for j in range(i+1, min(i+20, len(lines))):
-                    if '**Visual Elements:**' in lines[j]:
-                        desc_line = lines[j].split('**Visual Elements:**', 1)[1].strip()
-                        full_desc = desc_line
-                        k = j + 1
-                        while k < len(lines) and lines[k].strip() and not lines[k].startswith('**'):
-                            full_desc += ' ' + lines[k].strip()
-                            k += 1
+            if '**Visual Elements:**' in line:
+                desc_line = line.split('**Visual Elements:**', 1)[1].strip()
+                full_desc = desc_line
+                k = i + 1
+                while k < len(lines) and lines[k].strip() and not lines[k].startswith('**'):
+                    full_desc += ' ' + lines[k].strip()
+                    k += 1
 
-                    if '**Generated Image:**' in lines[j] or 'View Image' in lines[j]:
-                        match = re.search(r'chapter_(\d+)_scene_(\d+)\.png', lines[j])
+                # Look for the image reference
+                for j in range(i, min(i+15, len(lines))):
+                    if 'chapter_' in lines[j] and '_scene_' in lines[j]:
+                        match = re.search(r'chapter_(\d+)_scene_(\d+)', lines[j])
                         if match:
-                            descriptions[(match.group(1), match.group(2))] = full_desc.strip() if 'full_desc' in dir() else ''
+                            descriptions[(match.group(1), match.group(2))] = full_desc.strip()
                         break
             i += 1
+
+        print(f"✅ Loaded {len(descriptions)} scene descriptions")
 
     except Exception as e:
         print(f"⚠️  Warning: Could not parse Chapters.md: {e}")
 
     return descriptions
+
+def get_caption(img_path, descriptions):
+    """Get full caption for image."""
+    filename = Path(img_path).stem
+    match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+    if match:
+        chapter, scene = match.group(1), match.group(2)
+        if (chapter, scene) in descriptions:
+            return descriptions[(chapter, scene)]
+        return f"Chapter {chapter}, Scene {scene}"
+    return Path(img_path).stem
 
 def collect_images(base_dir):
     """Collect all PNG images sorted by chapter and scene."""
@@ -77,6 +102,123 @@ def collect_images(base_dir):
     images.sort(key=sort_key)
     return images
 
+def create_page_image(width, height, bg_color='#1a1a1a'):
+    """Create a blank page image with dark background."""
+    return Image.new('RGB', (width, height), color=bg_color)
+
+def create_title_page(title, author, width=1024, height=1024):
+    """Create title/cover page."""
+    img = create_page_image(width, height)
+    draw = ImageDraw.Draw(img)
+
+    title_font = get_font(60, bold=True)
+    author_font = get_font(36)
+
+    # Title
+    draw.text((width//2, height//2 - 50), title, fill='#e0e0e0', font=title_font, anchor='mm')
+    # Author
+    draw.text((width//2, height//2 + 50), f"by {author}", fill='#888888', font=author_font, anchor='mm')
+
+    return img
+
+def create_metadata_page(title, author, num_images, width=1024, height=1024):
+    """Create metadata/credits page."""
+    img = create_page_image(width, height)
+    draw = ImageDraw.Draw(img)
+
+    title_font = get_font(36, bold=True)
+    text_font = get_font(24)
+    accent_font = get_font(48, bold=True)
+
+    y = 200
+    draw.text((width//2, y), "AI Illustrated by", fill='#e0e0e0', font=title_font, anchor='mm')
+    y += 80
+    draw.text((width//2, y), "imaginize", fill='#4a9eff', font=accent_font, anchor='mm')
+
+    y += 150
+    metadata = [
+        f"Title: {title}",
+        f"Author: {author}",
+        f"Images: {num_images}",
+        "",
+        "github.com/tribixbite/imaginize"
+    ]
+
+    for line in metadata:
+        draw.text((width//2, y), line, fill='#aaaaaa', font=text_font, anchor='mm')
+        y += 40
+
+    return img
+
+def create_toc_page(images, descriptions, width=1024, height=1024):
+    """Create table of contents page."""
+    img = create_page_image(width, height)
+    draw = ImageDraw.Draw(img)
+
+    title_font = get_font(36, bold=True)
+    item_font = get_font(16)
+
+    draw.text((width//2, 80), "Table of Contents", fill='#e0e0e0', font=title_font, anchor='mm')
+
+    y = 150
+    max_items = (height - 200) // 25
+
+    for i, img_path in enumerate(images[:max_items]):
+        filename = Path(img_path).stem
+        match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+        if match:
+            chapter, scene = match.group(1), match.group(2)
+            # Get short caption (first 40 chars)
+            caption = get_caption(img_path, descriptions)[:40]
+            if len(get_caption(img_path, descriptions)) > 40:
+                caption += "..."
+            text = f"{i+1}. Ch{chapter} Sc{scene}: {caption}"
+        else:
+            text = f"{i+1}. {filename}"
+
+        draw.text((50, y), text, fill='#aaaaaa', font=item_font, anchor='lm')
+        y += 25
+
+    if len(images) > max_items:
+        draw.text((50, y + 10), f"... and {len(images) - max_items} more", fill='#666666', font=item_font, anchor='lm')
+
+    return img
+
+def add_caption_overlay(img_path, caption, output_path):
+    """Add caption overlay to image and save as PNG."""
+    with Image.open(img_path) as img:
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+
+        # Caption background
+        caption_height = 80
+        draw.rectangle([0, height - caption_height, width, height], fill='#1a1a1aCC')
+
+        # Caption text (wrap if needed)
+        font = get_font(18, bold=True)
+        small_font = get_font(14)
+
+        # Split caption into title and description
+        if len(caption) > 60:
+            # Show chapter/scene on top, description below
+            match = re.search(r'chapter_(\d+)_scene_(\d+)', Path(img_path).stem)
+            if match:
+                title = f"Chapter {match.group(1)}, Scene {match.group(2)}"
+                desc = caption[:80] + "..." if len(caption) > 80 else caption
+            else:
+                title = caption[:40]
+                desc = caption[40:120] if len(caption) > 40 else ""
+
+            draw.text((width//2, height - caption_height + 25), title, fill='#e0e0e0', font=font, anchor='mm')
+            draw.text((width//2, height - caption_height + 55), desc, fill='#aaaaaa', font=small_font, anchor='mm')
+        else:
+            draw.text((width//2, height - caption_height//2), caption, fill='#e0e0e0', font=font, anchor='mm')
+
+        img.save(output_path, 'PNG')
+
 def create_comicinfo_xml(title, author, num_pages):
     """Create ComicInfo.xml for CBZ metadata."""
     return f'''<?xml version="1.0" encoding="utf-8"?>
@@ -91,41 +233,66 @@ def create_comicinfo_xml(title, author, num_pages):
 </ComicInfo>'''
 
 def create_cbz(images, output_path, title="Illustrated Book", author="Unknown", imaginize_dir=None):
-    """
-    Create CBZ archive from images.
+    """Create CBZ archive with metadata pages and captioned images."""
 
-    Args:
-        images: List of image paths
-        output_path: Output CBZ path
-        title: Book title
-        author: Author name
-        imaginize_dir: Path to imaginize directory
-    """
+    descriptions = load_scene_descriptions(imaginize_dir) if imaginize_dir else {}
+
     print(f"📦 Creating CBZ archive with {len(images)} images...")
 
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as cbz:
-        # Add ComicInfo.xml
-        comic_info = create_comicinfo_xml(title, author, len(images))
-        cbz.writestr('ComicInfo.xml', comic_info)
+    # Create temp directory for processed images
+    import tempfile
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        page_num = 0
 
-        # Add images with numbered filenames for proper ordering
+        # Create title page
+        title_img = create_title_page(title, author)
+        title_path = temp_path / f"{page_num:04d}_title.png"
+        title_img.save(title_path)
+        page_num += 1
+
+        # Create metadata page
+        meta_img = create_metadata_page(title, author, len(images))
+        meta_path = temp_path / f"{page_num:04d}_metadata.png"
+        meta_img.save(meta_path)
+        page_num += 1
+
+        # Create TOC page
+        toc_img = create_toc_page(images, descriptions)
+        toc_path = temp_path / f"{page_num:04d}_toc.png"
+        toc_img.save(toc_path)
+        page_num += 1
+
+        # Process images with captions
         for i, img_path in enumerate(images):
-            # Extract chapter/scene info for naming
             filename = Path(img_path).stem
             match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
             if match:
-                new_name = f"{i:04d}_ch{match.group(1)}_sc{match.group(2)}.png"
+                new_name = f"{page_num:04d}_ch{match.group(1)}_sc{match.group(2)}.png"
             else:
-                new_name = f"{i:04d}_{filename}.png"
+                new_name = f"{page_num:04d}_{filename}.png"
 
-            cbz.write(img_path, new_name)
+            caption = get_caption(img_path, descriptions)
+            out_path = temp_path / new_name
+            add_caption_overlay(img_path, caption, out_path)
+            page_num += 1
 
             if (i + 1) % 10 == 0:
-                print(f"   Added {i + 1}/{len(images)} images...")
+                print(f"   Processed {i + 1}/{len(images)} images...")
+
+        # Create CBZ
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as cbz:
+            # Add ComicInfo.xml
+            comic_info = create_comicinfo_xml(title, author, page_num)
+            cbz.writestr('ComicInfo.xml', comic_info)
+
+            # Add all pages
+            for png_file in sorted(temp_path.glob('*.png')):
+                cbz.write(png_file, png_file.name)
 
     size_mb = Path(output_path).stat().st_size / (1024 * 1024)
     print(f"\n✅ CBZ created: {output_path}")
-    print(f"   Total images: {len(images)}")
+    print(f"   Total pages: {page_num}")
     print(f"   File size: {size_mb:.1f} MB")
 
 if __name__ == "__main__":

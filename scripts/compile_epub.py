@@ -76,20 +76,31 @@ def load_scene_descriptions(imaginize_dir):
     return descriptions
 
 def get_caption(img_path, descriptions):
-    """Get caption for image from descriptions."""
+    """Get full caption for image from descriptions."""
     filename = Path(img_path).stem
     match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
     if match:
         chapter, scene = match.group(1), match.group(2)
         if (chapter, scene) in descriptions:
             desc = descriptions[(chapter, scene)]
-            # Extract 2-5 key words
-            words = desc.split()
-            skip_words = {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'and', 'or', 'is', 'are'}
-            key_words = [w for w in words if w.lower() not in skip_words][:5]
-            return ' '.join(key_words) if key_words else ''
+            # Return full description
+            return desc
         return f"Chapter {chapter}, Scene {scene}"
     return ""
+
+def get_short_caption(img_path, descriptions):
+    """Get short caption for TOC."""
+    filename = Path(img_path).stem
+    match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+    if match:
+        chapter, scene = match.group(1), match.group(2)
+        if (chapter, scene) in descriptions:
+            desc = descriptions[(chapter, scene)][:50]
+            if len(descriptions[(chapter, scene)]) > 50:
+                desc += "..."
+            return f"Ch{chapter} Sc{scene}: {desc}"
+        return f"Chapter {chapter}, Scene {scene}"
+    return Path(img_path).stem
 
 def create_epub(images, output_path, title="Illustrated Book", author="Unknown", imaginize_dir=None):
     """Create EPUB with fixed layout pages for each image."""
@@ -116,6 +127,65 @@ def create_epub(images, output_path, title="Illustrated Book", author="Unknown",
         manifest_items = []
         spine_items = []
 
+        # Create title page
+        title_xhtml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <title>{title}</title>
+  <style>
+    body {{ margin: 0; padding: 0; background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; }}
+    .title-page {{ text-align: center; color: #e0e0e0; font-family: sans-serif; }}
+    h1 {{ font-size: 48px; margin-bottom: 20px; }}
+    .author {{ font-size: 24px; color: #888888; }}
+  </style>
+</head>
+<body>
+  <div class="title-page">
+    <h1>{title}</h1>
+    <p class="author">by {author}</p>
+  </div>
+</body>
+</html>'''
+        epub.writestr('OEBPS/title.xhtml', title_xhtml)
+        manifest_items.append('    <item id="title" href="title.xhtml" media-type="application/xhtml+xml"/>')
+        spine_items.append('    <itemref idref="title"/>')
+
+        # Create metadata page
+        meta_xhtml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <title>About This Book</title>
+  <style>
+    body {{ margin: 0; padding: 40px; background: #1a1a1a; color: #e0e0e0; font-family: sans-serif; }}
+    .metadata {{ max-width: 600px; margin: 0 auto; }}
+    h1 {{ color: #4a9eff; font-size: 36px; text-align: center; }}
+    .info {{ margin: 30px 0; }}
+    .info p {{ margin: 10px 0; color: #aaaaaa; }}
+    .footer {{ text-align: center; margin-top: 50px; color: #666666; font-size: 14px; }}
+    .footer a {{ color: #4a9eff; text-decoration: none; }}
+  </style>
+</head>
+<body>
+  <div class="metadata">
+    <h1>AI Illustrated by imaginize</h1>
+    <div class="info">
+      <p><strong>Title:</strong> {title}</p>
+      <p><strong>Author:</strong> {author}</p>
+      <p><strong>Images:</strong> {len(images)}</p>
+      <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d')}</p>
+    </div>
+    <div class="footer">
+      <p>github.com/tribixbite/imaginize</p>
+    </div>
+  </div>
+</body>
+</html>'''
+        epub.writestr('OEBPS/metadata.xhtml', meta_xhtml)
+        manifest_items.append('    <item id="metadata" href="metadata.xhtml" media-type="application/xhtml+xml"/>')
+        spine_items.append('    <itemref idref="metadata"/>')
+
         # Add images and create XHTML pages
         for i, img_path in enumerate(images):
             img_name = f"image_{i:04d}.png"
@@ -129,25 +199,44 @@ def create_epub(images, output_path, title="Illustrated Book", author="Unknown",
             with Image.open(img_path) as img:
                 width, height = img.size
 
-            # Create XHTML page for image
+            # Create XHTML page for image with better caption handling
             caption = get_caption(img_path, descriptions)
+
+            # Extract chapter/scene for title
+            filename = Path(img_path).stem
+            match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+            if match:
+                page_title = f"Chapter {match.group(1)}, Scene {match.group(2)}"
+            else:
+                page_title = f"Page {i+1}"
+
+            # Truncate very long captions for display
+            display_caption = caption
+            if len(caption) > 150:
+                display_caption = caption[:147] + "..."
+
             xhtml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
-  <title>{caption or f"Page {i+1}"}</title>
+  <title>{page_title}</title>
   <meta name="viewport" content="width={width}, height={height}"/>
   <style>
     body {{ margin: 0; padding: 0; background: #1a1a1a; }}
     .page {{ width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-    img {{ max-width: 100%; max-height: 90%; object-fit: contain; }}
-    .caption {{ color: #e0e0e0; font-family: sans-serif; font-size: 14px; text-align: center; padding: 10px; }}
+    img {{ max-width: 100%; max-height: 85%; object-fit: contain; }}
+    .caption-box {{ background: #2a2a2a; padding: 15px 20px; margin: 10px; border-radius: 8px; max-width: 90%; }}
+    .caption-title {{ color: #4a9eff; font-family: sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px; text-align: center; }}
+    .caption-desc {{ color: #e0e0e0; font-family: sans-serif; font-size: 14px; text-align: center; line-height: 1.4; }}
   </style>
 </head>
 <body>
   <div class="page">
-    <img src="images/{img_name}" alt="{caption}"/>
-    <div class="caption">{caption}</div>
+    <img src="images/{img_name}" alt="{page_title}"/>
+    <div class="caption-box">
+      <div class="caption-title">{page_title}</div>
+      <div class="caption-desc">{display_caption}</div>
+    </div>
   </div>
 </body>
 </html>'''

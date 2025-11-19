@@ -75,17 +75,31 @@ def load_scene_descriptions(imaginize_dir):
     return descriptions
 
 def get_caption(img_path, descriptions):
-    """Get caption for image from descriptions."""
+    """Get full caption for image from descriptions."""
     filename = Path(img_path).stem
     match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
     if match:
         chapter, scene = match.group(1), match.group(2)
         if (chapter, scene) in descriptions:
             desc = descriptions[(chapter, scene)]
-            words = desc.split()
-            skip_words = {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'and', 'or', 'is', 'are'}
-            key_words = [w for w in words if w.lower() not in skip_words][:5]
-            return f"Ch {chapter}, Scene {scene}: {' '.join(key_words)}" if key_words else f"Chapter {chapter}, Scene {scene}"
+            # Return full description, truncated if too long for display
+            if len(desc) > 120:
+                desc = desc[:117] + "..."
+            return desc
+        return f"Chapter {chapter}, Scene {scene}"
+    return Path(img_path).stem
+
+def get_short_caption(img_path, descriptions):
+    """Get short caption for TOC display."""
+    filename = Path(img_path).stem
+    match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
+    if match:
+        chapter, scene = match.group(1), match.group(2)
+        if (chapter, scene) in descriptions:
+            desc = descriptions[(chapter, scene)][:50]
+            if len(descriptions[(chapter, scene)]) > 50:
+                desc += "..."
+            return f"Ch {chapter}, Sc {scene}: {desc}"
         return f"Chapter {chapter}, Scene {scene}"
     return Path(img_path).stem
 

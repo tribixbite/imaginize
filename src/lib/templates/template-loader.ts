@@ -225,20 +225,25 @@ EXTRACTION TARGETS:
 - Secondary characters (named, with dialogue/actions): 3-8 expected
 - Creature types (monsters, magical beings, animals): 5-15 expected
 - Key locations (cities, buildings, geographical features): 5-10 expected
-- Important items/objects (magical items, weapons, artifacts): 2-5 expected
+- Important items/objects (vehicles, weapons, artifacts): 5-10 expected
 
 REQUIREMENTS:
 1. Be comprehensive - extract ALL named entities that appear multiple times
 2. Include secondary characters if they have dialogue or significant actions
 3. List each distinct creature type (not individual creatures)
 4. Include all named locations, even if mentioned briefly
-5. Catalog magical/significant items separately from ordinary objects
+5. Catalog significant items/vehicles separately from ordinary objects
 
 For each element provide:
 1. Type: character/creature/place/item/object
 2. Name: The actual name from the text
 3. Quotes: 2-3 direct quotes describing this element (verbatim from text)
-4. Description: Consolidated 1-2 sentence summary
+4. Description: VISUAL description (2-3 sentences) including colors, shapes, materials, textures, and distinctive visual characteristics. This will be used for image generation, so physical appearance details are critical.
+
+VISUAL DESCRIPTION EXAMPLES:
+- Character: "Tall woman with silver-streaked black hair, wearing a dark blue coat with brass buttons. Her eyes are sharp gray and she carries a worn leather satchel."
+- Vehicle: "Black electric car with orange running lights across the front grille. Large sticky tires and a sleek, low-slung body shaped like a lozenge."
+- Place: "Gothic cathedral with flying buttresses and rose windows. Gargoyles perch at the corners and vines climb the weathered gray stone walls."
 
 Text excerpt:
 {{chapterContent}}
@@ -252,7 +257,7 @@ Return as JSON with an "elements" array.
       "quotes": [
         {"text": "direct quote describing them", "page": "estimated page"}
       ],
-      "description": "consolidated description"
+      "description": "VISUAL description with colors, shapes, materials, textures"
     }
   ]
 }`;

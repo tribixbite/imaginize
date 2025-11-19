@@ -67,14 +67,52 @@ def load_scene_descriptions(imaginize_dir):
 
     return descriptions
 
+def extract_smart_caption(desc):
+    """Extract a concise caption (5-8 words) focusing on subject and location."""
+    if not desc:
+        return ""
+
+    words = desc.split()
+    result = []
+
+    # Words to skip entirely
+    skip = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'has', 'have', 'had',
+            'and', 'or', 'but', 'with', 'by', 'for', 'to', 'from', 'of',
+            'tall', 'short', 'out', 'shape', 'dressed', 'appearing', 'blurred',
+            'contrasting', 'standing', 'sitting', 'looking', 'like'}
+
+    # Capture first sentence only (before first period)
+    first_sentence = []
+    for w in words:
+        first_sentence.append(w)
+        if w.endswith('.'):
+            break
+
+    # Build caption from key words, preserving proper nouns
+    for word in first_sentence:
+        clean = word.rstrip(',.;:')
+        if not clean:
+            continue
+
+        # Always keep capitalized words (proper nouns) and location prepositions
+        if clean[0].isupper() or clean.lower() in ['in', 'at', 'on', 'near', 'before']:
+            result.append(clean)
+        elif clean.lower() not in skip and len(clean) > 2:
+            result.append(clean)
+
+        if len(result) >= 7:
+            break
+
+    return ' '.join(result) if result else desc[:50]
+
 def get_caption(img_path, descriptions):
-    """Get full caption for image."""
+    """Get concise caption for image."""
     filename = Path(img_path).stem
     match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
     if match:
         chapter, scene = match.group(1), match.group(2)
         if (chapter, scene) in descriptions:
-            return descriptions[(chapter, scene)]
+            return extract_smart_caption(descriptions[(chapter, scene)])
         return f"Chapter {chapter}, Scene {scene}"
     return Path(img_path).stem
 

@@ -17,6 +17,7 @@ import {
   DEFAULT_EXTRACT_TEMPLATE,
   type TemplateVariables,
 } from '../templates/template-loader.js';
+import { extractElementsIterative } from '../ai-analyzer.js';
 
 export class ExtractPhase extends BasePhase {
   private elements: BookElement[] = [];
@@ -122,24 +123,58 @@ export class ExtractPhase extends BasePhase {
 
     await progressTracker.startElementExtraction();
 
-    const fullText = chapters
-      .map((c) => c.content)
-      .join('\n\n')
-      .substring(0, 50000);
-    const modelConfig = resolveModelConfig(config.model, config);
+    // Check if iterative extraction is enabled (default: true)
+    const useIterative = config.iterativeExtraction !== false;
 
     try {
-      this.elements = await this.executeWithRetry(
-        async () => await this.extractElements(fullText, modelConfig),
-        'extract story elements'
-      );
+      let tokensUsed = 0;
+
+      if (useIterative) {
+        // New iterative chapter-by-chapter extraction
+        await progressTracker.log(
+          '🔄 Using iterative extraction (chapter-by-chapter)',
+          'info'
+        );
+
+        this.elements = await this.executeWithRetry(
+          async () =>
+            await extractElementsIterative(chapters, config as any, openai, (current, total, title) => {
+              progressTracker.log(
+                `   ${current}/${total} - Extracting from ${title}...`,
+                'info'
+              );
+            }),
+          'extract story elements iteratively'
+        );
+
+        // Estimate tokens used (approximate: chapter count * avg tokens per chapter)
+        tokensUsed = chapters.length * 2000; // Conservative estimate
+      } else {
+        // Legacy full-text extraction (fallback)
+        await progressTracker.log(
+          '⚠️ Using legacy full-text extraction (may have limitations)',
+          'warning'
+        );
+
+        const fullText = chapters
+          .map((c) => c.content)
+          .join('\n\n')
+          .substring(0, config.maxExtractionChars || 50000);
+        const modelConfig = resolveModelConfig(config.model, config);
+
+        this.elements = await this.executeWithRetry(
+          async () => await this.extractElements(fullText, modelConfig),
+          'extract story elements'
+        );
+
+        tokensUsed = estimateTokens(fullText) + 2000;
+      }
 
       // Update state with elements
       for (const element of this.elements) {
         stateManager.updateElement(element.type, element.name, 'completed');
       }
 
-      const tokensUsed = estimateTokens(fullText) + 2000;
       stateManager.updateTokenStats(tokensUsed);
       await stateManager.save();
 

@@ -189,6 +189,315 @@ Return as JSON array:
 }
 
 /**
+ * Extract elements from a single chapter (iterative extraction)
+ *
+ * @param chapter - Chapter content to extract from
+ * @param config - Configuration
+ * @param openai - OpenAI client
+ * @returns Array of extracted elements
+ */
+export async function extractElementsFromChapter(
+  chapter: ChapterContent,
+  config: Required<IllustrateConfig>,
+  openai: OpenAI
+): Promise<BookElement[]> {
+  const prompt = `Analyze this chapter and extract all important story elements.
+
+Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}
+Page Range: ${chapter.pageRange}
+
+${chapter.content}
+
+Extract:
+- Characters: Name, physical description, distinctive features
+- Places: Name, visual description, atmosphere
+- Items: Name, appearance, significance
+
+For each element provide:
+1. Type (character/creature/place/item/object)
+2. Name
+3. 2-3 direct quotes with approximate page references
+4. VISUAL description (2-3 sentences) including colors, shapes, materials, textures, and distinctive visual characteristics
+
+VISUAL DESCRIPTION EXAMPLES:
+- Character: "Tall woman with silver-streaked black hair, wearing a dark blue coat with brass buttons. Her eyes are sharp gray and she carries a worn leather satchel."
+- Place: "Gothic cathedral with flying buttresses and rose windows. Gargoyles perch at the corners and vines climb the weathered gray stone walls."
+- Item: "Ornate silver compass with intricate engravings of constellations. The needle glows faintly blue in darkness."
+
+Return as JSON array:
+[
+  {
+    "type": "character",
+    "name": "Character Name",
+    "quotes": [
+      {"text": "direct quote describing them", "page": "${chapter.pageRange}"}
+    ],
+    "description": "VISUAL description with colors, shapes, materials, textures"
+  }
+]`;
+
+  try {
+    const modelName = typeof config.model === 'string' ? config.model : config.model.name;
+    const response = await openai.chat.completions.create({
+      model: modelName,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a literary analyst expert at identifying and cataloging story elements. Focus on visual descriptions. Return only valid JSON.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.5,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from AI');
+    }
+
+    const parsed = JSON.parse(content);
+    return Array.isArray(parsed) ? parsed : parsed.elements || [];
+  } catch (error) {
+    console.error(`Error extracting elements from chapter ${chapter.chapterNumber}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Merge new element into catalog with LLM-based entity resolution
+ *
+ * @param newElement - Newly extracted element
+ * @param catalog - Existing element catalog (Map for efficient lookups)
+ * @param config - Configuration
+ * @param openai - OpenAI client
+ */
+export async function mergeElementIntoCatalog(
+  newElement: BookElement,
+  catalog: Map<string, BookElement>,
+  config: Required<IllustrateConfig>,
+  openai: OpenAI
+): Promise<void> {
+  // Get existing elements of the same type
+  const existingElements = Array.from(catalog.values()).filter(
+    (e) => e.type === newElement.type
+  );
+
+  if (existingElements.length === 0) {
+    // First occurrence - add to catalog
+    catalog.set(newElement.name.toLowerCase(), newElement);
+    return;
+  }
+
+  // Skip entity resolution if disabled
+  if (config.smartElementMerging === false) {
+    // Simple case-insensitive match
+    const key = newElement.name.toLowerCase();
+    if (catalog.has(key)) {
+      const existing = catalog.get(key)!;
+      // Merge quotes
+      if (!existing.quotes) existing.quotes = [];
+      if (newElement.quotes) {
+        existing.quotes.push(...newElement.quotes);
+      }
+      // Enrich description
+      if (newElement.description && existing.description !== newElement.description) {
+        existing.description = `${existing.description} ${newElement.description}`;
+      }
+      catalog.set(key, existing);
+    } else {
+      catalog.set(key, newElement);
+    }
+    return;
+  }
+
+  // Use LLM to check for entity matches (handle aliases, variants)
+  const confidenceThreshold = config.entityMatchConfidence || 0.7;
+  const prompt = `Does the new element refer to an existing element?
+
+New Element:
+- Type: ${newElement.type}
+- Name: "${newElement.name}"
+- Description: "${newElement.description || 'N/A'}"
+
+Existing Elements:
+${existingElements.map((e, i) => `${i + 1}. "${e.name}" - ${e.description || 'N/A'}`).join('\n')}
+
+Question: Is the new element the same as any existing element (accounting for aliases, nicknames, titles, variants)?
+
+Examples of matches:
+- "Dr. Jekyll" matches "Henry Jekyll"
+- "The Dark Lord" matches "Voldemort"
+- "Jon Snow" matches "John Snow"
+
+Return JSON:
+{
+  "is_match": true/false,
+  "matched_index": <number 1-based or null>,
+  "confidence": <0-1>,
+  "reasoning": "brief explanation"
+}`;
+
+  try {
+    const modelName = typeof config.model === 'string' ? config.model : config.model.name;
+    const response = await openai.chat.completions.create({
+      model: modelName,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are an expert at entity resolution and matching. Be conservative with matches - only match if confident they refer to the same entity.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from AI');
+    }
+
+    const result = JSON.parse(content);
+
+    if (
+      result.is_match &&
+      result.confidence >= confidenceThreshold &&
+      result.matched_index !== null
+    ) {
+      // Merge with existing element
+      const existingElement = existingElements[result.matched_index - 1]; // Convert to 0-based
+      if (!existingElement) {
+        // Invalid index, add as new
+        catalog.set(newElement.name.toLowerCase(), newElement);
+        return;
+      }
+
+      const key = existingElement.name.toLowerCase();
+      const merged = catalog.get(key)!;
+
+      // Track alias
+      if (!('aliases' in merged)) {
+        (merged as any).aliases = [];
+      }
+      const aliases = (merged as any).aliases as string[];
+      if (!aliases.includes(newElement.name)) {
+        aliases.push(newElement.name);
+      }
+
+      // Enrich description (append new details)
+      if (newElement.description && merged.description !== newElement.description) {
+        merged.description = enrichDescription(merged.description || '', newElement.description);
+      }
+
+      // Accumulate quotes
+      if (!merged.quotes) merged.quotes = [];
+      if (newElement.quotes) {
+        merged.quotes.push(...newElement.quotes);
+      }
+
+      catalog.set(key, merged);
+    } else {
+      // New unique element
+      catalog.set(newElement.name.toLowerCase(), newElement);
+    }
+  } catch (error) {
+    console.error('Error in entity resolution, using simple matching:', error);
+    // Fallback to simple matching
+    const key = newElement.name.toLowerCase();
+    if (catalog.has(key)) {
+      const existing = catalog.get(key)!;
+      if (!existing.quotes) existing.quotes = [];
+      if (newElement.quotes) {
+        existing.quotes.push(...newElement.quotes);
+      }
+      if (newElement.description && existing.description !== newElement.description) {
+        existing.description = `${existing.description} ${newElement.description}`;
+      }
+      catalog.set(key, existing);
+    } else {
+      catalog.set(key, newElement);
+    }
+  }
+}
+
+/**
+ * Enrich existing description with new details
+ * Avoids redundancy while preserving unique information
+ */
+function enrichDescription(existing: string, additional: string): string {
+  if (!additional || additional === existing) return existing;
+
+  // Check if additional info is already in existing
+  const existingLower = existing.toLowerCase();
+  const additionalLower = additional.toLowerCase();
+
+  if (existingLower.includes(additionalLower)) {
+    return existing; // Already contains this info
+  }
+
+  // Merge: existing + new details
+  return `${existing}. Additional details: ${additional}`;
+}
+
+/**
+ * Extract and enrich story elements chapter-by-chapter (iterative extraction)
+ *
+ * Benefits:
+ * - Dramatically reduced token costs (process in chunks)
+ * - No context window limitations
+ * - Progressive description enrichment
+ * - More accurate element catalog
+ *
+ * @param chapters - All chapters to extract from
+ * @param config - Configuration
+ * @param openai - OpenAI client
+ * @returns Complete element catalog
+ */
+export async function extractElementsIterative(
+  chapters: ChapterContent[],
+  config: Required<IllustrateConfig>,
+  openai: OpenAI,
+  onProgress?: (current: number, total: number, chapterTitle: string) => void
+): Promise<BookElement[]> {
+  const elementCatalog: Map<string, BookElement> = new Map();
+
+  console.log(`\n📊 Iterative element extraction: ${chapters.length} chapters\n`);
+
+  for (let i = 0; i < chapters.length; i++) {
+    const chapter = chapters[i];
+    const chapterLabel = `Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`;
+
+    if (onProgress) {
+      onProgress(i + 1, chapters.length, chapter.chapterTitle);
+    }
+
+    console.log(`   ${i + 1}/${chapters.length} - Extracting from ${chapterLabel}...`);
+
+    // Extract elements from this chapter
+    const chapterElements = await extractElementsFromChapter(chapter, config, openai);
+
+    console.log(`      Found ${chapterElements.length} elements`);
+
+    // Normalize and merge with catalog
+    for (const newElement of chapterElements) {
+      await mergeElementIntoCatalog(newElement, elementCatalog, config, openai);
+    }
+
+    console.log(`      Catalog now has ${elementCatalog.size} unique elements\n`);
+  }
+
+  const finalElements = Array.from(elementCatalog.values());
+  console.log(
+    `✅ Extraction complete: ${finalElements.length} unique elements identified\n`
+  );
+
+  return finalElements;
+}
+
+/**
  * Generate an image for a given concept or element
  * Note: Expects imageOpenai client configured with image-capable model
  */

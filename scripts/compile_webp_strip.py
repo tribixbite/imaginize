@@ -56,17 +56,19 @@ def load_scene_descriptions(imaginize_dir):
 
             if '**Visual Elements:**' in line:
                 desc_line = line.split('**Visual Elements:**', 1)[1].strip()
-                current_desc = desc_line
+                full_desc = desc_line
                 k = i + 1
                 while k < len(lines) and lines[k].strip() and not lines[k].startswith('**'):
-                    current_desc += ' ' + lines[k].strip()
+                    full_desc += ' ' + lines[k].strip()
                     k += 1
 
-            if '**Generated Image:**' in line or 'View Image' in line:
-                match = re.search(r'chapter_(\d+)_scene_(\d+)\.png', line)
-                if match and current_desc:
-                    descriptions[(match.group(1), match.group(2))] = current_desc.strip()
-                current_desc = ''
+                # Look for the FIRST image reference only
+                for j in range(i, min(i+15, len(lines))):
+                    if 'chapter_' in lines[j] and '_scene_' in lines[j]:
+                        match = re.search(r'chapter_(\d+)_scene_(\d+)', lines[j])
+                        if match:
+                            descriptions[(match.group(1), match.group(2))] = full_desc.strip()
+                        break
             i += 1
 
     except Exception as e:

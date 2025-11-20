@@ -39,6 +39,7 @@ Comprehensive architecture and feature documentation for the imaginize project.
 - [Error Recovery](./error-recovery.md) - Resume from failures, stuck chapter timeout
 - [Parallel Processing](./parallel-processing.md) - Batch processing and concurrency control
 - [Provider Detection](./provider-detection.md) - Auto-configuration for OpenAI/OpenRouter
+- [Extraction Enhancements](./extraction-enhancements.md) - Metrics, caching, and confidence threshold tuning ✅
 
 ### Deployment
 - [npm Publishing](./npm-publishing.md) - Release process and automation

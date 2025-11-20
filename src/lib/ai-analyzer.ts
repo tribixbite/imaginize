@@ -10,6 +10,11 @@ import type {
   BookElement,
   ChapterContent,
 } from '../types/config.js';
+import { ExtractionMetricsCollector } from './extraction-metrics.js';
+import { EntityResolutionCache } from './entity-resolution-cache.js';
+
+// Export metrics and cache for external use
+export { ExtractionMetricsCollector, EntityResolutionCache };
 
 /**
  * Element context for scene analysis

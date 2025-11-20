@@ -269,8 +269,8 @@ describe('state-manager', () => {
     });
   });
 
-  describe('updateElement', () => {
-    it('should add new element', () => {
+  describe('updateElement (deprecated)', () => {
+    it('should add new element with minimal data', () => {
       manager.updateElement('character', 'Aria', 'completed');
 
       const state = manager.getState();
@@ -278,17 +278,16 @@ describe('state-manager', () => {
       expect(state.elements![0]).toMatchObject({
         type: 'character',
         name: 'Aria',
-        status: 'completed',
+        quotes: [],
       });
     });
 
-    it('should update existing element (case-insensitive)', () => {
+    it('should update existing element with imageUrl (case-insensitive)', () => {
       manager.updateElement('character', 'Aria', 'in_progress');
       manager.updateElement('character', 'ARIA', 'completed', 'http://image.url');
 
       const state = manager.getState();
       expect(state.elements).toHaveLength(1);
-      expect(state.elements![0].status).toBe('completed');
       expect(state.elements![0].imageUrl).toBe('http://image.url');
     });
 
@@ -307,6 +306,68 @@ describe('state-manager', () => {
 
       const state = manager.getState();
       expect(state.elements![0].imageUrl).toBe('http://old.url');
+    });
+  });
+
+  describe('setElements (Phase 3+)', () => {
+    it('should store complete BookElement array', () => {
+      const elements: any[] = [
+        {
+          type: 'character',
+          name: 'John Snow',
+          description: 'Dark hair, gray eyes',
+          quotes: [
+            { text: 'John at the wall', page: '1' },
+            { text: 'Snow drew his sword', page: '5' },
+          ],
+          aliases: ['Jon Snow', 'The Bastard'],
+        },
+        {
+          type: 'place',
+          name: 'Winterfell',
+          description: 'Ancient castle',
+          quotes: [{ text: 'Winterfell loomed', page: '2' }],
+        },
+      ];
+
+      manager.setElements(elements);
+      const state = manager.getState();
+
+      expect(state.elements).toHaveLength(2);
+      expect(state.elements![0]).toMatchObject({
+        type: 'character',
+        name: 'John Snow',
+        description: 'Dark hair, gray eyes',
+      });
+      expect(state.elements![0].quotes).toHaveLength(2);
+      expect(state.elements![0].aliases).toEqual(['Jon Snow', 'The Bastard']);
+      expect(state.elements![1].type).toBe('place');
+    });
+
+    it('should replace existing elements', () => {
+      manager.updateElement('character', 'Old', 'completed');
+
+      const newElements: any[] = [
+        {
+          type: 'character',
+          name: 'New',
+          description: 'New character',
+          quotes: [],
+        },
+      ];
+
+      manager.setElements(newElements);
+      const state = manager.getState();
+
+      expect(state.elements).toHaveLength(1);
+      expect(state.elements![0].name).toBe('New');
+    });
+
+    it('should handle empty array', () => {
+      manager.setElements([]);
+      const state = manager.getState();
+
+      expect(state.elements).toHaveLength(0);
     });
   });
 

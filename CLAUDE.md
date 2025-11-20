@@ -58,3 +58,19 @@ Completed comprehensive improvements to referential context system based on expe
 - Better alias detection and normalization
 - Progressive description enrichment
 - Proper state persistence for regeneration
+
+**Quality Enhancements (Commit 1f00d85):**
+- ✅ ExtractionMetricsCollector - Real-time quality analytics
+  - Track extraction, resolution, enrichment stats
+  - Calculate quality scores (coverage, consistency, enrichment)
+  - Generate reports with automatic recommendations
+  - Performance metrics (time, tokens, API calls)
+- ✅ EntityResolutionCache - API call reduction (~43%)
+  - LRU cache with TTL expiration
+  - JSON export/import for persistence
+  - Cache statistics and hit rate tracking
+- ✅ Confidence threshold tuning guide
+  - Genre-specific recommendations
+  - Tuning process with examples
+  - Default/Conservative/Aggressive presets
+- ✅ extraction-enhancements.md (650 lines documentation)

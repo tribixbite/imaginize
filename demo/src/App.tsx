@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react';
 import { FileUpload } from './components/FileUpload';
 import { APIKeyInput } from './components/APIKeyInput';
 import { ProcessingProgress } from './components/ProcessingProgress';
+import { ProcessingSettings } from './components/ProcessingSettings';
 import { ResultsView } from './components/ResultsView';
 import { useProcessing } from './hooks/useProcessing';
-import type { BookFile } from './types';
+import type { BookFile, ProcessingOptions } from './types';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -25,6 +26,7 @@ function App() {
 
   const [selectedFile, setSelectedFile] = useState<BookFile | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [processingOptions, setProcessingOptions] = useState<Partial<ProcessingOptions>>({});
 
   // Processing state
   const { state, result, activityLogs, error, startProcessing, cancelProcessing, reset, isProcessing } = useProcessing();
@@ -76,10 +78,11 @@ function App() {
       file: selectedFile.name,
       type: selectedFile.type,
       hasApiKey: !!apiKey,
+      options: processingOptions,
     });
 
-    // Start processing
-    await startProcessing(selectedFile, apiKey);
+    // Start processing with options
+    await startProcessing(selectedFile, apiKey, processingOptions);
   };
 
   const handleReset = () => {
@@ -87,7 +90,17 @@ function App() {
     setSelectedFile(null);
   };
 
-  const canStartProcessing = selectedFile !== null && apiKey !== null && apiKey.trim().startsWith('sk-') && !isProcessing;
+  // API key validation depends on selected provider
+  const isValidApiKey = (key: string | null, provider: string): boolean => {
+    if (!key || !key.trim()) return false;
+    // OpenAI keys start with sk-
+    if (provider === 'openai') return key.trim().startsWith('sk-');
+    // OpenRouter and custom endpoints accept any non-empty key
+    return true;
+  };
+
+  const currentProvider = processingOptions.provider || 'openai';
+  const canStartProcessing = selectedFile !== null && isValidApiKey(apiKey, currentProvider) && !isProcessing;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -194,6 +207,15 @@ function App() {
             <APIKeyInput onKeyChange={handleAPIKeyChange} />
           </section>
 
+          {/* Processing Settings Section */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">3. Configure Settings</h3>
+            <ProcessingSettings
+              options={processingOptions}
+              onChange={setProcessingOptions}
+            />
+          </section>
+
           {/* Start Button */}
           <section className="flex justify-center pt-4">
             <button
@@ -258,7 +280,7 @@ function App() {
             >
               imaginize
             </a>
-            . Powered by OpenAI.
+            . Supports OpenAI, OpenRouter, and custom endpoints.
           </p>
         </div>
       </footer>

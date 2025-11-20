@@ -5,7 +5,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { createOpenAIClient } from '../lib/api-client';
 import { BookProcessor } from '../lib/processor';
-import type { BookFile, ProcessingState, ProcessingResult, ActivityLog } from '../types';
+import type { BookFile, ProcessingState, ProcessingResult, ActivityLog, ProcessingOptions } from '../types';
 
 export function useProcessing() {
   const [state, setState] = useState<ProcessingState>({
@@ -23,7 +23,11 @@ export function useProcessing() {
   /**
    * Start processing a book
    */
-  const startProcessing = useCallback(async (bookFile: BookFile, apiKey: string) => {
+  const startProcessing = useCallback(async (
+    bookFile: BookFile,
+    apiKey: string,
+    options?: Partial<ProcessingOptions>
+  ) => {
     // Reset state
     setState({ phase: 'idle', progress: 0, currentStep: '' });
     setResult(null);
@@ -31,10 +35,13 @@ export function useProcessing() {
     setError(null);
 
     try {
-      // Create OpenAI client
-      const openai = createOpenAIClient(apiKey);
+      // Merge options with API key
+      const processingOptions = { ...options, apiKey };
 
-      // Create processor
+      // Create OpenAI client with options
+      const openai = createOpenAIClient(apiKey, processingOptions);
+
+      // Create processor with options
       const processor = new BookProcessor(bookFile, openai, {
         onStateChange: (newState) => {
           setState(newState);
@@ -55,7 +62,7 @@ export function useProcessing() {
         onError: (err) => {
           setError(err);
         },
-      });
+      }, processingOptions);
 
       processorRef.current = processor;
 

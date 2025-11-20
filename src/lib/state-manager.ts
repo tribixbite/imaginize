@@ -11,6 +11,7 @@ import type {
   PhaseStatus,
   PhaseState,
   ChapterState,
+  BookElement,
 } from '../types/config.js';
 import { atomicWriteJSON } from './concurrent/atomic-write.js';
 
@@ -157,6 +158,18 @@ export class StateManager {
   /**
    * Add or update element state
    */
+  /**
+   * Replace the entire element catalog in the state (Phase 3+ improvement)
+   * Stores full BookElement objects for proper file regeneration
+   */
+  setElements(elements: BookElement[]): void {
+    this.state.elements = elements;
+  }
+
+  /**
+   * @deprecated Use setElements() instead. This method only stores summary data.
+   * Update single element (legacy method for backward compatibility)
+   */
   updateElement(
     type: string,
     name: string,
@@ -172,10 +185,15 @@ export class StateManager {
     );
 
     if (existing) {
-      existing.status = status;
       if (imageUrl) existing.imageUrl = imageUrl;
     } else {
-      this.state.elements.push({ type, name, status, imageUrl });
+      // Create minimal element for legacy support
+      this.state.elements.push({
+        type: type as any,
+        name,
+        quotes: [],
+        imageUrl,
+      });
     }
   }
 

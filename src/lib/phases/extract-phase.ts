@@ -170,11 +170,8 @@ export class ExtractPhase extends BasePhase {
         tokensUsed = estimateTokens(fullText) + 2000;
       }
 
-      // Update state with elements
-      for (const element of this.elements) {
-        stateManager.updateElement(element.type, element.name, 'completed');
-      }
-
+      // Store full element catalog in state (Phase 3+ improvement)
+      stateManager.setElements(this.elements);
       stateManager.updateTokenStats(tokensUsed);
       await stateManager.save();
 
@@ -192,28 +189,24 @@ export class ExtractPhase extends BasePhase {
    */
   protected async save(): Promise<SubPhaseResult> {
     const { outputDir, stateManager, progressTracker } = this.context;
+    const state = stateManager.getState();
 
-    if (this.elements.length === 0) {
-      // Try to load from state if we didn't extract this time
-      const state = stateManager.getState();
-      if (state.elements && state.elements.length > 0) {
-        // Elements already exist in state, just regenerate the file
-        // This would need actual element data, not just metadata
-        // For now, skip if we don't have the full data
-        return { success: true };
-      }
+    // Load elements from memory if just extracted, or from state if regenerating
+    const elementsToSave = this.elements.length > 0 ? this.elements : state.elements || [];
+
+    if (elementsToSave.length === 0) {
+      await progressTracker.log('No elements found to save.', 'info');
       return { success: true };
     }
 
     await progressTracker.log('Generating Elements.md...', 'info');
 
-    const state = stateManager.getState();
     const metadata = {
       title: state.bookTitle,
       totalPages: state.totalPages,
     };
 
-    await generateElementsFile(outputDir, metadata, this.elements);
+    await generateElementsFile(outputDir, metadata, elementsToSave);
 
     await progressTracker.log('Elements.md generated', 'success');
 
@@ -287,7 +280,7 @@ export class ExtractPhase extends BasePhase {
       genre: (config as any).genre,
 
       // Chapter data (full text in this case)
-      chapterContent: fullText,
+      fullText: fullText, // Fixed: was chapterContent, now matches template placeholder
       wordCount: fullText.split(/\s+/).length,
       tokenCount: estimateTokens(fullText),
 

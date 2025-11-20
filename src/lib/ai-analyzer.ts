@@ -378,18 +378,30 @@ Return JSON:
       const key = existingElement.name.toLowerCase();
       const merged = catalog.get(key)!;
 
-      // Track alias
-      if (!('aliases' in merged)) {
-        (merged as any).aliases = [];
+      // Track alias (now properly typed in BookElement)
+      if (!merged.aliases) {
+        merged.aliases = [];
       }
-      const aliases = (merged as any).aliases as string[];
-      if (!aliases.includes(newElement.name)) {
-        aliases.push(newElement.name);
+      if (!merged.aliases.includes(newElement.name)) {
+        merged.aliases.push(newElement.name);
       }
 
-      // Enrich description (append new details)
+      // Enrich description (use AI if enabled, otherwise simple concatenation)
       if (newElement.description && merged.description !== newElement.description) {
-        merged.description = enrichDescription(merged.description || '', newElement.description);
+        const useAIEnrichment = config.aiDescriptionEnrichment === true;
+        if (useAIEnrichment) {
+          const modelName = typeof config.model === 'string' ? config.model : config.model.name;
+          merged.description = await enrichDescriptionWithAI(
+            merged.description || '',
+            newElement.description,
+            merged.name,
+            openai,
+            modelName,
+            true
+          );
+        } else {
+          merged.description = enrichDescription(merged.description || '', newElement.description);
+        }
       }
 
       // Accumulate quotes
@@ -424,7 +436,59 @@ Return JSON:
 }
 
 /**
- * Enrich existing description with new details
+ * Enrich existing description with new details using AI consolidation
+ * Produces coherent, readable descriptions without redundancy
+ *
+ * @param existing - Current description
+ * @param additional - New details to merge
+ * @param elementName - Name of element for context
+ * @param openai - OpenAI client
+ * @param model - Model to use for consolidation
+ * @param useAI - Whether to use AI enrichment (default: true)
+ */
+async function enrichDescriptionWithAI(
+  existing: string,
+  additional: string,
+  elementName: string,
+  openai: OpenAI,
+  model: string,
+  useAI: boolean = true
+): Promise<string> {
+  if (!additional || existing.toLowerCase().includes(additional.toLowerCase())) {
+    return existing;
+  }
+
+  // If AI enrichment disabled, use simple concatenation
+  if (!useAI) {
+    return `${existing}. Additional details: ${additional}`;
+  }
+
+  try {
+    const prompt = `Consolidate and refine the description for the story element "${elementName}".
+Combine the existing description with the new details into a single, coherent paragraph.
+Eliminate redundancy but preserve all unique visual information.
+
+Existing Description: "${existing}"
+New Details: "${additional}"
+
+Return only the new, consolidated description as a single string.`;
+
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+    });
+
+    return response.choices[0]?.message?.content || `${existing}. ${additional}`;
+  } catch (error) {
+    // Fallback to simple concatenation on error
+    console.error('Error in AI description enrichment:', error);
+    return `${existing}. Additional details: ${additional}`;
+  }
+}
+
+/**
+ * Enrich existing description with new details (simple version)
  * Avoids redundancy while preserving unique information
  */
 function enrichDescription(existing: string, additional: string): string {

@@ -192,6 +192,14 @@ export interface IllustrateConfig {
    * @since v2.8.0
    */
   entityMatchConfidence?: number;
+
+  /**
+   * Enable AI-powered description enrichment
+   * Uses LLM to consolidate descriptions for better readability
+   * @default false (uses simple concatenation)
+   * @since v2.8.0
+   */
+  aiDescriptionEnrichment?: boolean;
 }
 
 export interface BookMetadata {
@@ -224,6 +232,7 @@ export interface BookElement {
   }>;
   description?: string;
   imageUrl?: string;
+  aliases?: string[]; // Tracked by entity resolution system
 }
 
 export interface ChapterContent {
@@ -289,12 +298,7 @@ export interface IllustrateState {
     totalUsed: number;
     estimatedRemaining?: number;
   };
-  elements?: Array<{
-    type: string;
-    name: string;
-    status: PhaseStatus;
-    imageUrl?: string;
-  }>;
+  elements?: BookElement[]; // Full element data for regeneration
   lastUpdated: string;
 }
 

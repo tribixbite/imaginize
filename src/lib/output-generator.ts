@@ -139,6 +139,11 @@ export async function generateElementsFile(
     typeElements.forEach((element) => {
       content += `#### ${element.name}\n\n`;
 
+      // Render aliases if detected by entity resolution
+      if (element.aliases && element.aliases.length > 0) {
+        content += `**Aliases:** ${element.aliases.join(', ')}\n\n`;
+      }
+
       if (element.description) {
         content += `**Description:** ${element.description}\n\n`;
       }

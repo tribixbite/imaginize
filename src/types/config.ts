@@ -2,7 +2,7 @@
  * Configuration types for illustrate
  */
 
-export type AIProvider = 'openai' | 'openrouter' | 'custom';
+export type AIProvider = 'openai' | 'openrouter' | 'gemini' | 'custom';
 
 export interface ModelConfig {
   /** Model name (supports OpenRouter syntax: provider/model) */
@@ -42,6 +42,9 @@ export interface IllustrateConfig {
 
   /** Model configuration for text analysis */
   model?: string | ModelConfig;
+
+  /** AI provider selection (auto-detected from baseUrl if not specified) */
+  provider?: AIProvider;
 
   /** Separate image generation configuration */
   imageEndpoint?: {
@@ -200,6 +203,23 @@ export interface IllustrateConfig {
    * @since v2.8.0
    */
   aiDescriptionEnrichment?: boolean;
+
+  /**
+   * Nano Banana (Gemini 2.5 Flash Image) specific configuration
+   * @since v2.9.0
+   */
+  nanoBanana?: {
+    /** Use markdown lists for requirements (recommended) */
+    useMarkdownLists?: boolean;
+    /** Add professional photography buzzwords */
+    usePhotographyBuzzwords?: boolean;
+    /** Enforce physical realism constraints */
+    enforcePhysicality?: boolean;
+    /** Use JSON-structured prompts (experimental) */
+    useJsonPrompts?: boolean;
+    /** Specify exact hex colors */
+    useHexColors?: boolean;
+  };
 }
 
 export interface BookMetadata {
@@ -336,6 +356,7 @@ export interface CommandOptions {
   model?: string;
   apiKey?: string;
   imageKey?: string;
+  provider?: string; // 'openai', 'openrouter', 'gemini', 'custom'
 
   // Output
   outputDir?: string;

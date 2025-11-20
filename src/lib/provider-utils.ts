@@ -19,6 +19,10 @@ export function detectProvider(baseUrl: string): AIProvider {
     return 'openai';
   }
 
+  if (url.includes('generativelanguage.googleapis.com') || url.includes('gemini')) {
+    return 'gemini';
+  }
+
   return 'custom';
 }
 
@@ -57,6 +61,23 @@ export function getRecommendedFreeImageModel(): ModelConfig {
     maxTokens: 8_000,
     inputCostPer1M: 0.0,
     outputCostPer1M: 0.0,
+    supportsImages: true,
+  };
+}
+
+/**
+ * Get Nano Banana PRO (Gemini 3 Pro Image) configuration
+ * Studio-quality image generation with Gemini 3 Pro
+ * Released: November 20, 2025
+ * @see docs/NANO-BANANA-PRO-GUIDE.md
+ */
+export function getNanoBananaProModel(): ModelConfig {
+  return {
+    name: 'gemini-3-pro-image-preview', // Model ID for API calls
+    contextLength: 1_000_000, // Gemini 3 Pro context window
+    maxTokens: 8_192,
+    inputCostPer1M: 0.0, // Pricing is per-image, not per-token
+    outputCostPer1M: 139.0, // $0.139 per 1080p/2K image (expressed as cost per 1M output tokens)
     supportsImages: true,
   };
 }

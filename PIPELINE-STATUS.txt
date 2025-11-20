@@ -4,7 +4,7 @@ IMAGINIZE PIPELINE STATUS - 2025-11-20
 BOOK: ImpossibleCreatures.epub (83 chapters, 297 pages)
 
 PROGRESS:
-🔄 Text Analysis: 46/83 chapters (55%) - IN PROGRESS ✨ HALFWAY!
+⚠️  Text Analysis: 35/83 chapters (42%) - PAUSED (rate limit exceeded)
 ⏳ Element Extraction: PENDING
 ⏳ Image Generation: PENDING
 ⚠️  Graphic Novel Compilation: NOT IMPLEMENTED
@@ -45,6 +45,12 @@ DOCUMENTATION:
 📄 SESSION-2025-11-20.md - Full session record
 📄 PIPELINE-STATUS.txt - This file
 
-STATUS: Processing resumed - text analysis active
-LAST UPDATED: 2025-11-20 (Session continued)
-NEXT: Wait for text analysis to complete, then run element extraction
+STATUS: Rate limit exceeded - waiting for cooldown
+LAST UPDATED: 2025-11-20 18:01 UTC
+ISSUE: Chapter 39 failed after 11 retry attempts (429 error)
+NEXT: Wait 10-15 minutes, then resume with --continue flag
+
+RECOVERY:
+# Wait for rate limit window to reset (10-15 minutes)
+# Then resume processing:
+echo "y" | node bin/imaginize.js --continue --text --file ImpossibleCreatures.epub

@@ -7,6 +7,7 @@ Comprehensive architecture and feature documentation for the imaginize project.
 ### Core Architecture
 - [System Architecture](./architecture.md) - Overall system design, components, and data flow
 - [Pipeline Architecture](./pipeline-architecture.md) - Phase-based processing pipeline (Analyze, Extract, Illustrate)
+- [Context Management System](./context-management-system.md) - Element extraction, normalization, and scene cross-referencing 🔄
 - [Concurrent Processing](./concurrent-processing.md) - Two-pass analysis and manifest coordination
 - [State Management](./state-management.md) - `.imaginize.state.json` and resume functionality
 

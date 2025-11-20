@@ -246,7 +246,7 @@ VISUAL DESCRIPTION EXAMPLES:
 - Place: "Gothic cathedral with flying buttresses and rose windows. Gargoyles perch at the corners and vines climb the weathered gray stone walls."
 
 Text excerpt:
-{{chapterContent}}
+{{fullText}}
 
 Return as JSON with an "elements" array.
 {

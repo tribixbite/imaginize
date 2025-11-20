@@ -12,22 +12,55 @@ import type {
 } from '../types/config.js';
 
 /**
+ * Element context for scene analysis
+ * Contains formatted descriptions of known story elements
+ */
+export interface ElementContext {
+  characters?: string;
+  places?: string;
+  items?: string;
+}
+
+/**
  * Analyze chapter content and identify key visual concepts
+ *
+ * @param chapter - Chapter content to analyze
+ * @param config - Configuration
+ * @param openai - OpenAI client
+ * @param elementContext - Previously extracted elements for context injection (optional)
  */
 export async function analyzeChapter(
   chapter: ChapterContent,
   config: Required<IllustrateConfig>,
-  openai: OpenAI
+  openai: OpenAI,
+  elementContext?: ElementContext
 ): Promise<ImageConcept[]> {
-  const numImages = Math.ceil(
-    chapter.content.split(/\s+/).length / (config.pagesPerImage * 300)
-  );
+  // Calculate images based on actual page range (more accurate than word count)
+  const [startPage, endPage] = chapter.pageRange.split('-').map(Number);
+  const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
+  const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
+
+  // Build element context section if available
+  let elementContextSection = '';
+  if (elementContext && (elementContext.characters || elementContext.places || elementContext.items)) {
+    elementContextSection = '\n\nKNOWN STORY ELEMENTS (maintain visual consistency):\n';
+    if (elementContext.characters) {
+      elementContextSection += `\nCHARACTERS:\n${elementContext.characters}\n`;
+    }
+    if (elementContext.places) {
+      elementContextSection += `\nPLACES:\n${elementContext.places}\n`;
+    }
+    if (elementContext.items) {
+      elementContextSection += `\nITEMS:\n${elementContext.items}\n`;
+    }
+    elementContextSection += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
+  }
 
   const prompt = `You are analyzing a book chapter to identify the most visually interesting and important concepts for illustration.
 
 Chapter: ${chapter.chapterTitle}
 Page Range: ${chapter.pageRange}
-
+${elementContextSection}
 Content:
 ${chapter.content}
 
@@ -35,6 +68,7 @@ Please identify ${numImages} key visual concepts from this chapter that would ma
 1. Choose a significant quote (20-50 words) that captures the visual moment
 2. Provide a brief description of what should be illustrated
 3. Explain why this moment is important or visually interesting
+4. If known story elements appear in this scene, reference their established descriptions for consistency
 
 Return your response as a JSON array with this structure:
 [
@@ -99,6 +133,9 @@ export async function extractElements(
   config: Required<IllustrateConfig>,
   openai: OpenAI
 ): Promise<BookElement[]> {
+  // Use configurable max extraction chars (defaults to 50000)
+  const maxChars = config.maxExtractionChars || 50000;
+
   const prompt = `Analyze this book text and extract key elements (characters, creatures, places, items, objects).
 
 For each element:
@@ -108,7 +145,7 @@ For each element:
 4. Provide a brief consolidated description
 
 Text (truncated if necessary):
-${fullText.substring(0, 50000)}
+${fullText.substring(0, maxChars)}
 
 Return as JSON array:
 [

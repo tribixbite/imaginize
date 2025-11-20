@@ -160,6 +160,38 @@ export interface IllustrateConfig {
     /** Clear error status for all chapters before processing (default: false) */
     clearErrors?: boolean;
   };
+
+  /**
+   * Maximum characters for element extraction per chunk
+   * Prevents context window overflows when processing large books
+   * @default 50000
+   * @since v2.8.0
+   */
+  maxExtractionChars?: number;
+
+  /**
+   * Enable iterative element extraction (chapter-by-chapter)
+   * Recommended for better token efficiency and element enrichment
+   * @default true
+   * @since v2.8.0
+   */
+  iterativeExtraction?: boolean;
+
+  /**
+   * Enable LLM-based element normalization
+   * Uses AI to merge duplicate elements and handle aliases
+   * @default true
+   * @since v2.8.0
+   */
+  smartElementMerging?: boolean;
+
+  /**
+   * Confidence threshold for entity matching (0-1)
+   * Lower values merge more aggressively, higher values are more conservative
+   * @default 0.7
+   * @since v2.8.0
+   */
+  entityMatchConfidence?: number;
 }
 
 export interface BookMetadata {

@@ -183,27 +183,38 @@ Shot with a Canon EOS 90D DSLR camera for professional production quality.
 - Used single dedicated background process (PID: 2130)
 - Implemented proper monitoring without process multiplication
 
-## Current Status
+## Current Status (Updated: 22:21 EST)
+
+**EXTRACTION NOW RUNNING! ✅**
 
 **Active Process:**
 ```
-PID: 2130
+PID: 11841
 Command: node bin/imaginize.js --continue --elements --file ImpossibleCreatures.epub
-CPU: 5.1%
-Memory: ~30MB
-Status: Initializing extraction phase
-Log: extraction-clean.log
+Status: Extracting elements chapter-by-chapter (4/83 chapters)
+Log: extraction-success.log
 ```
 
 **Monitor Command:**
 ```bash
-tail -f extraction-clean.log
+tail -f extraction-success.log
 ```
 
+**Critical Fix Applied:**
+- **Root Cause:** Lock file `imaginize_ImpossibleCreatures/progress.md.lock` was created as a **DIRECTORY** instead of a file
+- **Solution:** Removed lock directory with `rm -rf imaginize_ImpossibleCreatures/progress.md.lock`
+- **Result:** Extraction now proceeding normally
+
+**Rate Limit Encountered:**
+- Google Gemini free tier hit rate limit on chapter 5
+- Extraction continues with retries and backoff
+- Expected completion: ~35 minutes (with rate limit delays)
+
 **Next Steps:**
-1. Wait for extraction phase to complete (~35 min)
-2. Review `Elements.md` output
-3. Proceed to image generation with chosen provider:
+1. Monitor extraction progress: `tail -f extraction-success.log`
+2. Wait for completion (~35 min, possibly longer due to rate limits)
+3. Review `Elements.md` output
+4. Proceed to image generation with chosen provider:
    - OpenAI DALL-E 3 (current default)
    - Replicate (various models)
    - Nano Banana PRO (new option, premium quality)

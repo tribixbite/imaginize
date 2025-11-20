@@ -8,7 +8,7 @@ import os
 import sys
 import json
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import re
 
 def collect_images(base_dir):
@@ -125,18 +125,38 @@ def get_caption(img_path, descriptions):
         return f"Chapter {chapter}, Scene {scene}"
     return ""
 
-def create_webp_album(images, output_path, title="Illustrated Book", author="Unknown", imaginize_dir=None, quality=85):
+def get_font(size, bold=False):
+    """Get a font, falling back to default if custom fonts unavailable."""
+    font_paths = [
+        "/system/fonts/Roboto-Bold.ttf" if bold else "/system/fonts/Roboto-Regular.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ]
+    for font_path in font_paths:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except:
+            continue
+    return ImageFont.load_default()
+
+def create_page_image(width=1024, height=1024):
+    """Create a dark background image for front matter pages."""
+    return Image.new('RGB', (width, height), color='#1a1a1a')
+
+def create_webp_album(images, output_path, title="Illustrated Book", author="Unknown", imaginize_dir=None, quality=95):
     """
-    Convert images to WebP format and create album.
+    Convert images to WebP format with caption overlays and front matter pages.
 
     Args:
         images: List of image paths
-        output_path: Output directory or zip path
+        output_path: Output directory
         title: Book title
         author: Author name
         imaginize_dir: Path to imaginize directory
-        quality: WebP quality (0-100)
+        quality: WebP quality (0-100), default 95
     """
+    from datetime import datetime
+    from PIL import ImageDraw
+
     descriptions = load_scene_descriptions(imaginize_dir) if imaginize_dir else {}
 
     # Create output directory
@@ -156,29 +176,81 @@ def create_webp_album(images, output_path, title="Illustrated Book", author="Unk
     total_original = 0
     total_webp = 0
 
+    # Create cover page
+    cover = create_page_image()
+    draw = ImageDraw.Draw(cover)
+    title_font = get_font(60, bold=True)
+    author_font = get_font(30)
+    draw.text((512, 400), title, fill='#e0e0e0', font=title_font, anchor='mm')
+    draw.text((512, 500), f"by {author}", fill='#888888', font=author_font, anchor='mm')
+    draw.text((512, 600), f"{len(images)} illustrations", fill='#4a9eff', font=get_font(24), anchor='mm')
+    cover_path = output_dir / '0000_cover.webp'
+    cover.save(cover_path, 'WEBP', quality=quality, method=6)
+
+    # Create metadata page
+    meta = create_page_image()
+    draw = ImageDraw.Draw(meta)
+    draw.text((512, 300), "AI Illustrated by imaginize", fill='#4a9eff', font=get_font(36, bold=True), anchor='mm')
+    draw.text((512, 400), f"Title: {title}", fill='#aaaaaa', font=get_font(20), anchor='mm')
+    draw.text((512, 450), f"Author: {author}", fill='#aaaaaa', font=get_font(20), anchor='mm')
+    draw.text((512, 500), f"Images: {len(images)}", fill='#aaaaaa', font=get_font(20), anchor='mm')
+    draw.text((512, 550), f"Generated: {datetime.now().strftime('%Y-%m-%d')}", fill='#aaaaaa', font=get_font(20), anchor='mm')
+    draw.text((512, 700), "github.com/tribixbite/imaginize", fill='#4a9eff', font=get_font(16), anchor='mm')
+    meta_path = output_dir / '0001_metadata.webp'
+    meta.save(meta_path, 'WEBP', quality=quality, method=6)
+
+    # Create TOC page(s)
+    toc_font = get_font(14)
+    items_per_page = 25
+    for page_num in range((len(images) + items_per_page - 1) // items_per_page):
+        toc = create_page_image()
+        draw = ImageDraw.Draw(toc)
+        draw.text((512, 50), f"Table of Contents{' (cont.)' if page_num > 0 else ''}", fill='#e0e0e0', font=get_font(24, bold=True), anchor='mm')
+
+        start_idx = page_num * items_per_page
+        end_idx = min(start_idx + items_per_page, len(images))
+        y = 120
+        for i in range(start_idx, end_idx):
+            caption = get_caption(images[i], descriptions)
+            draw.text((50, y), f"{i+1}. {caption}", fill='#aaaaaa', font=toc_font, anchor='lm')
+            y += 35
+
+        toc_path = output_dir / f'000{2 + page_num}_toc.webp'
+        toc.save(toc_path, 'WEBP', quality=quality, method=6)
+
+    # Convert images with caption overlays
     for i, img_path in enumerate(images):
         filename = Path(img_path).stem
         match = re.search(r'chapter_(\d+)_scene_(\d+)', filename)
         if match:
-            webp_name = f"{i:04d}_ch{match.group(1)}_sc{match.group(2)}.webp"
+            webp_name = f"{i+10:04d}_ch{match.group(1)}_sc{match.group(2)}.webp"
         else:
-            webp_name = f"{i:04d}_{filename}.webp"
+            webp_name = f"{i+10:04d}_{filename}.webp"
 
         webp_path = output_dir / webp_name
 
-        # Convert to WebP
+        # Open and add caption overlay
         with Image.open(img_path) as img:
-            # Convert to RGB if necessary (WebP doesn't support all modes)
             if img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
+
+            width, height = img.size
+            draw = ImageDraw.Draw(img)
+
+            # Add caption overlay at bottom
+            caption = get_caption(img_path, descriptions)
+            caption_height = 60
+            draw.rectangle([0, height - caption_height, width, height], fill='#1a1a1aCC')
+            caption_font = get_font(16, bold=True)
+            draw.text((width // 2, height - caption_height // 2), caption,
+                     fill='#e0e0e0', font=caption_font, anchor='mm')
+
             img.save(webp_path, 'WEBP', quality=quality, method=6)
 
         original_size = Path(img_path).stat().st_size
         webp_size = webp_path.stat().st_size
         total_original += original_size
         total_webp += webp_size
-
-        caption = get_caption(img_path, descriptions)
 
         metadata['images'].append({
             'filename': webp_name,

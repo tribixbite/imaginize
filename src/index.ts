@@ -872,15 +872,11 @@ export async function main(): Promise<void> {
 
       if (needsText) {
         console.log(chalk.cyan('📝 Phase: Analyze (--text)\n'));
-        console.log(chalk.gray('Setting phase to analyze...'));
         progressTracker.setPhase('analyze');
-        console.log(chalk.gray('Creating analyze phase instance...'));
         const analyzePhase = useConcurrent
           ? new AnalyzePhaseV2(context)
           : new AnalyzePhase(context);
-        console.log(chalk.gray('Calling analyzePhase.execute()...'));
         await analyzePhase.execute();
-        console.log(chalk.gray('Analyze phase completed'));
         console.log('');
       }
 

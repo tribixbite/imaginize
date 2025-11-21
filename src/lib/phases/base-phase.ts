@@ -51,10 +51,15 @@ export abstract class BasePhase {
   async execute(): Promise<void> {
     const { stateManager, progressTracker } = this.context;
 
+    console.log(`[DEBUG] BasePhase.execute() starting for ${this.phaseName}`);
     try {
       // Mark phase as in progress
+      console.log(`[DEBUG] Updating phase status to in_progress...`);
       stateManager.updatePhase(this.phaseName, 'in_progress');
+      console.log(`[DEBUG] Saving state...`);
       await stateManager.save();
+      console.log(`[DEBUG] State saved`);
+
 
       await progressTracker.log(`Starting phase: ${this.phaseName}`, 'info');
 

@@ -4,9 +4,9 @@
 
 **Status:** ✅ **ALL CLAUDE.MD CHECKLIST ITEMS COMPLETE (11/11 - 100%)**
 
-**Latest Commit:** `6033630` - fix: resolve extraction lock file issue (2025-11-20 22:21 EST)
+**Latest Commit:** `209c44a` - docs: document incomplete extraction due to rate limiting (2025-11-20 22:26 EST)
 
-**Latest Update (2025-11-20 Evening):** Critical lock file issue resolved. Extraction was failing because `progress.md.lock` was created as a directory instead of a file. Removed lock directory and extraction is now running successfully (4/83 chapters processed). Nano Banana PRO (Gemini 3 Pro Image) integration complete from earlier session.
+**Latest Update (2025-11-20 Evening):** Lock file issue resolved ✅, but extraction severely degraded by rate limiting ⚠️. Only 7/83 chapters (8.4%) successful - 164 rate limit errors on OpenRouter free tier. Found 7 elements vs expected 80-150. Need to add personal API key or switch provider for complete extraction. Nano Banana PRO integration complete from earlier session.
 
 **Previous Update (2025-11-20 Morning):** Phase 3 Context Management improvements fully implemented based on Gemini 2.5 Pro code review. Complete referential context system with element consistency, alias detection, quality metrics, and performance optimization. All 100 Phase 3 tests passing.
 

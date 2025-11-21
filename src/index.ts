@@ -1206,6 +1206,3 @@ export async function main(): Promise<void> {
     process.exit(1);
   }
 }
-
-// Execute main function
-main();

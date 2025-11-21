@@ -51,8 +51,8 @@ Successfully generated all 6 compilation formats for the illustrated book.
 **Result:** System is working as designed; no fix needed
 **Cleanup:** Removed all debug logging from production code (commit pending)
 
-### Neuromancer - 🚀 IN PROGRESS
-**Status:** Analysis phase running successfully (rate-limited by Gemini API)
+### Neuromancer - ⚠️ PAUSED (Rate Limit Exceeded)
+**Status:** Processing failed after 19/33 chapters due to Gemini API rate limits
 
 **Progress:**
 1. ✅ File located and copied
@@ -61,17 +61,33 @@ Successfully generated all 6 compilation formats for the illustrated book.
 4. ✅ Book parses successfully (33 chapters, 301 pages)
 5. ✅ StateManager working correctly
 6. ✅ ProgressTracker confirmed working
-7. 🚀 Analysis phase: **16/33 chapters complete (48%)**
-8. 🚀 **20 visual concepts found** so far
+7. ⚠️ Analysis phase: **19/33 chapters analyzed (57%)** before rate limit failure
+8. ⚠️ **23 visual concepts identified** (data not saved - V2 mode limitation)
 
-**Monitoring:**
-Run `./monitor-neuromancer.sh` to check progress in real-time
+**Issue:**
+- Gemini free tier (`gemini-2.0-flash-exp:free`) hit aggressive rate limits
+- Failed on Chapter 21 after 11 retry attempts (HTTP 429)
+- V2 concurrent mode didn't save incremental progress
+- **All analysis progress lost** - must restart from beginning
+
+**Solutions:**
+See `NEUROMANCER-ISSUE.md` for detailed analysis and options:
+1. **Wait 2-3 hours** for Gemini rate limits to reset, then retry
+2. **Switch to paid API** (OpenAI GPT-3.5/4, Claude) - RECOMMENDED
+3. **Use non-concurrent mode** for incremental saves (slower but safer)
+
+**Cost Estimates (Paid API):**
+- GPT-3.5-turbo: ~$0.10 total
+- GPT-4-turbo: ~$1.50 total
+- Claude Sonnet: ~$1.20 total
 
 **Next Steps:**
-1. 🚀 Complete Neuromancer analysis phase (17 chapters remaining)
-2. ⏳ Run extraction phase
-3. ⏳ Generate illustrations
-4. ⏳ Compile all 6 formats
+1. ⏳ Decide on API strategy (wait vs paid)
+2. ⏳ Resume Neuromancer processing with chosen approach
+3. ⏳ Complete analysis phase (33 chapters)
+4. ⏳ Run extraction phase
+5. ⏳ Generate illustrations
+6. ⏳ Compile all 6 formats
 
 ## Technical Debt
 
@@ -84,7 +100,8 @@ Run `./monitor-neuromancer.sh` to check progress in real-time
 - aa28550 - docs: update WORKING.md with progress
 - aa6c172 - debug: add logging to isolate hang issue
 - af8fa8d - debug: remove debug logging after confirming system working correctly
-- (pending) - feat: add Neuromancer monitoring script and progress update
+- c61a446 - feat: add Neuromancer monitoring and progress updates
+- (pending) - docs: document Gemini rate limit issue and solutions
 
 ## Storage Breakdown
 
@@ -98,5 +115,5 @@ Run `./monitor-neuromancer.sh` to check progress in real-time
 | WebP Album | 10.4MB | 90.5% savings | Web galleries |
 
 ---
-*Last Updated: 2025-11-21 02:50 EST*
-*Session Complete: All bugs fixed, Neuromancer processing successfully @ 48% (16/33 chapters)*
+*Last Updated: 2025-11-21 03:10 EST*
+*Status: Debugging complete, Neuromancer hit rate limits (19/33 analyzed, awaiting paid API or rate limit reset)*

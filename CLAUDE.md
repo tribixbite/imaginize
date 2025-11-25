@@ -74,3 +74,21 @@ Completed comprehensive improvements to referential context system based on expe
   - Tuning process with examples
   - Default/Conservative/Aggressive presets
 - ✅ extraction-enhancements.md (650 lines documentation)
+
+**Unified Analysis - Double Processing Fix (Commit bbed152 - 2025-11-25):**
+- ✅ Created `analyzeChapterUnified()` function
+  - Extracts BOTH visual scenes AND story elements in single API call
+  - Eliminates duplicate processing of same chapter text
+  - Reduces API calls by ~50% (was 2 calls per chapter, now 1)
+- ✅ Added `UnifiedAnalysisResult` interface
+  - Contains scenes: ImageConcept[]
+  - Contains elements: BookElement[]
+- ⏳ PENDING: Wire unified function to analyze phase
+- ⏳ PENDING: Update ChapterState to store full concept data (not just count)
+- ⏳ PENDING: Update extract phase to reuse analyze data
+
+**Impact:**
+- 50% reduction in API calls during combined analyze+extract workflow
+- Improved consistency between scene descriptions and element extractions
+- Better rate limit handling for free API tiers
+- Fixes TODO in illustrate-phase.ts about storing full concept data

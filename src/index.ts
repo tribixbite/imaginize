@@ -860,16 +860,9 @@ export async function main(): Promise<void> {
         console.log(chalk.yellow('⚡ Concurrent processing enabled (experimental)\n'));
       }
 
-      // CRITICAL: Extract phase must execute BEFORE analyze phase
-      // This ensures element context is available for scene analysis
-      if (needsElements) {
-        console.log(chalk.cyan('🔍 Phase: Extract (--elements)\n'));
-        progressTracker.setPhase('extract');
-        const extractPhase = new ExtractPhase(context);
-        await extractPhase.execute();
-        console.log('');
-      }
-
+      // CRITICAL: Analyze phase must execute BEFORE extract phase
+      // This ensures unified analysis extracts both scenes AND elements
+      // Extract phase can then reuse elements from analyze phase
       if (needsText) {
         console.log(chalk.cyan('📝 Phase: Analyze (--text)\n'));
         progressTracker.setPhase('analyze');
@@ -877,6 +870,14 @@ export async function main(): Promise<void> {
           ? new AnalyzePhaseV2(context)
           : new AnalyzePhase(context);
         await analyzePhase.execute();
+        console.log('');
+      }
+
+      if (needsElements) {
+        console.log(chalk.cyan('🔍 Phase: Extract (--elements)\n'));
+        progressTracker.setPhase('extract');
+        const extractPhase = new ExtractPhase(context);
+        await extractPhase.execute();
         console.log('');
       }
 

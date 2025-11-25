@@ -1,0 +1,9 @@
+{
+  "models": {
+    "text": "google/gemini-2.0-flash-exp:free"
+  },
+  "smartElementMerging": false,
+  "aiDescriptionEnrichment": false,
+  "maxRetries": 10,
+  "retryTimeout": 10000
+}

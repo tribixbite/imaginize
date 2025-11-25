@@ -27,6 +27,15 @@ export interface ElementContext {
 }
 
 /**
+ * Combined result from unified analysis
+ * Contains both visual scenes and extracted elements from a single API call
+ */
+export interface UnifiedAnalysisResult {
+  scenes: ImageConcept[];
+  elements: BookElement[];
+}
+
+/**
  * Analyze chapter content and identify key visual concepts
  *
  * @param chapter - Chapter content to analyze
@@ -127,6 +136,142 @@ Return your response as a JSON array with this structure:
   } catch (error) {
     console.error(`Error analyzing chapter ${chapter.chapterTitle}:`, error);
     return [];
+  }
+}
+
+/**
+ * UNIFIED ANALYSIS: Extract both visual scenes AND story elements in a single API call
+ * This eliminates duplicate processing of the same chapter text
+ *
+ * @param chapter - Chapter content to analyze
+ * @param config - Configuration
+ * @param openai - OpenAI client
+ * @param elementContext - Previously extracted elements for context injection (optional)
+ * @returns Combined scenes and elements from single API call
+ */
+export async function analyzeChapterUnified(
+  chapter: ChapterContent,
+  config: Required<IllustrateConfig>,
+  openai: OpenAI,
+  elementContext?: ElementContext
+): Promise<UnifiedAnalysisResult> {
+  // Calculate images based on actual page range
+  const [startPage, endPage] = chapter.pageRange.split('-').map(Number);
+  const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
+  const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
+
+  // Build element context section if available
+  let elementContextSection = '';
+  if (elementContext && (elementContext.characters || elementContext.places || elementContext.items)) {
+    elementContextSection = '\n\nKNOWN STORY ELEMENTS (maintain visual consistency):\n';
+    if (elementContext.characters) {
+      elementContextSection += `\nCHARACTERS:\n${elementContext.characters}\n`;
+    }
+    if (elementContext.places) {
+      elementContextSection += `\nPLACES:\n${elementContext.places}\n`;
+    }
+    if (elementContext.items) {
+      elementContextSection += `\nITEMS:\n${elementContext.items}\n`;
+    }
+    elementContextSection += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
+  }
+
+  const prompt = `You are analyzing a book chapter to accomplish TWO tasks in a single pass:
+
+TASK 1: Identify ${numImages} key visual scenes for illustration
+TASK 2: Extract ALL story elements (characters, places, items)
+
+Chapter: ${chapter.chapterTitle}
+Page Range: ${chapter.pageRange}
+${elementContextSection}
+Content:
+${chapter.content}
+
+TASK 1 - VISUAL SCENES:
+Identify ${numImages} visually interesting moments for illustration. For each:
+1. Choose a significant quote (20-50 words) capturing the visual moment
+2. Describe what should be illustrated
+3. Explain why it's visually significant
+4. If known elements appear, reference their established descriptions
+
+TASK 2 - STORY ELEMENTS:
+Extract ALL important story elements. For each:
+1. Type (character/creature/place/item/object)
+2. Name
+3. 2-3 direct quotes with page references
+4. VISUAL description (2-3 sentences): colors, shapes, materials, textures, distinctive features
+
+VISUAL DESCRIPTION EXAMPLES:
+- Character: "Tall woman with silver-streaked black hair, wearing a dark blue coat with brass buttons. Her eyes are sharp gray and she carries a worn leather satchel."
+- Place: "Gothic cathedral with flying buttresses and rose windows. Gargoyles perch at the corners and vines climb the weathered gray stone walls."
+- Item: "Ornate silver compass with intricate engravings of constellations. The needle glows faintly blue in darkness."
+
+Return as JSON:
+{
+  "scenes": [
+    {
+      "quote": "exact quote from text",
+      "description": "what to illustrate",
+      "reasoning": "why significant"
+    }
+  ],
+  "elements": [
+    {
+      "type": "character",
+      "name": "Name",
+      "quotes": [{"text": "direct quote", "page": "${chapter.pageRange}"}],
+      "description": "VISUAL description with colors, shapes, materials, textures"
+    }
+  ]
+}`;
+
+  try {
+    const modelName = typeof config.model === 'string' ? config.model : config.model.name;
+    const response = await openai.chat.completions.create({
+      model: modelName,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a literary analyst specializing in visual storytelling and element extraction. Analyze the chapter once and provide both visual scenes and story elements. Return only valid JSON.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.6,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from AI');
+    }
+
+    const parsed = JSON.parse(content);
+
+    // Parse scenes
+    const rawScenes = Array.isArray(parsed.scenes) ? parsed.scenes : [];
+    const scenes: ImageConcept[] = rawScenes.map((s: any) => ({
+      chapter: chapter.chapterTitle,
+      pageRange: chapter.pageRange,
+      quote: s.quote || '',
+      description: s.description || '',
+      reasoning: s.reasoning || '',
+    }));
+
+    // Parse elements
+    const rawElements = Array.isArray(parsed.elements) ? parsed.elements : [];
+    const elements: BookElement[] = rawElements.map((e: any) => ({
+      type: e.type || 'object',
+      name: e.name || 'Unknown',
+      quotes: Array.isArray(e.quotes) ? e.quotes : [],
+      description: e.description || '',
+      aliases: e.aliases || [],
+    }));
+
+    return { scenes, elements };
+  } catch (error) {
+    console.error(`Error in unified analysis for chapter ${chapter.chapterTitle}:`, error);
+    return { scenes: [], elements: [] };
   }
 }
 

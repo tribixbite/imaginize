@@ -4,7 +4,7 @@
  */
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
-import type { ImageConcept, ChapterContent } from '../../types/config.js';
+import type { ImageConcept, ChapterContent, BookElement } from '../../types/config.js';
 import {
   estimateTokens,
   createTokenEstimate,
@@ -13,6 +13,7 @@ import {
 } from '../token-counter.js';
 import { generateChaptersFile } from '../output-generator.js';
 import { isStoryContent } from '../provider-utils.js';
+import { analyzeChapterUnified, type UnifiedAnalysisResult } from '../ai-analyzer.js';
 
 interface AnalyzePlanData {
   chaptersToProcess: number[];
@@ -24,6 +25,7 @@ interface AnalyzePlanData {
 export class AnalyzePhase extends BasePhase {
   private planData?: AnalyzePlanData;
   private conceptsByChapter: Map<string, ImageConcept[]> = new Map();
+  private elementsByChapter: Map<number, BookElement[]> = new Map();
 
   constructor(context: PhaseContext) {
     super(context, 'analyze');
@@ -185,21 +187,31 @@ export class AnalyzePhase extends BasePhase {
       await stateManager.save();
 
       try {
-        // Analyze chapter with retry
-        const concepts = await this.executeWithRetry(
+        // Analyze chapter with unified function (extracts scenes AND elements)
+        const result = await this.executeWithRetry(
           async () => await this.analyzeChapter(chapter, modelConfig),
           `analyze chapter ${chapterNum}`
         );
 
-        this.conceptsByChapter.set(chapter.chapterTitle, concepts);
+        // Store scenes for Chapters.md generation
+        this.conceptsByChapter.set(chapter.chapterTitle, result.scenes);
+
+        // Store elements for later use by extract phase
+        if (result.elements && result.elements.length > 0) {
+          this.elementsByChapter.set(chapterNum, result.elements);
+        }
 
         // Estimate tokens used (rough approximation)
-        const tokensUsed = estimateTokens(chapter.content) + concepts.length * 200;
+        const tokensUsed = estimateTokens(chapter.content) +
+                          result.scenes.length * 200 +
+                          result.elements.length * 150;
         totalTokensUsed += tokensUsed;
 
-        // Update state
+        // Update state with BOTH scenes and elements
         stateManager.updateChapter('analyze', chapterNum, 'completed', {
-          concepts: concepts.length,
+          concepts: result.scenes.length, // DEPRECATED: For backward compatibility
+          sceneConcepts: result.scenes,   // NEW: Full scene data
+          elements: result.elements,      // NEW: Full element data
           tokensUsed,
         });
         stateManager.updateTokenStats(tokensUsed);
@@ -208,7 +220,7 @@ export class AnalyzePhase extends BasePhase {
         await progressTracker.completeChapter(
           chapter.chapterNumber,
           chapter.chapterTitle,
-          concepts.length
+          result.scenes.length
         );
       } catch (error: any) {
         stateManager.updateChapter('analyze', chapterNum, 'failed', {
@@ -275,12 +287,12 @@ export class AnalyzePhase extends BasePhase {
   }
 
   /**
-   * Analyze a single chapter to extract visual concepts
+   * Analyze a single chapter using unified function (extracts scenes AND elements)
    */
   private async analyzeChapter(
     chapter: ChapterContent,
     modelConfig: any
-  ): Promise<ImageConcept[]> {
+  ): Promise<UnifiedAnalysisResult> {
     const { config, openai, progressTracker } = this.context;
 
     // Filter non-story content
@@ -289,93 +301,28 @@ export class AnalyzePhase extends BasePhase {
         `Skipping non-story chapter: ${chapter.chapterTitle}`,
         'info'
       );
-      return []; // Return empty concepts for non-story chapters
+      return { scenes: [], elements: [] }; // Return empty result for non-story chapters
     }
 
-    // Calculate number of images based on actual page count
-    // Parse page range (e.g., "8-8" or "9-11")
-    const pageRange = chapter.pageRange.split('-').map((p) => parseInt(p.trim()));
-    const pageCount = pageRange.length === 2 ? pageRange[1] - pageRange[0] + 1 : 1;
+    // Use unified analysis function to extract BOTH scenes and elements in one API call
+    // This reduces API calls by 50% compared to separate analyze + extract phases
+    const result = await analyzeChapterUnified(chapter, config, openai);
 
-    // Generate 1 image per pagesPerImage (default: 10)
-    const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
-
-    const prompt = `You are analyzing a book chapter to identify visually rich scenes for illustration.
-
-Chapter: ${chapter.chapterTitle}
-Page Range: ${chapter.pageRange}
-
-Content:
-${chapter.content}
-
-Identify ${numImages} visually compelling scenes from this chapter. For each scene:
-1. Extract a COMPLETE passage of 3-8 consecutive sentences that contains rich visual description
-2. The quote MUST be verbatim from the source text - copy it exactly as written
-3. For the description field, extract ONLY the visual details from those sentences (what can be drawn)
-
-CRITICAL REQUIREMENTS:
-- Quote length: MINIMUM 3 sentences, MAXIMUM 8 sentences - select the full passage that describes the scene
-- EXACT quotes: Copy the text word-for-word, preserving all punctuation and capitalization
-- Multi-sentence context: Include surrounding sentences that add visual detail to the scene
-- Description: List only physical visual elements (characters, creatures, settings, objects, actions, lighting, weather)
-- NO single-sentence quotes - always include contextual sentences before/after
-- Focus on narrative scenes with action, not glossary/appendix entries
-
-GOOD EXAMPLE:
-{
-  "quote": "The sky was darkening to purple, and the first stars were beginning to show. The griffin landed on a rocky outcrop, its wings spread wide against the sunset. Its feathers caught the last rays of light, turning gold and amber. Christopher could see every detail of its eagle face - the sharp curve of its beak, the fierce intelligence in its eyes.",
-  "description": "A griffin landing on a rocky outcrop at sunset with wings spread wide. Purple darkening sky with first stars appearing. Griffin's feathers are gold and amber in the sunset light. Close view showing eagle face details, curved beak, and intelligent eyes."
-}
-
-BAD EXAMPLE (too short):
-{
-  "quote": "The griffin landed.",
-  "description": "A griffin landing."
-}
-
-Return JSON format:
-{
-  "concepts": [
-    {
-      "quote": "3-8 consecutive sentences verbatim from source",
-      "description": "visual elements only: who, what, where, appearance, actions",
-      "mood": "emotional atmosphere (e.g., tense, whimsical, ominous, peaceful, adventurous)",
-      "lighting": "time of day and lighting (e.g., sunrise, night with moonlight, stormy afternoon, candlelit evening)"
-    }
-  ]
-}`;
-
-    const response = await openai.chat.completions.create({
-      model: typeof modelConfig === 'string' ? modelConfig : modelConfig.name,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a literary analyst specializing in visual storytelling. Extract mood and lighting details for cinematic illustration. Return only valid JSON.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('No response from AI');
-    }
-
-    const parsed = JSON.parse(content);
-    const concepts = parsed.concepts || [];
-
-    return concepts.map((c: any) => ({
+    // Add chapter metadata to scenes for backward compatibility with Chapters.md
+    const scenesWithMetadata = result.scenes.map((scene) => ({
+      ...scene,
       chapter: chapter.chapterTitle,
-      chapterNumber: chapter.chapterNumber, // Add actual chapter number
+      chapterNumber: chapter.chapterNumber,
       pageRange: chapter.pageRange,
-      quote: c.quote || '',
-      description: c.description || '',
-      mood: c.mood || 'neutral',
-      lighting: c.lighting || 'natural daylight',
       lineNumbers: chapter.lineNumbers,
+      // Ensure mood and lighting have defaults
+      mood: scene.reasoning || 'neutral', // Use reasoning as mood if available
+      lighting: 'natural daylight', // Default lighting
     }));
+
+    return {
+      scenes: scenesWithMetadata,
+      elements: result.elements,
+    };
   }
 }

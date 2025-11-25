@@ -95,10 +95,30 @@ Completed comprehensive improvements to referential context system based on expe
 - ✅ Comprehensive integration plan documented
   - See: docs/specs/unified-analysis-integration.md
 
-**Phase 2-4 TODO (Next Session):**
-- ⏳ Phase 2: Wire unified function to analyze phase
+**Phase 2 Integration - COMPLETE ✅ (Commit 92dd6fa - 2025-11-25)**
+- ✅ Modified analyze-phase.ts to use `analyzeChapterUnified()`
+  - Completely rewrote `analyzeChapter()` method
+  - Added `elementsByChapter` property to store extracted elements
+  - Single API call now extracts both scenes and elements
+- ✅ Updated `executePhase()` to store both data types in state
+  - Stores `sceneConcepts` array in chapter state
+  - Stores `elements` array in chapter state
+  - Maintains backward-compatible `concepts` count
+- ✅ Built and tested successfully
+  - Compiled with no TypeScript errors
+  - Tested with simple.epub fixture
+  - Verified state structure: sceneConcepts and elements fields present
+  - Confirmed unified function is called (verified in error stack traces)
+
+**Phase 3-4 TODO (Next Session):**
 - ⏳ Phase 3: Update extract phase to reuse analyze data
+  - Check if elements already exist in state before processing
+  - Skip API calls for chapters that already have elements
+  - Merge/combine elements from state with any new extractions
 - ⏳ Phase 4: Update illustrate phase to use state data
+  - Load concepts directly from state.sceneConcepts
+  - Remove TODO comment about storing full concept data
+  - Eliminate Chapters.md parsing dependency
 
 **Impact:**
 - 50% reduction in API calls during combined analyze+extract workflow

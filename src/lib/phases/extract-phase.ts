@@ -123,6 +123,36 @@ export class ExtractPhase extends BasePhase {
 
     await progressTracker.startElementExtraction();
 
+    // Phase 3 improvement: Check for elements from unified analysis
+    const elementsFromAnalyze = this.collectElementsFromAnalyzePhase(state);
+
+    if (elementsFromAnalyze.length > 0) {
+      await progressTracker.log(
+        `✓ Found ${elementsFromAnalyze.length} elements from unified analysis (Phase 2)`,
+        'success'
+      );
+      await progressTracker.log(
+        `   Skipping redundant extraction - reusing analyze phase data`,
+        'info'
+      );
+
+      this.elements = elementsFromAnalyze;
+
+      // Store full element catalog in state (Phase 3+ improvement)
+      stateManager.setElements(this.elements);
+      await stateManager.save();
+
+      await progressTracker.completeElementExtraction(this.elements.length);
+
+      return { success: true, tokensUsed: 0 }; // No additional tokens used
+    }
+
+    // No elements from analyze phase - fall back to traditional extraction
+    await progressTracker.log(
+      '⚠️ No elements found from unified analysis, falling back to extraction',
+      'warning'
+    );
+
     // Check if iterative extraction is enabled (default: true)
     const useIterative = config.iterativeExtraction !== false;
 
@@ -211,6 +241,46 @@ export class ExtractPhase extends BasePhase {
     await progressTracker.log('Elements.md generated', 'success');
 
     return { success: true };
+  }
+
+  /**
+   * Collect elements that were already extracted during analyze phase (Phase 3 improvement)
+   * This eliminates redundant API calls when using unified analysis
+   */
+  private collectElementsFromAnalyzePhase(state: Readonly<any>): BookElement[] {
+    const elements: BookElement[] = [];
+    const analyzeChapters = state.phases.analyze.chapters || {};
+
+    // Collect elements from each analyzed chapter
+    for (const chapterNum in analyzeChapters) {
+      const chapterState = analyzeChapters[chapterNum];
+      if (chapterState.elements && Array.isArray(chapterState.elements)) {
+        elements.push(...chapterState.elements);
+      }
+    }
+
+    // Deduplicate elements by name and type (case-insensitive)
+    const seen = new Map<string, BookElement>();
+    for (const element of elements) {
+      const key = `${element.type}:${element.name.toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.set(key, element);
+      } else {
+        // Merge descriptions and quotes if duplicate found
+        const existing = seen.get(key)!;
+        if (element.description && !existing.description) {
+          existing.description = element.description;
+        }
+        if (element.quotes && element.quotes.length > 0) {
+          existing.quotes = [...(existing.quotes || []), ...element.quotes];
+        }
+        if (element.aliases && element.aliases.length > 0) {
+          existing.aliases = [...new Set([...(existing.aliases || []), ...element.aliases])];
+        }
+      }
+    }
+
+    return Array.from(seen.values());
   }
 
   /**

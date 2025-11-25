@@ -27,6 +27,29 @@ export interface ElementContext {
 }
 
 /**
+ * Build element context section for prompts
+ * Centralized helper to avoid code duplication
+ */
+function buildElementContextSection(elementContext?: ElementContext): string {
+  if (!elementContext || (!elementContext.characters && !elementContext.places && !elementContext.items)) {
+    return '';
+  }
+
+  let section = '\n\nKNOWN STORY ELEMENTS (maintain visual consistency):\n';
+  if (elementContext.characters) {
+    section += `\nCHARACTERS:\n${elementContext.characters}\n`;
+  }
+  if (elementContext.places) {
+    section += `\nPLACES:\n${elementContext.places}\n`;
+  }
+  if (elementContext.items) {
+    section += `\nITEMS:\n${elementContext.items}\n`;
+  }
+  section += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
+  return section;
+}
+
+/**
  * Combined result from unified analysis
  * Contains both visual scenes and extracted elements from a single API call
  */
@@ -54,21 +77,8 @@ export async function analyzeChapter(
   const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
   const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
-  // Build element context section if available
-  let elementContextSection = '';
-  if (elementContext && (elementContext.characters || elementContext.places || elementContext.items)) {
-    elementContextSection = '\n\nKNOWN STORY ELEMENTS (maintain visual consistency):\n';
-    if (elementContext.characters) {
-      elementContextSection += `\nCHARACTERS:\n${elementContext.characters}\n`;
-    }
-    if (elementContext.places) {
-      elementContextSection += `\nPLACES:\n${elementContext.places}\n`;
-    }
-    if (elementContext.items) {
-      elementContextSection += `\nITEMS:\n${elementContext.items}\n`;
-    }
-    elementContextSection += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
-  }
+  // Build element context section if available (using centralized helper)
+  const elementContextSection = buildElementContextSection(elementContext);
 
   const prompt = `You are analyzing a book chapter to identify the most visually interesting and important concepts for illustration.
 
@@ -160,21 +170,8 @@ export async function analyzeChapterUnified(
   const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
   const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
-  // Build element context section if available
-  let elementContextSection = '';
-  if (elementContext && (elementContext.characters || elementContext.places || elementContext.items)) {
-    elementContextSection = '\n\nKNOWN STORY ELEMENTS (maintain visual consistency):\n';
-    if (elementContext.characters) {
-      elementContextSection += `\nCHARACTERS:\n${elementContext.characters}\n`;
-    }
-    if (elementContext.places) {
-      elementContextSection += `\nPLACES:\n${elementContext.places}\n`;
-    }
-    if (elementContext.items) {
-      elementContextSection += `\nITEMS:\n${elementContext.items}\n`;
-    }
-    elementContextSection += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
-  }
+  // Build element context section if available (using centralized helper)
+  const elementContextSection = buildElementContextSection(elementContext);
 
   const prompt = `You are analyzing a book chapter to accomplish TWO tasks in a single pass:
 

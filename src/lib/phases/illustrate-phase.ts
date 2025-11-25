@@ -5,7 +5,7 @@
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import { resolveModelConfig } from '../token-counter.js';
-import type { ImageConcept, BookElement } from '../../types/config.js';
+import type { ImageConcept, BookElement, IllustrateState } from '../../types/config.js';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -293,7 +293,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
   /**
    * Load concepts from analyze phase state (Phase 4 improvement)
    */
-  private async loadConceptsFromState(state: any): Promise<void> {
+  private async loadConceptsFromState(state: Readonly<IllustrateState>): Promise<void> {
     const { outputDir, progressTracker } = this.context;
     const analyzeChapters = state.phases.analyze.chapters || {};
 

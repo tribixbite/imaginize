@@ -22,6 +22,11 @@ interface AnalyzePlanData {
   requiresSplitting: boolean;
 }
 
+// Token estimation constants for unified analysis output
+// These are rough approximations based on typical AI response verbosity
+const ESTIMATED_TOKENS_PER_SCENE = 200;    // Approx. tokens for scene object (quote, description, reasoning)
+const ESTIMATED_TOKENS_PER_ELEMENT = 150;  // Approx. tokens for element object (name, description, quotes)
+
 export class AnalyzePhase extends BasePhase {
   private planData?: AnalyzePlanData;
   private conceptsByChapter: Map<string, ImageConcept[]> = new Map();
@@ -201,10 +206,10 @@ export class AnalyzePhase extends BasePhase {
           this.elementsByChapter.set(chapterNum, result.elements);
         }
 
-        // Estimate tokens used (rough approximation)
+        // Estimate tokens used (input + output approximation using constants)
         const tokensUsed = estimateTokens(chapter.content) +
-                          result.scenes.length * 200 +
-                          result.elements.length * 150;
+                          result.scenes.length * ESTIMATED_TOKENS_PER_SCENE +
+                          result.elements.length * ESTIMATED_TOKENS_PER_ELEMENT;
         totalTokensUsed += tokensUsed;
 
         // Update state with BOTH scenes and elements

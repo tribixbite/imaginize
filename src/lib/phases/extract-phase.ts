@@ -5,7 +5,7 @@
 
 import { join } from 'path';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
-import type { BookElement } from '../../types/config.js';
+import type { BookElement, IllustrateState } from '../../types/config.js';
 import {
   estimateTokens,
   createTokenEstimate,
@@ -247,7 +247,7 @@ export class ExtractPhase extends BasePhase {
    * Collect elements that were already extracted during analyze phase (Phase 3 improvement)
    * This eliminates redundant API calls when using unified analysis
    */
-  private collectElementsFromAnalyzePhase(state: Readonly<any>): BookElement[] {
+  private collectElementsFromAnalyzePhase(state: Readonly<IllustrateState>): BookElement[] {
     const elements: BookElement[] = [];
     const analyzeChapters = state.phases.analyze.chapters || {};
 

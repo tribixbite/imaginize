@@ -110,11 +110,24 @@ Completed comprehensive improvements to referential context system based on expe
   - Verified state structure: sceneConcepts and elements fields present
   - Confirmed unified function is called (verified in error stack traces)
 
-**Phase 3-4 TODO (Next Session):**
-- ⏳ Phase 3: Update extract phase to reuse analyze data
-  - Check if elements already exist in state before processing
-  - Skip API calls for chapters that already have elements
-  - Merge/combine elements from state with any new extractions
+**Phase 3 Extract Optimization - COMPLETE ✅ (Commit 88cad06 - 2025-11-25)**
+- ✅ Added `collectElementsFromAnalyzePhase()` helper method
+  - Iterates through analyze phase chapter states
+  - Collects all elements that were extracted during unified analysis
+  - Deduplicates by type and name (case-insensitive)
+  - Merges descriptions, quotes, and aliases for duplicates
+- ✅ Modified `executePhase()` to check for existing elements first
+  - Checks analyze phase state before making any API calls
+  - Reuses elements if found (zero additional tokens used)
+  - Falls back to traditional extraction if none found
+  - Logs clear messages about reuse vs fallback
+- ✅ Built and tested successfully
+  - Compiled with no TypeScript errors
+  - Tested with simple.epub - correctly detected empty elements
+  - Verified fallback extraction works when no elements in state
+  - Confirmed "No elements found from unified analysis" message
+
+**Phase 4 TODO (Next Session):**
 - ⏳ Phase 4: Update illustrate phase to use state data
   - Load concepts directly from state.sceneConcepts
   - Remove TODO comment about storing full concept data

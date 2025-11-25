@@ -291,39 +291,72 @@ Return ONLY the style guide text, no JSON or formatting.`;
   }
 
   /**
-   * Load concepts from analyze phase state
+   * Load concepts from analyze phase state (Phase 4 improvement)
    */
   private async loadConceptsFromState(state: any): Promise<void> {
-    // Get concepts from analyze phase chapters
+    const { outputDir, progressTracker } = this.context;
     const analyzeChapters = state.phases.analyze.chapters || {};
 
-    // We need to reconstruct concepts from the state
-    // For now, we'll just note that concepts should be stored better
-    // TODO: Store full concept data in state, not just count
-
-    // For testing, let's try to load from Chapters.md
-    const { outputDir, progressTracker } = this.context;
-    try {
-      const chaptersPath = join(outputDir, 'Chapters.md');
-      const chaptersContent = await readFile(chaptersPath, 'utf-8');
-      this.concepts = this.parseChaptersFile(chaptersContent);
-    } catch (error) {
-      // Chapters.md doesn't exist yet
+    // Phase 4: Load concepts directly from state (sceneConcepts field)
+    const conceptsFromState: ImageConcept[] = [];
+    for (const chapterNum in analyzeChapters) {
+      const chapterState = analyzeChapters[chapterNum];
+      if (chapterState.sceneConcepts && Array.isArray(chapterState.sceneConcepts)) {
+        conceptsFromState.push(...chapterState.sceneConcepts);
+      }
     }
 
-    // Load elements from Elements.md for cross-referencing
-    try {
-      const elementsPath = join(outputDir, 'Elements.md');
-      if (existsSync(elementsPath)) {
-        const elementsContent = await readFile(elementsPath, 'utf-8');
-        this.elements = this.parseElementsFile(elementsContent);
+    if (conceptsFromState.length > 0) {
+      // Success! Use concepts from state
+      this.concepts = conceptsFromState;
+      await progressTracker.log(
+        `✓ Loaded ${conceptsFromState.length} scene concepts from state (Phase 2 unified analysis)`,
+        'success'
+      );
+    } else {
+      // Fallback: Parse Chapters.md if state doesn't have sceneConcepts
+      await progressTracker.log(
+        '⚠️ No scene concepts in state, falling back to parsing Chapters.md',
+        'warning'
+      );
+      try {
+        const chaptersPath = join(outputDir, 'Chapters.md');
+        const chaptersContent = await readFile(chaptersPath, 'utf-8');
+        this.concepts = this.parseChaptersFile(chaptersContent);
         await progressTracker.log(
-          `Loaded ${this.elements.length} elements for cross-referencing`,
+          `Loaded ${this.concepts.length} concepts from Chapters.md`,
           'info'
         );
+      } catch (error) {
+        await progressTracker.log(
+          'Failed to load concepts from Chapters.md - file may not exist',
+          'warning'
+        );
       }
-    } catch (error) {
-      // Elements.md doesn't exist, cross-referencing not available
+    }
+
+    // Load elements from state (Phase 3 improvement)
+    if (state.elements && Array.isArray(state.elements)) {
+      this.elements = state.elements;
+      await progressTracker.log(
+        `✓ Loaded ${this.elements.length} elements from state for cross-referencing`,
+        'info'
+      );
+    } else {
+      // Fallback: Parse Elements.md
+      try {
+        const elementsPath = join(outputDir, 'Elements.md');
+        if (existsSync(elementsPath)) {
+          const elementsContent = await readFile(elementsPath, 'utf-8');
+          this.elements = this.parseElementsFile(elementsContent);
+          await progressTracker.log(
+            `Loaded ${this.elements.length} elements from Elements.md`,
+            'info'
+          );
+        }
+      } catch (error) {
+        // Elements.md doesn't exist, cross-referencing not available
+      }
     }
   }
 

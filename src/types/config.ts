@@ -270,7 +270,9 @@ export type SubPhase = 'plan' | 'estimate' | 'prepare' | 'execute' | 'save';
 
 export interface ChapterState {
   status: PhaseStatus;
-  concepts?: number;
+  concepts?: number; // DEPRECATED: Use sceneConcepts.length instead
+  sceneConcepts?: ImageConcept[]; // Full scene data from analysis
+  elements?: BookElement[]; // Full element data extracted from chapter
   tokensUsed?: number;
   completedAt?: string;
   error?: string;

@@ -173,54 +173,46 @@ export async function analyzeChapterUnified(
   // Build element context section if available (using centralized helper)
   const elementContextSection = buildElementContextSection(elementContext);
 
-  const prompt = `You are analyzing a book chapter to accomplish TWO tasks in a single pass:
+  const prompt = `### PRIMARY GOAL
+Analyze the provided chapter content to extract key visual scenes and story elements.
 
-TASK 1: Identify ${numImages} key visual scenes for illustration
-TASK 2: Extract ALL story elements (characters, places, items)
+### STEP-BY-STEP INSTRUCTIONS
+1. **First, identify ${numImages} key visual scenes.** These should be moments with strong, clear imagery suitable for illustration. For each scene, gather the required details (quote, description, reasoning).
+2. **Second, extract ALL important story elements.** These include characters, places, items, etc., that are visually described.
+3. **Finally, format ALL collected information** into a single JSON object according to the specified structure. It is critical that BOTH the "scenes" and "elements" arrays are populated.
 
-Chapter: ${chapter.chapterTitle}
-Page Range: ${chapter.pageRange}
-${elementContextSection}
-Content:
-${chapter.content}
-
-TASK 1 - VISUAL SCENES:
-Identify ${numImages} visually interesting moments for illustration. For each:
-1. Choose a significant quote (20-50 words) capturing the visual moment
-2. Describe what should be illustrated
-3. Explain why it's visually significant
-4. If known elements appear, reference their established descriptions
-
-TASK 2 - STORY ELEMENTS:
-Extract ALL important story elements. For each:
-1. Type (character/creature/place/item/object)
-2. Name
-3. 2-3 direct quotes with page references
-4. VISUAL description (2-3 sentences): colors, shapes, materials, textures, distinctive features
-
-VISUAL DESCRIPTION EXAMPLES:
-- Character: "Tall woman with silver-streaked black hair, wearing a dark blue coat with brass buttons. Her eyes are sharp gray and she carries a worn leather satchel."
-- Place: "Gothic cathedral with flying buttresses and rose windows. Gargoyles perch at the corners and vines climb the weathered gray stone walls."
-- Item: "Ornate silver compass with intricate engravings of constellations. The needle glows faintly blue in darkness."
-
-Return as JSON:
+### HIGH-QUALITY OUTPUT EXAMPLE
+Here is an example of a perfect response for a fictional sci-fi chapter:
 {
   "scenes": [
     {
-      "quote": "exact quote from text",
-      "description": "what to illustrate",
-      "reasoning": "why significant"
+      "quote": "The SecUnit crouched on the rusted gantry, its armor plating dripping with acidic rain as the twin suns of Kepler-186f set behind the jagged, purple mountains.",
+      "description": "A lone, armored android (SecUnit) is perched on a high, industrial walkway overlooking an alien landscape at sunset. The scene is moody, with rain and a dramatic sky.",
+      "reasoning": "This moment establishes the main character's isolation and the harsh, alien environment. The contrast between the high-tech armor and the decaying infrastructure is visually compelling."
     }
   ],
   "elements": [
     {
       "type": "character",
-      "name": "Name",
-      "quotes": [{"text": "direct quote", "page": "${chapter.pageRange}"}],
-      "description": "VISUAL description with colors, shapes, materials, textures"
+      "name": "SecUnit",
+      "quotes": [
+        {"text": "Its helmet was a smooth, dark gray plate, devoid of features except for a single red optical sensor.", "page": "p. 12"},
+        {"text": "The armor was a patchwork of mismatched corporate-issue plates, scarred from previous engagements.", "page": "p. 14"}
+      ],
+      "description": "A humanoid android construct in full body armor. The armor is dark gray and utilitarian, showing signs of wear and tear. Its face is a featureless plate with a single glowing red camera lens."
     }
   ]
-}`;
+}
+
+### CHAPTER DETAILS
+Chapter: ${chapter.chapterTitle}
+Page Range: ${chapter.pageRange}
+${elementContextSection}
+### CHAPTER CONTENT
+${chapter.content}
+
+### REQUIRED JSON OUTPUT
+Return your full analysis in the JSON format demonstrated in the example above. The "scenes" array must not be empty if the text contains any visual moments. Both "scenes" and "elements" arrays must be populated.`;
 
   try {
     const modelName = typeof config.model === 'string' ? config.model : config.model.name;
@@ -230,7 +222,7 @@ Return as JSON:
         {
           role: 'system',
           content:
-            'You are a literary analyst specializing in visual storytelling and element extraction. Analyze the chapter once and provide both visual scenes and story elements. Return only valid JSON.',
+            'You are a literary analyst AI specializing in visual storytelling and element extraction. Your task is to analyze a book chapter in a single pass and perform two distinct tasks: identifying key visual scenes and extracting all story elements. You must return a single, valid JSON object containing the results of both tasks.',
         },
         { role: 'user', content: prompt },
       ],

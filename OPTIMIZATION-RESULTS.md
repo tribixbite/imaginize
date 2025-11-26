@@ -323,13 +323,16 @@ Test optimized prompt with:
 | Model | Provider | Tier | Scenes | Elements | Status |
 |-------|----------|------|--------|----------|--------|
 | google/gemini-2.0-flash-exp:free | Google | Free | 10 | 85 | ✅ SUCCESS |
+| openrouter/bert-nebulon-alpha | OpenRouter | Free | 2 | 26 | ✅ SUCCESS |
 | kwaipilot/kat-coder-pro:free | OpenRouter | Free | 0 | 0 | ❌ Failed |
 | z-ai/glm-4.5-air:free | OpenRouter | Free | 0 | 0 | ❌ Failed |
 | tngtech/deepseek-r1t2-chimera:free | OpenRouter | Free | 0 | 0 | ❌ Failed |
 | google/gemini-2.5-pro | Google | Paid | - | - | ⏳ Recommended |
 | openai/gpt-4 | OpenAI | Paid | - | - | ⏳ Future |
 
-**Critical Finding:** Google Gemini is the ONLY free tier model that successfully works with the optimized unified prompt.
+**Critical Finding:** TWO free tier models successfully work with the optimized unified prompt:
+1. **google/gemini-2.0-flash-exp:free** (10 scenes, 85 elements) - Best performance
+2. **openrouter/bert-nebulon-alpha** (2 scenes, 26 elements) - Working alternative
 
 ### Success Criteria
 

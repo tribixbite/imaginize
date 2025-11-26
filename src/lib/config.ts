@@ -130,35 +130,123 @@ export function getSampleConfig(): string {
   return `# illustrate configuration file v2.0
 # Place this file as .imaginize.config in your home directory or project directory
 
-# Text analysis (primary endpoint)
+# =============================================================================
+# TEXT ANALYSIS ENDPOINT (Primary)
+# =============================================================================
 baseUrl: "https://openrouter.ai/api/v1"  # or "https://api.openai.com/v1"
 apiKey: "\${OPENROUTER_API_KEY}"  # Reference env var or use literal key
 model:
-  name: "google/gemini-flash-1.5:free"  # Free model on OpenRouter
+  name: "google/gemini-2.0-flash-exp:free"  # Free model (validated with unified analysis)
+  # Alternative: "openrouter/bert-nebulon-alpha" (also free, working)
+  # Paid options: "gpt-4o", "claude-sonnet-4", etc.
   contextLength: 1000000
   maxTokens: 8192
 
-# Separate image generation endpoint (optional)
+# =============================================================================
+# IMAGE GENERATION ENDPOINT (Optional, for --images phase)
+# =============================================================================
 imageEndpoint:
   baseUrl: "https://api.openai.com/v1"
   apiKey: "\${OPENAI_API_KEY}"
   model: "dall-e-3"
 
-# Processing options
+# =============================================================================
+# PROCESSING OPTIONS
+# =============================================================================
 pagesPerImage: 10
 pagesPerAutoChapter: 50
 extractElements: true
 generateElementImages: false
 
-# Performance & reliability
+# =============================================================================
+# PERFORMANCE & RELIABILITY
+# =============================================================================
 maxConcurrency: 3
 tokenSafetyMargin: 0.9
 maxRetries: 1
 retryTimeout: 5000
 
-# Output settings
+# =============================================================================
+# OUTPUT SETTINGS
+# =============================================================================
 outputPattern: "imaginize_{name}"
 imageSize: "1024x1024"  # Options: 1024x1024, 1024x1792, 1792x1024
 imageQuality: "standard"  # Options: standard, hd
+
+# =============================================================================
+# CLI FLAGS REFERENCE (use these when running imaginize)
+# =============================================================================
+#
+# BASIC USAGE:
+#   imaginize --file <path> --text --continue
+#
+# FILE SELECTION:
+#   --file <path>, -f <path>    Specify exact book file (REQUIRED for resume)
+#                                Without this, tool auto-selects next unprocessed book
+#
+# PHASE CONTROL:
+#   --text                      Generate Chapters.md (analyze phase - scenes + elements)
+#   --elements                  Generate Elements.md (extract phase)
+#   --images                    Generate images with DALL-E (illustrate phase)
+#
+# COMPILATION FORMATS:
+#   --pdf                       Compile graphic novel PDF
+#   --cbz                       Compile CBZ comic book archive
+#   --epub                      Compile EPUB eBook
+#   --html                      Generate HTML gallery
+#   --webp-album                Compile WebP album (smaller than PDF)
+#   --webp-strip                Create single vertical strip WebP image
+#   --all-formats               Generate all output formats
+#
+# RESUME & RETRY:
+#   --continue                  Continue from saved progress (auto-resume)
+#   --force                     Force regeneration (ignores existing state)
+#   --retry-failed              Only retry chapters that previously failed
+#   --skip-failed               Skip failed chapters and continue
+#   --clear-errors              Clear error status before processing
+#
+# FILTERING:
+#   --chapters <range>          Process specific chapters (e.g., "1-5,10")
+#   --elements-filter <filter>  Filter elements (e.g., "character:*,place:castle")
+#   --limit <n>                 Limit number of items (for testing)
+#
+# CONFIG OVERRIDES:
+#   --model <name>              Override model (e.g., "gpt-4o")
+#   --api-key <key>             Override API key
+#   --image-key <key>           Separate image API key
+#   --output-dir <dir>          Override output directory
+#
+# OTHER OPTIONS:
+#   --dashboard                 Start web dashboard for real-time progress
+#   --dashboard-port <port>     Dashboard server port (default: 3000)
+#   --dashboard-host <host>     Dashboard server host (default: localhost)
+#   --concurrent                Use concurrent processing (experimental)
+#   --migrate                   Migrate old state to new schema
+#   --verbose                   Verbose logging
+#   --quiet                     Minimal output
+#   --init-config               Generate this config file
+#   --estimate                  Estimate costs without executing
+#
+# EXAMPLES:
+#
+#   # Process entire book with free tier model (slow but free)
+#   imaginize --file book.epub --text
+#
+#   # Resume processing after interruption
+#   imaginize --file book.epub --text --continue
+#
+#   # Force regenerate specific chapters
+#   imaginize --file book.epub --text --force --chapters 1-5
+#
+#   # Retry only failed chapters
+#   imaginize --file book.epub --text --retry-failed
+#
+#   # Full pipeline with all formats
+#   imaginize --file book.epub --text --elements --images --all-formats
+#
+#   # Use specific model
+#   imaginize --file book.epub --text --model gpt-4o
+#
+# =============================================================================
 `;
 }

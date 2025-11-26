@@ -237,12 +237,6 @@ Return your full analysis in the JSON format demonstrated in the example above. 
 
     const parsed = JSON.parse(content);
 
-    // DEBUG: Log response structure for model comparison
-    console.log(`[MODEL: ${modelName}] Chapter "${chapter.chapterTitle}":`, JSON.stringify({
-      scenes: Array.isArray(parsed.scenes) ? parsed.scenes.length : 0,
-      elements: Array.isArray(parsed.elements) ? parsed.elements.length : 0
-    }));
-
     // Parse scenes
     const rawScenes = Array.isArray(parsed.scenes) ? parsed.scenes : [];
     const scenes: ImageConcept[] = rawScenes.map((s: any) => ({

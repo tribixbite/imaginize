@@ -7,6 +7,8 @@
 
 import { readFile } from 'fs/promises';
 import type OpenAI from 'openai';
+import type { IAiClient } from '../ai-client.js';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import type { VisualStyleGuide, ExtractedVisualFeatures } from './types.js';
 import { createStyleGuide } from './style-guide.js';
 
@@ -17,7 +19,7 @@ import { createStyleGuide } from './style-guide.js';
  */
 export async function analyzeStyleFromImages(
   imagePaths: string[],
-  openai: OpenAI,
+  openai: IAiClient,
   progressCallback?: (message: string) => Promise<void>
 ): Promise<VisualStyleGuide> {
   if (imagePaths.length === 0) {
@@ -76,7 +78,7 @@ export async function analyzeStyleFromImages(
       ],
       max_tokens: 1000,
       temperature: 0.3, // Lower temperature for more consistent analysis
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '{}';
 
@@ -280,7 +282,7 @@ function createFallbackStyleGuide(bootstrapCount: number): VisualStyleGuide {
  */
 export async function analyzeImageStyle(
   imagePath: string,
-  openai: OpenAI
+  openai: IAiClient
 ): Promise<ExtractedVisualFeatures> {
   const imageData = await readFile(imagePath);
   const base64 = imageData.toString('base64');
@@ -311,7 +313,7 @@ export async function analyzeImageStyle(
     ],
     max_tokens: 500,
     temperature: 0.3,
-  });
+  }) as ChatCompletion;
 
   const content = response.choices[0]?.message?.content || '{}';
   return parseStyleAnalysis(content);

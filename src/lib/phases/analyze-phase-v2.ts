@@ -9,6 +9,7 @@
  */
 
 import { writeFile } from 'fs/promises';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import { join } from 'path';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { ImageConcept, ChapterContent } from '../../types/config.js';
@@ -821,7 +822,7 @@ export class AnalyzePhaseV2 extends BasePhase {
       ],
       temperature: 0.7,
       max_tokens: 2000,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '[]';
 

@@ -10,6 +10,7 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import readline from 'readline';
 import type OpenAI from 'openai';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import type { VisualStyleGuide } from './types.js';
 import { analyzeStyleFromImages } from './style-analyzer.js';
 import {
@@ -167,7 +168,7 @@ async function createStyleGuideFromText(
     ],
     temperature: 0.7,
     max_tokens: 800,
-  });
+  }) as ChatCompletion;
 
   const content = response.choices[0]?.message?.content || '{}';
 

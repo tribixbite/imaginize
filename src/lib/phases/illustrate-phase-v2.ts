@@ -14,6 +14,7 @@
  */
 
 import { writeFile, readFile } from 'fs/promises';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
@@ -194,7 +195,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
       ],
       temperature: 0.7,
       max_tokens: 200,
-    });
+    }) as ChatCompletion;
 
     return (
       response.choices[0]?.message?.content ||
@@ -630,12 +631,15 @@ Return ONLY the style guide text, no JSON or formatting.`;
             aspect_ratio: config.imageEndpoint.aspectRatio,
           },
         }),
-      });
+      }) as ChatCompletion;
 
       // Check multiple possible response formats
       const imageUrl =
+        // @ts-expect-error - DALL-E specific response format
         response.choices[0]?.message?.images?.[0]?.image_url?.url ||
+        // @ts-expect-error - DALL-E specific response format
         response.choices[0]?.message?.image_url ||
+        // @ts-expect-error - DALL-E specific response format
         response.data?.[0]?.url;
 
       if (!imageUrl) {

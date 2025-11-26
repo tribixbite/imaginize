@@ -4,6 +4,7 @@
  */
 
 import { join } from 'path';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
 import type { BookElement, IllustrateState } from '../../types/config.js';
 import {
@@ -376,7 +377,7 @@ export class ExtractPhase extends BasePhase {
       ],
       response_format: { type: 'json_object' },
       temperature: 0.5,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {

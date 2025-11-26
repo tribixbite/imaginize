@@ -4,6 +4,7 @@
  */
 
 import { BasePhase, type PhaseContext, type SubPhaseResult } from './base-phase.js';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 import { resolveModelConfig } from '../token-counter.js';
 import type { ImageConcept, BookElement, IllustrateState } from '../../types/config.js';
 import { readFile, writeFile } from 'fs/promises';
@@ -148,7 +149,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
       ],
       temperature: 0.7,
       max_tokens: 200,
-    });
+    }) as ChatCompletion;
 
     return (
       response.choices[0]?.message?.content ||
@@ -770,9 +771,10 @@ Return ONLY the style guide text, no JSON or formatting.`;
       image_config: {
         aspect_ratio: aspectRatio,
       },
-    });
+    }) as ChatCompletion;
 
     // Images returned in message.images array
+          // @ts-expect-error - DALL-E specific response format
     const images = response.choices[0]?.message?.images;
     if (images && images.length > 0) {
       const imageUrl = images[0]?.image_url?.url;

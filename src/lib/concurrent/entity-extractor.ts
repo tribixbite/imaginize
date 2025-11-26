@@ -6,6 +6,8 @@
  */
 
 import type OpenAI from 'openai';
+import type { IAiClient } from '../ai-client.js';
+import type { ChatCompletion } from 'openai/resources/chat/completions';
 
 /**
  * Extracted entity from text
@@ -42,7 +44,7 @@ export async function extractEntitiesFast(
   chapterContent: string,
   chapterNumber: number,
   chapterTitle: string,
-  openai: OpenAI,
+  openai: IAiClient,
   model: string = 'gpt-4o-mini'
 ): Promise<EntityExtractionResult> {
   // Truncate very long chapters to first 8000 chars for speed
@@ -92,7 +94,7 @@ ${truncated}`;
       ],
       temperature: 0.3, // Low temperature for consistent extraction
       max_tokens: 1000, // Keep response short - just entity lists
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '[]';
 

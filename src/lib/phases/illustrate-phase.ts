@@ -123,20 +123,25 @@ export class IllustratePhase extends BasePhase {
     const state = stateManager.getState();
     const bookTitle = state.bookTitle;
 
-    const prompt = `Analyze this fantasy book excerpt and create a concise visual style guide for illustration.
+    const prompt = `Analyze this book excerpt and create a concise visual style guide for illustration.
 
 Book: ${bookTitle}
 
 Sample text:
 ${sampleText}
 
-Create a brief style guide (3-4 sentences) covering:
+First, identify the primary genre (e.g., Epic Fantasy, Hard Sci-Fi, Gothic Horror, Contemporary Romance, Mystery Thriller, Historical Fiction, etc.).
+
+Then create a brief style guide (3-4 sentences) covering:
 1. Overall visual tone and atmosphere (whimsical, dark, realistic, painterly, etc.)
 2. Color palette tendencies
 3. Level of detail (realistic vs stylized)
 4. Any signature visual elements
 
-Return ONLY the style guide text, no JSON or formatting.`;
+Return ONLY the style guide text, starting with "GENRE: [Identified Genre]. " followed by the style guide.
+
+Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, earthy tones..."`;
+
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -470,12 +475,12 @@ Return ONLY the style guide text, no JSON or formatting.`;
     // Build structured prompt with genre, style, mood, and lighting
     let promptParts: string[] = [];
 
-    // 1. Genre context
-    promptParts.push('GENRE: Fantasy adventure illustration');
-
-    // 2. Visual style guide
+    // 1. Genre and visual style guide (genre now included in styleGuide)
     if (this.styleGuide) {
-      promptParts.push(`STYLE: ${this.styleGuide}`);
+      promptParts.push(this.styleGuide);
+    } else {
+      // Fallback if no style guide generated
+      promptParts.push('GENRE: Detailed illustration with atmospheric detail');
     }
 
     // 3. Mood and atmosphere
@@ -492,26 +497,40 @@ Return ONLY the style guide text, no JSON or formatting.`;
     promptParts.push(`\nSCENE: ${concept.description}`);
 
     // 6. Character/creature details from elements
-    if (this.elements.length > 0) {
+    if (this.elements.length > 0 && concept.elements_present && concept.elements_present.length > 0) {
       const referencedElements: string[] = [];
 
-      // Extract entity names mentioned in the description
-      const mentionedEntities = this.extractEntityNames(
-        concept.description,
-        concept.quote
-      );
-
-      for (const entityName of mentionedEntities) {
-        // Find matching element (fuzzy match)
-        const element = this.findElement(entityName);
-        if (element) {
+      // Use structured elements_present array from analysis phase (more reliable than regex)
+      for (const entityName of concept.elements_present) {
+        // Find matching element with case-insensitive match
+        const element = this.elements.find(e =>
+          e.name.toLowerCase() === entityName.toLowerCase()
+        );
+        if (element && element.description) {
           referencedElements.push(`- ${element.name}: ${element.description}`);
         }
       }
 
       // Append element descriptions to prompt
       if (referencedElements.length > 0) {
-        promptParts.push('\nCHARACTERS/CREATURES:');
+        promptParts.push('\nELEMENT DETAILS (maintain consistency):');
+        promptParts.push(referencedElements.join('\n'));
+      }
+    } else if (this.elements.length > 0) {
+      // Fallback: Use regex-based extraction if elements_present not available
+      const referencedElements: string[] = [];
+      const mentionedEntities = this.extractEntityNames(
+        concept.description,
+        concept.quote
+      );
+      for (const entityName of mentionedEntities) {
+        const element = this.findElement(entityName);
+        if (element) {
+          referencedElements.push(`- ${element.name}: ${element.description}`);
+        }
+      }
+      if (referencedElements.length > 0) {
+        promptParts.push('\nELEMENT DETAILS (maintain consistency):');
         promptParts.push(referencedElements.join('\n'));
       }
     }

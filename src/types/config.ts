@@ -239,6 +239,7 @@ export interface ImageConcept {
   reasoning?: string;
   mood?: string; // Emotional atmosphere of the scene
   lighting?: string; // Time of day and lighting conditions
+  elements_present?: string[]; // List of story elements (characters, places, items) in this scene
   imageUrl?: string;
   lineNumbers?: { start: number; end: number };
 }

@@ -187,7 +187,12 @@ export async function analyzeChapterUnified(
 Analyze the provided chapter content to extract key visual scenes and story elements.
 
 ### STEP-BY-STEP INSTRUCTIONS
-1. **First, identify ${numImages} key visual scenes.** These should be moments with strong, clear imagery suitable for illustration. For each scene, gather the required details (quote, description, reasoning).
+1. **First, identify ${numImages} key visual scenes.** These should be moments with strong, clear imagery suitable for illustration. For each scene, provide a detailed description as if you are a film director setting up a shot. Include:
+   - **Composition & Framing:** (e.g., wide shot of a valley, close-up on a character's face, over-the-shoulder view, aerial perspective)
+   - **Character State:** Describe character poses, expressions, and actions (e.g., "Arion stands defiantly, sword raised, a look of grim determination on his face")
+   - **Lighting & Mood:** Describe the key light sources and the overall atmosphere (e.g., "lit by flickering torchlight, creating a tense and mysterious mood")
+   - **Key Elements:** Mention all significant characters, places, and items visible in the scene
+   - **Visual Details:** Include colors, textures, materials, and environmental features
 2. **Second, extract ALL important story elements.** These include characters, places, items, etc., that are visually described.
 3. **Finally, format ALL collected information** into a single JSON object according to the specified structure. It is critical that BOTH the "scenes" and "elements" arrays are populated.
 
@@ -198,7 +203,10 @@ Here is an example of a perfect response for a fictional sci-fi chapter:
     {
       "quote": "The SecUnit crouched on the rusted gantry, its armor plating dripping with acidic rain as the twin suns of Kepler-186f set behind the jagged, purple mountains.",
       "description": "A lone, armored android (SecUnit) is perched on a high, industrial walkway overlooking an alien landscape at sunset. The scene is moody, with rain and a dramatic sky.",
-      "reasoning": "This moment establishes the main character's isolation and the harsh, alien environment. The contrast between the high-tech armor and the decaying infrastructure is visually compelling."
+      "reasoning": "This moment establishes the main character's isolation and the harsh, alien environment. The contrast between the high-tech armor and the decaying infrastructure is visually compelling.",
+      "mood": "Moody, tense, isolated",
+      "lighting": "Setting twin suns, acidic rain, dramatic sky with purple hues",
+      "elements_present": ["SecUnit", "Kepler-186f"]
     }
   ],
   "elements": [
@@ -255,6 +263,9 @@ Return your full analysis in the JSON format demonstrated in the example above. 
       quote: s.quote || '',
       description: s.description || '',
       reasoning: s.reasoning || '',
+      mood: s.mood || undefined,
+      lighting: s.lighting || undefined,
+      elements_present: Array.isArray(s.elements_present) ? s.elements_present : undefined,
     }));
 
     // Parse elements

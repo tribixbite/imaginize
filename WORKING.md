@@ -1,3 +1,39 @@
+## 2025-11-26: Expert Review & Testing Blocked by Config Issue
+
+**Status:** Gemini 2.5 Pro code review complete + Top 3 fixes implemented + Testing blocked
+
+### Environment Variable Precedence Issue ⚠️
+
+**Problem:** Cannot test improved prompts due to environment variable overriding config file
+
+**Root Cause:** `src/lib/config.ts` prioritizes environment variables over config files:
+```typescript
+// Priority: OPENROUTER_API_KEY > OPENAI_API_KEY > config file
+if (process.env.OPENROUTER_API_KEY) {
+  config.apiKey = process.env.OPENROUTER_API_KEY;
+  config.baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+}
+```
+
+**Impact:**
+- Config file correctly specifies Google native API: `https://generativelanguage.googleapis.com/v1beta`
+- But tool uses OpenRouter because `OPENROUTER_API_KEY` set in `~/.bashrc`
+- Hit OpenRouter rate limits (16 req/min) instead of using Google's higher limits
+- Cannot complete comparison test of improved prompts vs old output
+
+**Workaround:**
+1. Commented out env vars in `~/.bashrc` (lines 5-7)
+2. Need to start fresh shell for changes to take effect
+3. Alternative: modify `config.ts` to prioritize config file over env vars
+
+**Files Affected:**
+- `.bashrc`: Commented out OPENAI_API_KEY and OPENROUTER_API_KEY
+- Test blocked: Cannot complete fresh run until rate limits reset or fresh shell started
+
+### Code Improvements Ready for Testing ✅
+
+---
+
 ## 2025-11-26: Expert Review & Pipeline Improvements ✅
 
 **Status:** Gemini 2.5 Pro code review complete + Top 3 fixes implemented

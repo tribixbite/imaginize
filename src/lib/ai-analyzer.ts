@@ -12,9 +12,19 @@ import type {
 } from '../types/config.js';
 import { ExtractionMetricsCollector } from './extraction-metrics.js';
 import { EntityResolutionCache } from './entity-resolution-cache.js';
+import type { IAiClient } from './ai-client.js';
 
 // Export metrics and cache for external use
 export { ExtractionMetricsCollector, EntityResolutionCache };
+
+import type { ChatCompletion } from 'openai/resources/chat/completions';
+
+/**
+ * Type guard to ensure response is a ChatCompletion (not a Stream)
+ */
+function isChatCompletion(response: any): response is ChatCompletion {
+  return response && 'choices' in response && Array.isArray(response.choices);
+}
 
 /**
  * Element context for scene analysis
@@ -69,7 +79,7 @@ export interface UnifiedAnalysisResult {
 export async function analyzeChapter(
   chapter: ChapterContent,
   config: Required<IllustrateConfig>,
-  openai: OpenAI,
+  openai: IAiClient,
   elementContext?: ElementContext
 ): Promise<ImageConcept[]> {
   // Calculate images based on actual page range (more accurate than word count)
@@ -117,7 +127,7 @@ Return your response as a JSON array with this structure:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -162,7 +172,7 @@ Return your response as a JSON array with this structure:
 export async function analyzeChapterUnified(
   chapter: ChapterContent,
   config: Required<IllustrateConfig>,
-  openai: OpenAI,
+  openai: IAiClient,
   elementContext?: ElementContext
 ): Promise<UnifiedAnalysisResult> {
   // Calculate images based on actual page range
@@ -228,7 +238,7 @@ Return your full analysis in the JSON format demonstrated in the example above. 
       ],
       response_format: { type: 'json_object' },
       temperature: 0.6,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -338,7 +348,7 @@ Return as JSON array:
 export async function extractElementsFromChapter(
   chapter: ChapterContent,
   config: Required<IllustrateConfig>,
-  openai: OpenAI
+  openai: IAiClient
 ): Promise<BookElement[]> {
   const prompt = `Analyze this chapter and extract all important story elements.
 
@@ -389,7 +399,7 @@ Return as JSON array:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.5,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -416,7 +426,7 @@ export async function mergeElementIntoCatalog(
   newElement: BookElement,
   catalog: Map<string, BookElement>,
   config: Required<IllustrateConfig>,
-  openai: OpenAI
+  openai: IAiClient
 ): Promise<void> {
   // Get existing elements of the same type
   const existingElements = Array.from(catalog.values()).filter(
@@ -492,7 +502,7 @@ Return JSON:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1,
-    });
+    }) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -589,7 +599,7 @@ async function enrichDescriptionWithAI(
   existing: string,
   additional: string,
   elementName: string,
-  openai: OpenAI,
+  openai: IAiClient,
   model: string,
   useAI: boolean = true
 ): Promise<string> {
@@ -616,7 +626,7 @@ Return only the new, consolidated description as a single string.`;
       model: model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-    });
+    }) as ChatCompletion;
 
     return response.choices[0]?.message?.content || `${existing}. ${additional}`;
   } catch (error) {
@@ -662,7 +672,7 @@ function enrichDescription(existing: string, additional: string): string {
 export async function extractElementsIterative(
   chapters: ChapterContent[],
   config: Required<IllustrateConfig>,
-  openai: OpenAI,
+  openai: IAiClient,
   onProgress?: (current: number, total: number, chapterTitle: string) => void
 ): Promise<BookElement[]> {
   const elementCatalog: Map<string, BookElement> = new Map();

@@ -17,6 +17,8 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { Command } from 'commander';
 import readline from 'readline';
+import { GoogleGeminiAdapter, isGoogleNativeEndpoint } from './lib/google-gemini-adapter.js';
+import type { IAiClient } from './lib/ai-client.js';
 
 import { loadConfig, getSampleConfig } from './lib/config.js';
 import { parseEpub, sanitizeFilename } from './lib/epub-parser.js';
@@ -355,13 +357,23 @@ export async function main(): Promise<void> {
         // Load configuration
         const config = await loadConfig();
 
-        // Setup OpenAI client
-        const openai = new OpenAI({
-          apiKey: config.apiKey,
-          baseURL: config.baseUrl,
-          timeout: 120000,
-          maxRetries: config.maxRetries || 1,
-        });
+        // Setup OpenAI client (or Google native adapter)
+        let openai: IAiClient;
+        if (isGoogleNativeEndpoint(config.baseUrl)) {
+          console.log(chalk.cyan('Using Google Gemini native API (direct endpoint)'));
+          openai = new GoogleGeminiAdapter({
+            apiKey: config.apiKey,
+            model: typeof config.model === 'string' ? config.model : config.model.name,
+            baseUrl: config.baseUrl,
+          });
+        } else {
+          openai = new OpenAI({
+            apiKey: config.apiKey,
+            baseURL: config.baseUrl,
+            timeout: 120000,
+            maxRetries: config.maxRetries || 1,
+          });
+        }
 
         // Run style wizard
         const { runStyleWizard } = await import('./lib/visual-style/style-wizard.js');
@@ -781,11 +793,21 @@ export async function main(): Promise<void> {
 
     spinner.succeed('API configuration ready');
 
-    // Initialize OpenAI clients
-    const openai = new OpenAI({
-      apiKey: textConfig.apiKey,
-      baseURL: textConfig.baseUrl,
-    });
+    // Initialize OpenAI clients (or Google native adapter)
+    let openai: IAiClient;
+    if (isGoogleNativeEndpoint(textConfig.baseUrl)) {
+      console.log(chalk.cyan('Using Google Gemini native API (direct endpoint)'));
+      openai = new GoogleGeminiAdapter({
+        apiKey: textConfig.apiKey,
+        model: typeof textConfig.model === 'string' ? textConfig.model : textConfig.model.name,
+        baseUrl: textConfig.baseUrl,
+      });
+    } else {
+      openai = new OpenAI({
+        apiKey: textConfig.apiKey,
+        baseURL: textConfig.baseUrl,
+      });
+    }
 
     let imageOpenai: OpenAI | undefined;
     if (imageConfig) {

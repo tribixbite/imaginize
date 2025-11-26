@@ -13,12 +13,13 @@ import type {
 } from '../../types/config.js';
 import type { StateManager } from '../state-manager.js';
 import type { ProgressTracker } from '../progress-tracker.js';
+import type { IAiClient } from '../ai-client.js';
 import { retryWithBackoff, formatRetryError, isRateLimitError } from '../retry-utils.js';
 import { estimateTokens, createTokenEstimate } from '../token-counter.js';
 
 export interface PhaseContext {
   config: Required<IllustrateConfig> & { limit?: number };
-  openai: OpenAI;
+  openai: IAiClient;
   imageOpenai?: OpenAI;
   stateManager: StateManager;
   progressTracker: ProgressTracker;

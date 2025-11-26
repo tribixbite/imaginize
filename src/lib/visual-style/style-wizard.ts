@@ -1,3 +1,4 @@
+import type { IAiClient } from '../ai-client.js';
 /**
  * Interactive Style Wizard
  *
@@ -23,7 +24,7 @@ import chalk from 'chalk';
  */
 export interface StyleWizardOptions {
   outputDir: string;
-  openai: OpenAI;
+  openai: IAiClient;
   bookGenre?: string;
 }
 
@@ -124,7 +125,7 @@ export async function runStyleWizard(
  * Create style guide from text description
  */
 async function createStyleGuideFromText(
-  openai: OpenAI,
+  openai: IAiClient,
   bookGenre?: string
 ): Promise<VisualStyleGuide> {
   console.log(chalk.cyan('\n📝 Text Description Mode\n'));
@@ -188,7 +189,7 @@ async function createStyleGuideFromText(
  * Create style guide from reference images
  */
 async function createStyleGuideFromImages(
-  openai: OpenAI,
+  openai: IAiClient,
   bookGenre?: string
 ): Promise<VisualStyleGuide> {
   console.log(chalk.cyan('\n🖼️  Reference Image Mode\n'));
@@ -242,7 +243,7 @@ async function createStyleGuideFromImages(
  * Create hybrid style guide (text + images)
  */
 async function createHybridStyleGuide(
-  openai: OpenAI,
+  openai: IAiClient,
   bookGenre?: string
 ): Promise<VisualStyleGuide> {
   console.log(chalk.cyan('\n🎨 Hybrid Mode (Text + Images)\n'));

@@ -589,6 +589,14 @@ export async function main(): Promise<void> {
     }
     if (options.provider) {
       config.provider = options.provider as AIProvider;
+      // Set appropriate baseUrl for the provider if not already set
+      if (options.provider === 'gemini' && !config.baseUrl?.includes('generativelanguage.googleapis.com')) {
+        config.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+      } else if (options.provider === 'openai' && !config.baseUrl) {
+        config.baseUrl = 'https://api.openai.com/v1';
+      } else if (options.provider === 'openrouter' && !config.baseUrl) {
+        config.baseUrl = 'https://openrouter.ai/api/v1';
+      }
     }
 
     // Validate API key after all overrides

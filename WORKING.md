@@ -1,3 +1,22 @@
+## 2025-11-28: Rate Limiting for Gemini API ✅
+
+**Commit:** 63c9ae8 - Add rate limiting with retry for Gemini API in enrich phase
+
+**Problem:** Gemini free tier has 10 requests/minute limit. Previous run hit 429 errors on scenes 12-19.
+
+**Solution:** Added to `enrich-phase.ts`:
+- 6.5s delay between API calls (~9 req/min, safely under limit)
+- Exponential backoff retry for 429/rate limit errors
+- 3 retries with delays of 20s, 40s, 80s
+- Logs rate limiting info and retry attempts
+
+**Test Results:**
+- All 19 scenes processed without rate limit errors
+- 15/19 scenes enriched (4 had no matching elements to inject)
+- Total time: ~3 minutes (vs ~30s with rate limit errors)
+
+---
+
 ## 2025-11-28: Enrich Phase Implementation ✅✅✅✅✅
 
 **Status:** New --enrich phase implemented + Tested + Character visual details now injected into scenes

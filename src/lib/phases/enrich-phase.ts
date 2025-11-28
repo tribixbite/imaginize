@@ -358,6 +358,133 @@ export class EnrichPhase extends BasePhase {
   }
 
   /**
+   * Filter element description to extract only permanent visual traits
+   * Removes scene-specific states like "unconscious", "bleeding", "injured"
+   */
+  private extractPermanentTraits(element: BookElement): string {
+    if (!element.description) return '';
+
+    const description = element.description;
+
+    // Scene-specific state patterns to filter out
+    const sceneSpecificPatterns = [
+      // Injury/medical states
+      /\b(gravely |severely |critically )?(injured|wounded|hurt|bleeding|unconscious|dead|dying|killed)\b/gi,
+      /\b(massive |severe |deep )?(wounds?|injuries|cuts?|gashes?|bruises?)\b/gi,
+      /\bpulled from (its|the|a) mouth\b/gi,
+      /\b(rough|desperate|labored|shallow) breathing\b/gi,
+      /\bbleeding (through|from|heavily)\b/gi,
+      /\b(visible through|torn|damaged|ripped) (suit|armor|clothing)\b/gi,
+      // Emotional states (temporary)
+      /\b(currently |now )?(terrified|scared|frightened|panicked|shocked)\b/gi,
+      /\b(huddled|cowering|trembling|shaking) (in fear|with fear|on the ground)\b/gi,
+      /\bpale (with|from) (fear|terror|shock)\b/gi,
+      // Positional states
+      /\b(lying|sitting|standing|crouching) (on|in|at)\b/gi,
+      /\bfound (unconscious|injured|dead)\b/gi,
+    ];
+
+    let filtered = description;
+
+    // Apply filters
+    for (const pattern of sceneSpecificPatterns) {
+      filtered = filtered.replace(pattern, '');
+    }
+
+    // Clean up multiple spaces and punctuation artifacts
+    filtered = filtered
+      .replace(/\s+/g, ' ')
+      .replace(/\s*,\s*,/g, ',')
+      .replace(/\s*\.\s*\./g, '.')
+      .replace(/,\s*\./g, '.')
+      .replace(/^\s*[,.]?\s*/, '')
+      .replace(/\s*[,.]?\s*$/, '')
+      .trim();
+
+    // If we filtered out too much, return a minimal description
+    if (filtered.length < 20) {
+      // Try to extract just the core identity
+      const typeMatch = description.match(/^(A |An )?(human |alien )?(client|scientist|doctor|soldier|guard|construct|creature|robot)/i);
+      if (typeMatch) {
+        return typeMatch[0];
+      }
+      return element.type === 'character' ? 'A character' : element.description;
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Get scene-appropriate description for an element
+   * Uses the source quote to determine what states are relevant for THIS scene
+   */
+  private getSceneAppropriateDescription(
+    element: BookElement,
+    sceneQuote: string,
+    sceneDescription: string
+  ): string {
+    const permanentTraits = this.extractPermanentTraits(element);
+    const fullDescription = element.description || '';
+
+    // Check if this scene mentions injury/unconsciousness for this character
+    const namePattern = new RegExp(element.name.replace(/^(Dr\.|Mr\.|Mrs\.)\s*/i, ''), 'i');
+    const sceneContext = `${sceneQuote} ${sceneDescription}`.toLowerCase();
+    const elementNameLower = element.name.toLowerCase().replace(/^(dr\.|mr\.|mrs\.)\s*/i, '');
+
+    // Scene-specific states to check
+    const stateChecks = [
+      { pattern: /unconscious|limp|unresponsive/i, state: 'unconscious' },
+      { pattern: /bleeding|blood|wounded|injured/i, state: 'injured' },
+      { pattern: /dead|dying|lifeless/i, state: 'dead' },
+      { pattern: /terrified|scared|frightened|panic/i, state: 'frightened' },
+      { pattern: /huddled|cowering|trembling/i, state: 'cowering' },
+    ];
+
+    // Check if character is mentioned near these states in THIS scene
+    const activeStates: string[] = [];
+    for (const check of stateChecks) {
+      // Look for the state near the character's name in the scene
+      const combinedPattern = new RegExp(
+        `(${elementNameLower}[^.]*${check.pattern.source}|${check.pattern.source}[^.]*${elementNameLower})`,
+        'i'
+      );
+      if (combinedPattern.test(sceneContext)) {
+        activeStates.push(check.state);
+      }
+    }
+
+    // Build description: permanent traits + scene-relevant states
+    let result = permanentTraits;
+
+    if (activeStates.length > 0) {
+      // Add back scene-specific details that ARE relevant
+      const stateAdditions: string[] = [];
+
+      if (activeStates.includes('unconscious')) {
+        stateAdditions.push('currently unconscious');
+      }
+      if (activeStates.includes('injured')) {
+        // Extract injury details from original if present in scene
+        const injuryMatch = fullDescription.match(/((massive |severe )?(wounds?|injuries|bleeding)[^,.]*)/i);
+        if (injuryMatch) {
+          stateAdditions.push(injuryMatch[1].trim());
+        } else {
+          stateAdditions.push('visibly injured');
+        }
+      }
+      if (activeStates.includes('frightened') || activeStates.includes('cowering')) {
+        stateAdditions.push('showing fear');
+      }
+
+      if (stateAdditions.length > 0) {
+        result += `. In this scene: ${stateAdditions.join(', ')}`;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Use AI to intelligently enrich scene description with element details
    */
   private async enrichSceneWithAI(
@@ -366,9 +493,16 @@ export class EnrichPhase extends BasePhase {
     openai: any,
     modelName: string
   ): Promise<string> {
-    // Build element context
+    // Build element context with scene-appropriate filtering
     const elementDescriptions = elements
-      .map(e => `- ${e.name} (${e.type}): ${e.description}`)
+      .map(e => {
+        const appropriateDesc = this.getSceneAppropriateDescription(
+          e,
+          concept.quote,
+          concept.description
+        );
+        return `- ${e.name} (${e.type}): ${appropriateDesc}`;
+      })
       .join('\n');
 
     const prompt = `You are enriching a scene description for book illustration. Your task is to seamlessly integrate specific visual details about characters and elements into the existing scene description.
@@ -376,17 +510,26 @@ export class EnrichPhase extends BasePhase {
 ORIGINAL SCENE DESCRIPTION:
 ${concept.description}
 
+SOURCE TEXT FROM BOOK (use this to understand the scene context):
+"${concept.quote}"
+
 ELEMENT VISUAL DETAILS TO INTEGRATE:
 ${elementDescriptions}
 
-INSTRUCTIONS:
+CRITICAL INSTRUCTIONS:
 1. Rewrite the scene description to include specific visual details from the elements above
-2. For each character mentioned, add their physical appearance details naturally
-3. Maintain the same narrative flow, mood, and composition of the original
-4. Keep approximately the same length (can be slightly longer to accommodate details)
-5. Do NOT change the core action or setting
-6. Do NOT add elements or characters that weren't in the original
-7. Use descriptive language that works for illustration prompts
+2. For each character mentioned, add their PERMANENT physical appearance details (face, build, clothing, etc.)
+3. ONLY include temporary states (injured, frightened, etc.) if they are EXPLICITLY mentioned in the SOURCE TEXT above
+4. If a character is described as injured in the element details but NOT in the source text, show them as healthy
+5. Maintain the same narrative flow, mood, and composition of the original
+6. Keep approximately the same length (can be slightly longer to accommodate details)
+7. Do NOT change the core action or setting
+8. Do NOT add elements or characters that weren't in the original
+9. Use descriptive language that works for illustration prompts
+
+EXAMPLE:
+- If source text says "Bharadwaj was taking samples" → show her healthy, working
+- If source text says "Bharadwaj was bleeding" → show her injured
 
 CRITICAL: Return ONLY the enriched scene description, no explanations or preamble.
 

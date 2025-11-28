@@ -1,3 +1,65 @@
+## 2025-11-28: Enrich Phase Implementation ✅✅✅✅✅
+
+**Status:** New --enrich phase implemented + Tested + Character visual details now injected into scenes
+
+### Critical Gap Identified and Fixed
+
+**Problem:** Scene descriptions mentioned characters (e.g., "Dr. Bharadwaj") without ANY visual details, even though Elements.md had complete character descriptions.
+
+**Root Cause:** Element descriptions were only used during IMAGE GENERATION (illustrate-phase), not during scene description generation (analyze-phase).
+
+**Solution:** New `--enrich` phase that runs AFTER analyze + extract phases to inject element visual details into scene descriptions.
+
+### Enrichment Phase Features
+
+**Architecture:**
+- `EnrichPhase` class extends `BasePhase` with standard sub-phase pattern
+- Runs independently: `npx imaginize --enrich`
+- Uses AI to intelligently blend element descriptions into scenes
+- Low temperature (0.3) for consistent, predictable results
+- Regenerates Chapters.md with enriched content
+
+**Element Matching Logic:**
+1. Exact name match (case-insensitive)
+2. Title stripping (Dr., Mr., Mrs., etc.)
+3. Partial name matching
+4. Alias checking from element.aliases
+
+**CLI Usage:**
+```bash
+npx imaginize --enrich              # Run enrichment only (requires analyze + extract)
+npx imaginize --text --elements --enrich  # Full pipeline with enrichment
+```
+
+### Test Results (AllSystemsRed)
+
+**Scenes Enriched:** 11 (before rate limit hit)
+
+**Example - Chapter One Scene 1:**
+
+BEFORE (original):
+> "...pulling the unconscious and bleeding Dr. Bharadwaj from the gaping, tooth-filled maw..."
+
+AFTER (enriched):
+> "Dr. Bharadwaj, a human scientist, is gravely injured, massive bleeding wounds visible on her leg and side through her damaged suit, her breathing rough and desperate."
+
+**Character Details Successfully Injected:**
+- **SecUnit:** "humanoid construct with 'new skin' stretched over its frame...knit gray pants, a long-sleeved T-shirt, a jacket, and soft shoes designed to conceal gunports on its forearms"
+- **Dr. Mensah:** "dark-skinned woman with short, lighter brown hair...focused motion in the cockpit"
+- **Dr. Volescu:** "pale with fear...being helped into a seat"
+- **Hostile creature:** "subterranean horror with rows of sharp teeth or cilia capable of chewing through earth"
+
+### Implementation Commit
+
+**Commit:** 09308e6
+**Files Changed:**
+- `src/lib/phases/enrich-phase.ts` (new, 450 lines)
+- `src/index.ts` (added --enrich flag and phase execution)
+- `src/lib/state-manager.ts` (added enrich phase initialization)
+- `src/types/config.ts` (added enrich to phases and CommandOptions)
+
+---
+
 ## 2025-11-28: Quality Testing + Unified Analysis Optimization ✅✅✅✅
 
 **Status:** Expert review validated + Unified analysis working + Style guide bug fixed

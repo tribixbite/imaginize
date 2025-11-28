@@ -142,9 +142,12 @@ Return ONLY the style guide text, starting with "GENRE: [Identified Genre]. " fo
 
 Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, earthy tones..."`;
 
+    // Resolve model config to get model name string
+    const modelConfig = resolveModelConfig(this.context.config.model, this.context.config);
+    const modelName = typeof modelConfig === 'string' ? modelConfig : modelConfig.name;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: modelName,
       messages: [
         {
           role: 'system',

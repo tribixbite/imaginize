@@ -39,6 +39,7 @@ export class StateManager {
         parse: { status: 'pending' },
         analyze: { status: 'pending' },
         extract: { status: 'pending' },
+        enrich: { status: 'pending' }, // New: enriches scene descriptions with element details
         illustrate: { status: 'pending' },
       },
       toc: { chapters: [] },

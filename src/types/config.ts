@@ -307,6 +307,7 @@ export interface IllustrateState {
     parse: PhaseState;
     analyze: PhaseState;
     extract: PhaseState;
+    enrich: PhaseState; // New: enriches scene descriptions with element details
     illustrate: PhaseState;
   };
   toc: {
@@ -330,6 +331,7 @@ export interface CommandOptions {
   // Phase selection
   text?: boolean;
   elements?: boolean;
+  enrich?: boolean; // New: enrich scene descriptions with element visual details
   images?: boolean;
   pdf?: boolean;
   cbz?: boolean;

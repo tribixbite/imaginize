@@ -37,6 +37,7 @@ import {
 } from './lib/provider-utils.js';
 import { AnalyzePhase } from './lib/phases/analyze-phase.js';
 import { ExtractPhase } from './lib/phases/extract-phase.js';
+import { EnrichPhase } from './lib/phases/enrich-phase.js';
 import { IllustratePhase } from './lib/phases/illustrate-phase.js';
 import { AnalyzePhaseV2 } from './lib/phases/analyze-phase-v2.js';
 import { IllustratePhaseV2 } from './lib/phases/illustrate-phase-v2.js';
@@ -75,6 +76,7 @@ export async function main(): Promise<void> {
     // Phase selection
     .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')
+    .option('--enrich', 'Enrich scene descriptions with element visual details (enrich phase)')
     .option(
       '--images',
       'Generate images with DALL-E and update Chapters.md (illustrate phase)'
@@ -751,8 +753,9 @@ export async function main(): Promise<void> {
     await stateManager.save();
 
     // Determine which phases to run
-    const needsText = options.text || (!options.elements && !options.images);
+    const needsText = options.text || (!options.elements && !options.enrich && !options.images);
     const needsElements = !!options.elements;
+    const needsEnrich = !!options.enrich;
     const needsImages = !!options.images;
 
     // Filter chapters if requested
@@ -913,6 +916,14 @@ export async function main(): Promise<void> {
         progressTracker.setPhase('extract');
         const extractPhase = new ExtractPhase(context);
         await extractPhase.execute();
+        console.log('');
+      }
+
+      if (needsEnrich) {
+        console.log(chalk.cyan('✨ Phase: Enrich (--enrich)\n'));
+        progressTracker.setPhase('enrich');
+        const enrichPhase = new EnrichPhase(context);
+        await enrichPhase.execute();
         console.log('');
       }
 

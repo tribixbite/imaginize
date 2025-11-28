@@ -13,6 +13,11 @@ import { existsSync } from 'fs';
 import { generateChaptersFile } from '../output-generator.js';
 import fetch from 'node-fetch';
 
+// DALL-E-3 has a maximum prompt length of 4000 characters
+const DALLE_MAX_PROMPT_LENGTH = 4000;
+// Reserve space for required elements (style, scene, technical requirements)
+const PROMPT_BUFFER = 200;
+
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
   private elements: BookElement[] = [];
@@ -473,78 +478,134 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
   /**
    * Build image prompt from concept with element cross-referencing and style guide
+   * Ensures prompt stays within DALL-E-3's 4000 character limit
    */
   private buildImagePrompt(concept: ImageConcept): string {
-    // Build structured prompt with genre, style, mood, and lighting
-    let promptParts: string[] = [];
+    const maxLength = DALLE_MAX_PROMPT_LENGTH - PROMPT_BUFFER;
 
-    // 1. Genre and visual style guide (genre now included in styleGuide)
+    // Required parts (always included, may be truncated)
+    const technicalReqs = '\nTECHNICAL: Cinematic composition, detailed illustration, high-quality art\nCRITICAL: No text, letters, words, or writing in the image';
+    const technicalLen = technicalReqs.length;
+
+    // Style guide - truncate if too long (max 400 chars)
+    let styleSection = '';
     if (this.styleGuide) {
-      promptParts.push(this.styleGuide);
+      styleSection = this.truncateText(this.styleGuide, 400);
     } else {
-      // Fallback if no style guide generated
-      promptParts.push('GENRE: Detailed illustration with atmospheric detail');
+      styleSection = 'GENRE: Detailed illustration with atmospheric detail';
     }
 
-    // 3. Mood and atmosphere
+    // Mood and lighting (compact)
+    let moodLighting = '';
     if (concept.mood) {
-      promptParts.push(`MOOD: ${concept.mood}`);
+      moodLighting += `MOOD: ${concept.mood}. `;
     }
-
-    // 4. Lighting conditions
     if (concept.lighting) {
-      promptParts.push(`LIGHTING: ${concept.lighting}`);
+      moodLighting += `LIGHTING: ${concept.lighting}.`;
     }
+    moodLighting = this.truncateText(moodLighting, 150);
 
-    // 5. Main scene description
-    promptParts.push(`\nSCENE: ${concept.description}`);
+    // Scene description - the most important part
+    // Calculate available space for scene after other parts
+    const fixedPartsLen = styleSection.length + moodLighting.length + technicalLen + 50; // 50 for labels/newlines
+    const elementBudget = 600; // Reserve for element descriptions
+    const sceneMaxLen = maxLength - fixedPartsLen - elementBudget;
 
-    // 6. Character/creature details from elements
-    if (this.elements.length > 0 && concept.elements_present && concept.elements_present.length > 0) {
-      const referencedElements: string[] = [];
+    let sceneDescription = concept.description || '';
+    sceneDescription = this.truncateText(sceneDescription, Math.max(sceneMaxLen, 500));
 
-      // Use structured elements_present array from analysis phase (more reliable than regex)
-      for (const entityName of concept.elements_present) {
-        // Find matching element with case-insensitive match
-        const element = this.elements.find(e =>
-          e.name.toLowerCase() === entityName.toLowerCase()
-        );
-        if (element && element.description) {
-          referencedElements.push(`- ${element.name}: ${element.description}`);
-        }
-      }
+    // Build base prompt
+    let prompt = styleSection;
+    if (moodLighting) {
+      prompt += '\n' + moodLighting;
+    }
+    prompt += `\nSCENE: ${sceneDescription}`;
 
-      // Append element descriptions to prompt
-      if (referencedElements.length > 0) {
-        promptParts.push('\nELEMENT DETAILS (maintain consistency):');
-        promptParts.push(referencedElements.join('\n'));
-      }
-    } else if (this.elements.length > 0) {
-      // Fallback: Use regex-based extraction if elements_present not available
-      const referencedElements: string[] = [];
-      const mentionedEntities = this.extractEntityNames(
-        concept.description,
-        concept.quote
-      );
-      for (const entityName of mentionedEntities) {
-        const element = this.findElement(entityName);
-        if (element) {
-          referencedElements.push(`- ${element.name}: ${element.description}`);
-        }
-      }
-      if (referencedElements.length > 0) {
-        promptParts.push('\nELEMENT DETAILS (maintain consistency):');
-        promptParts.push(referencedElements.join('\n'));
+    // Add element details if space allows
+    const currentLen = prompt.length + technicalLen;
+    const remainingBudget = maxLength - currentLen - 50;
+
+    if (remainingBudget > 100 && this.elements.length > 0) {
+      const elementDescriptions = this.buildElementSection(concept, remainingBudget);
+      if (elementDescriptions) {
+        prompt += elementDescriptions;
       }
     }
 
-    // 7. Technical requirements
-    promptParts.push(
-      '\nTECHNICAL: Cinematic composition, detailed illustration, high-quality fantasy art'
-    );
-    promptParts.push('CRITICAL: No text, letters, words, or writing in the image');
+    // Add technical requirements
+    prompt += technicalReqs;
 
-    return promptParts.join('\n');
+    // Final safety check - hard truncate if still over
+    if (prompt.length > DALLE_MAX_PROMPT_LENGTH) {
+      prompt = prompt.substring(0, DALLE_MAX_PROMPT_LENGTH - 3) + '...';
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Build element section within budget
+   */
+  private buildElementSection(concept: ImageConcept, maxLen: number): string {
+    const referencedElements: string[] = [];
+
+    // Get entity names from elements_present or extract from text
+    const entityNames = concept.elements_present && concept.elements_present.length > 0
+      ? concept.elements_present
+      : this.extractEntityNames(concept.description || '', concept.quote || '');
+
+    for (const entityName of entityNames) {
+      const element = this.findElement(entityName);
+      if (element && element.description) {
+        // Truncate each element description to 150 chars
+        const shortDesc = this.truncateText(element.description, 150);
+        referencedElements.push(`- ${element.name}: ${shortDesc}`);
+      }
+    }
+
+    if (referencedElements.length === 0) {
+      return '';
+    }
+
+    // Build section and truncate to budget
+    let section = '\nELEMENTS:\n' + referencedElements.join('\n');
+    if (section.length > maxLen) {
+      // Remove elements from end until it fits
+      while (section.length > maxLen && referencedElements.length > 1) {
+        referencedElements.pop();
+        section = '\nELEMENTS:\n' + referencedElements.join('\n');
+      }
+      // If still too long, truncate the remaining
+      if (section.length > maxLen) {
+        section = section.substring(0, maxLen - 3) + '...';
+      }
+    }
+
+    return section;
+  }
+
+  /**
+   * Truncate text to maxLen, preserving word boundaries when possible
+   */
+  private truncateText(text: string, maxLen: number): string {
+    if (!text || text.length <= maxLen) {
+      return text;
+    }
+
+    // Try to cut at sentence boundary
+    const truncated = text.substring(0, maxLen - 3);
+    const lastPeriod = truncated.lastIndexOf('. ');
+    if (lastPeriod > maxLen * 0.6) {
+      return truncated.substring(0, lastPeriod + 1);
+    }
+
+    // Cut at word boundary
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLen * 0.8) {
+      return truncated.substring(0, lastSpace) + '...';
+    }
+
+    return truncated + '...';
   }
 
   /**

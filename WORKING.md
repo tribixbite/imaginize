@@ -49,11 +49,39 @@ AFTER (enriched):
 - **Dr. Volescu:** "pale with fear...being helped into a seat"
 - **Hostile creature:** "subterranean horror with rows of sharp teeth or cilia capable of chewing through earth"
 
-### Implementation Commit
+### Context-Aware Filtering (Commit 7a51f42)
 
-**Commit:** 09308e6
+**Problem Identified:** Element descriptions contained scene-specific states (e.g., "unconscious and bleeding") that would be incorrectly applied to ALL scenes featuring that character.
+
+**Solution:** Two-tier filtering system:
+
+1. **`extractPermanentTraits()`** - Filters out scene-specific states using regex:
+   - Injury states: injured, wounded, bleeding, unconscious, dead
+   - Emotional states: terrified, scared, frightened, panicked
+   - Positional states: lying, sitting, crouching
+   - Returns only permanent visual traits (appearance, clothing, build)
+
+2. **`getSceneAppropriateDescription()`** - Uses scene context to determine active states:
+   - Parses scene quote and description for character mentions
+   - Detects if character is mentioned near state keywords
+   - Re-adds ONLY relevant temporary states for THIS scene
+
+**Example Result:**
+- Scene A (character taking samples): Shows character healthy
+- Scene B (character injured): Shows character with wounds, bleeding
+
+**AI Prompt Updated:**
+- Added SOURCE TEXT section for scene context
+- Explicit instruction: "ONLY include temporary states if EXPLICITLY in SOURCE TEXT"
+- Example guidance: "Bharadwaj taking samples → healthy; Bharadwaj bleeding → injured"
+
+### Implementation Commits
+
+**Commit:** 09308e6 - Initial enrichment phase
+**Commit:** 7a51f42 - Context-aware filtering
+
 **Files Changed:**
-- `src/lib/phases/enrich-phase.ts` (new, 450 lines)
+- `src/lib/phases/enrich-phase.ts` (500+ lines with filtering)
 - `src/index.ts` (added --enrich flag and phase execution)
 - `src/lib/state-manager.ts` (added enrich phase initialization)
 - `src/types/config.ts` (added enrich to phases and CommandOptions)

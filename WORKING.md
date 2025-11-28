@@ -1,3 +1,49 @@
+## 2025-11-28: Full Pipeline Test - All 6 Compilation Formats ✅
+
+**Test Book:** All Systems Red: The Murderbot Diaries (Martha Wells)
+
+**Generated Files:**
+| Format | File | Size |
+|--------|------|------|
+| PDF | All_Systems_Red_The_Murderbot_Diaries.pdf | 16 MB |
+| CBZ | All_Systems_Red_The_Murderbot_Diaries.cbz | 8.5 MB |
+| EPUB | All_Systems_Red_The_Murderbot_Diaries.epub | 9.0 MB |
+| HTML Gallery | All_Systems_Red_The_Murderbot_Diaries.html | 24 MB |
+| WebP Album | All_Systems_Red_The_Murderbot_Diaries_webp/ | 0.8 MB (90.9% savings) |
+| WebP Strip | All_Systems_Red_The_Murderbot_Diaries_strip.webp | 1.8 MB |
+
+**Notes:**
+- 5 images generated (OpenAI content filters blocked some Murderbot content)
+- All compilation formats working correctly
+- WebP provides significant size reduction (90.9%)
+- PDF includes cover, TOC, metadata pages
+
+---
+
+## 2025-11-28: DALL-E-3 Prompt Truncation Fix ✅
+
+**Commit:** 205cf82 - fix: add DALL-E-3 prompt truncation to respect 4000 char limit
+
+**Problem:** Enriched scene descriptions were exceeding DALL-E-3's 4000 character prompt limit, causing "prompt too long" errors (4602-6164 chars).
+
+**Solution:** Added intelligent prompt truncation in `illustrate-phase.ts`:
+- `DALLE_MAX_PROMPT_LENGTH = 4000` constant
+- `truncateText()` helper with sentence/word boundary awareness
+- `buildElementSection()` for budget-aware element inclusion
+- Refactored `buildImagePrompt()`:
+  - Style guide: max 400 chars
+  - Mood/lighting: max 150 chars
+  - Scene description: dynamically sized based on remaining budget
+  - Element descriptions: 150 chars each
+  - Final safety check to hard truncate if still over limit
+
+**Test Results:**
+- No more "prompt too long" errors
+- 5/19 images generated successfully
+- Remaining failures due to OpenAI content safety filters (expected for "Murderbot" content)
+
+---
+
 ## 2025-11-28: Rate Limiting for Gemini API ✅
 
 **Commit:** 63c9ae8 - Add rate limiting with retry for Gemini API in enrich phase

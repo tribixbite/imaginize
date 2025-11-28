@@ -29,6 +29,18 @@ interface EnrichedConcept extends ImageConcept {
   elementsInjected?: string[]; // Which elements were injected
 }
 
+// Rate limiting constants for Gemini free tier (10 requests/min)
+const RATE_LIMIT_DELAY_MS = 6500; // ~9 requests/min to stay safely under limit
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 20000; // Start with 20s for 429 errors
+
+/**
+ * Sleep utility for rate limiting
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export class EnrichPhase extends BasePhase {
   private concepts: EnrichedConcept[] = [];
   private elements: BookElement[] = [];
@@ -201,10 +213,12 @@ export class EnrichPhase extends BasePhase {
     const modelName = typeof modelConfig === 'string' ? modelConfig : modelConfig.name;
 
     await progressTracker.log(`Using model: ${modelName}`, 'info');
+    await progressTracker.log(`Rate limiting: ${Math.round(60000 / RATE_LIMIT_DELAY_MS)} requests/min`, 'info');
 
     let enrichedCount = 0;
     let skippedCount = 0;
     let tokensUsed = 0;
+    let apiCallCount = 0;
 
     for (let i = 0; i < this.concepts.length; i++) {
       const concept = this.concepts[i];
@@ -217,31 +231,68 @@ export class EnrichPhase extends BasePhase {
         continue; // No elements to inject
       }
 
-      try {
-        // Use AI to enrich the description
-        const enrichedDescription = await this.enrichSceneWithAI(
-          concept,
-          relevantElements,
-          openai,
-          modelName
-        );
+      // Rate limiting: wait between API calls
+      if (apiCallCount > 0) {
+        await sleep(RATE_LIMIT_DELAY_MS);
+      }
 
-        if (enrichedDescription && enrichedDescription !== concept.description) {
-          concept.enrichedDescription = enrichedDescription;
-          concept.elementsInjected = relevantElements.map(e => e.name);
-          enrichedCount++;
+      let success = false;
+      let lastError: Error | null = null;
 
-          // Update progress periodically
-          if (enrichedCount % 5 === 0) {
+      // Retry loop with exponential backoff
+      for (let attempt = 0; attempt < MAX_RETRIES && !success; attempt++) {
+        try {
+          // Use AI to enrich the description
+          const enrichedDescription = await this.enrichSceneWithAI(
+            concept,
+            relevantElements,
+            openai,
+            modelName
+          );
+          apiCallCount++;
+
+          if (enrichedDescription && enrichedDescription !== concept.description) {
+            concept.enrichedDescription = enrichedDescription;
+            concept.elementsInjected = relevantElements.map(e => e.name);
+            enrichedCount++;
+
+            // Update progress periodically
+            if (enrichedCount % 5 === 0) {
+              await progressTracker.log(
+                `Progress: ${enrichedCount}/${this.concepts.length} scenes enriched`,
+                'info'
+              );
+            }
+          }
+          success = true;
+        } catch (error: any) {
+          lastError = error;
+          const errorMessage = error.message || String(error);
+
+          // Check if it's a rate limit error (429)
+          const isRateLimitError = errorMessage.includes('429') ||
+                                   errorMessage.includes('RESOURCE_EXHAUSTED') ||
+                                   errorMessage.includes('rate') ||
+                                   errorMessage.includes('quota');
+
+          if (isRateLimitError && attempt < MAX_RETRIES - 1) {
+            // Exponential backoff: 20s, 40s, 80s
+            const backoffDelay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
             await progressTracker.log(
-              `Progress: ${enrichedCount}/${this.concepts.length} scenes enriched`,
-              'info'
+              `Rate limited on scene ${i + 1}, waiting ${Math.round(backoffDelay / 1000)}s before retry ${attempt + 2}/${MAX_RETRIES}...`,
+              'warning'
             );
+            await sleep(backoffDelay);
+          } else if (!isRateLimitError) {
+            // Non-rate-limit error, don't retry
+            break;
           }
         }
-      } catch (error: any) {
+      }
+
+      if (!success && lastError) {
         await progressTracker.log(
-          `Warning: Failed to enrich scene ${i + 1}: ${error.message}`,
+          `Warning: Failed to enrich scene ${i + 1} after ${MAX_RETRIES} attempts: ${lastError.message}`,
           'warning'
         );
       }
@@ -256,7 +307,7 @@ export class EnrichPhase extends BasePhase {
 
     return {
       success: true,
-      data: { enrichedCount, skippedCount, tokensUsed },
+      data: { enrichedCount, skippedCount, tokensUsed, apiCallCount },
     };
   }
 

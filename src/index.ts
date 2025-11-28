@@ -28,7 +28,7 @@ import { StateManager } from './lib/state-manager.js';
 import { ProgressTracker } from './lib/progress-tracker.js';
 import { DashboardServer } from './lib/dashboard/server.js';
 import { findBookFiles, selectBookFile } from './lib/file-selector.js';
-import type { IllustrateConfig, IllustrateState } from './types/config.js';
+import type { IllustrateConfig, IllustrateState, AIProvider } from './types/config.js';
 import {
   prepareConfiguration,
   parseChapterSelection,
@@ -106,6 +106,7 @@ export async function main(): Promise<void> {
     .option('--model <name>', 'Override model (e.g., "gpt-4o")')
     .option('--api-key <key>', 'Override API key')
     .option('--image-key <key>', 'Separate image API key')
+    .option('--provider <provider>', 'Override AI provider (openai, openrouter, gemini, custom)')
     // Output
     .option('--output-dir <dir>', 'Override output directory')
     .option('--verbose', 'Verbose logging')
@@ -583,6 +584,18 @@ export async function main(): Promise<void> {
     if (options.apiKey) config.apiKey = options.apiKey;
     if (options.imageKey && config.imageEndpoint) {
       config.imageEndpoint.apiKey = options.imageKey;
+    }
+    if (options.provider) {
+      config.provider = options.provider as AIProvider;
+    }
+
+    // Validate API key after all overrides
+    if (!config.apiKey) {
+      spinner.fail('Configuration loaded');
+      console.error(chalk.red('\n❌ Error: API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .imaginize.config\n'));
+      console.log(chalk.yellow('💡 Tip: Run "imaginize --init-config" to create a configuration file'));
+      console.log(chalk.yellow('   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable'));
+      process.exit(1);
     }
 
     spinner.succeed('Configuration loaded');

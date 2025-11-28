@@ -32,10 +32,11 @@ const DEFAULT_CONFIG: IllustrateConfig = {
 
 /**
  * Load configuration from multiple sources with priority:
- * 1. Current directory .imaginize.config
- * 2. Home directory .imaginize.config
- * 3. Environment variables
- * 4. Default values
+ * 1. CLI arguments (applied in index.ts after loadConfig)
+ * 2. Current directory .imaginize.config
+ * 3. Home directory .imaginize.config
+ * 4. Environment variables (fallback only)
+ * 5. Default values
  */
 export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   const explorer = cosmiconfig('imaginize');
@@ -43,30 +44,7 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   // Start with defaults
   let config = { ...DEFAULT_CONFIG };
 
-  // Load from home directory
-  const homeConfigPath = join(homedir(), '.imaginize.config');
-  if (existsSync(homeConfigPath)) {
-    try {
-      const result = await explorer.load(homeConfigPath);
-      if (result?.config) {
-        config = { ...config, ...result.config };
-      }
-    } catch (error) {
-      console.warn(`Warning: Failed to load config from ${homeConfigPath}`);
-    }
-  }
-
-  // Load from current directory (higher priority)
-  try {
-    const result = await explorer.search();
-    if (result?.config) {
-      config = { ...config, ...result.config };
-    }
-  } catch (error) {
-    console.warn('Warning: Failed to load config from current directory');
-  }
-
-  // Override with environment variables (highest priority)
+  // Apply environment variables first (lowest priority, fallback only)
   // Priority: OPENROUTER_API_KEY > OPENAI_API_KEY
   if (process.env.OPENROUTER_API_KEY) {
     config.apiKey = process.env.OPENROUTER_API_KEY;
@@ -114,12 +92,31 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
   }
 
   // Validate required fields
-  if (!config.apiKey) {
-    throw new Error(
-      'API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .imaginize.config'
-    );
+  // Load from home directory (overrides env vars)
+  const homeConfigPath = join(homedir(), '.imaginize.config');
+  if (existsSync(homeConfigPath)) {
+    try {
+      const result = await explorer.load(homeConfigPath);
+      if (result?.config) {
+        config = { ...config, ...result.config };
+      }
+    } catch (error) {
+      console.warn(`Warning: Failed to load config from ${homeConfigPath}`);
+    }
   }
 
+  // Load from current directory (highest priority, overrides everything except CLI args)
+  try {
+    const result = await explorer.search();
+    if (result?.config) {
+      config = { ...config, ...result.config };
+    }
+  } catch (error) {
+    console.warn('Warning: Failed to load config from current directory');
+  }
+
+  // Note: API key validation removed - will be done after CLI overrides in index.ts
+  // This allows --api-key CLI option to work properly
   return config as Required<IllustrateConfig>;
 }
 

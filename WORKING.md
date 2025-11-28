@@ -1,36 +1,47 @@
-## 2025-11-26: Expert Review & Testing Blocked by Config Issue
+## 2025-11-28: Config Priority Fix + --provider CLI Option ✅
 
-**Status:** Gemini 2.5 Pro code review complete + Top 3 fixes implemented + Testing blocked
+**Status:** Fixed config precedence + Added CLI provider override + Tested successfully
 
-### Environment Variable Precedence Issue ⚠️
+### Config Priority Issue - FIXED ✅
 
-**Problem:** Cannot test improved prompts due to environment variable overriding config file
+**Problem:** Environment variables overrode config files, breaking Google API integration
 
-**Root Cause:** `src/lib/config.ts` prioritizes environment variables over config files:
-```typescript
-// Priority: OPENROUTER_API_KEY > OPENAI_API_KEY > config file
-if (process.env.OPENROUTER_API_KEY) {
-  config.apiKey = process.env.OPENROUTER_API_KEY;
-  config.baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-}
-```
+**Root Cause:** `src/lib/config.ts` applied env vars LAST (highest priority), after loading config files
 
-**Impact:**
-- Config file correctly specifies Google native API: `https://generativelanguage.googleapis.com/v1beta`
-- But tool uses OpenRouter because `OPENROUTER_API_KEY` set in `~/.bashrc`
-- Hit OpenRouter rate limits (16 req/min) instead of using Google's higher limits
-- Cannot complete comparison test of improved prompts vs old output
+**Solution Implemented:**
+1. **Reversed priority order** in `loadConfig()`:
+   - Environment variables now applied FIRST (lowest priority, fallback only)
+   - Home directory `.imaginizerc.json` overrides env vars
+   - Current directory `.imaginizerc.json` overrides home directory (highest priority)
+   - CLI arguments applied in `index.ts` after `loadConfig()` (ultimate priority)
 
-**Workaround:**
-1. Commented out env vars in `~/.bashrc` (lines 5-7)
-2. Need to start fresh shell for changes to take effect
-3. Alternative: modify `config.ts` to prioritize config file over env vars
+2. **Moved API key validation** from `config.ts` to `index.ts`:
+   - Allows CLI `--api-key` override to work properly
+   - Validation happens after all overrides applied
 
-**Files Affected:**
-- `.bashrc`: Commented out OPENAI_API_KEY and OPENROUTER_API_KEY
-- Test blocked: Cannot complete fresh run until rate limits reset or fresh shell started
+3. **Added `--provider` CLI option**:
+   - New option in `src/index.ts`: `--provider <provider>`
+   - Supports: openai, openrouter, gemini, custom
+   - Applied alongside other CLI overrides (model, api-key, image-key)
 
-### Code Improvements Ready for Testing ✅
+**Files Modified:**
+- `src/lib/config.ts`: Reversed config loading order (env vars → home → current dir)
+- `src/index.ts`: Added AIProvider import, --provider option, validation after overrides
+- `.bashrc`: Commented out OPENROUTER_API_KEY and OPENAI_API_KEY (no longer needed)
+
+**Testing Results:** ✅
+- Created `.imaginizerc.json` in test directory with Google API config
+- Successfully processed allsystemsred.epub using `gemini-2.0-flash-thinking-exp-1219`
+- No OpenRouter rate limits encountered
+- Config file correctly overrode environment variables
+- Progress log confirms Gemini model used: "Using model: gemini-2.0-flash-thinking-exp-1219"
+
+**New Priority Order:**
+1. CLI arguments (highest - applied in index.ts)
+2. Current directory `.imaginizerc.json` / `.imaginize.config.js`
+3. Home directory `.imaginizerc.json` / `.imaginize.config.js`
+4. Environment variables (OPENROUTER_API_KEY, OPENAI_API_KEY)
+5. Default values (lowest)
 
 ---
 

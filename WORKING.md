@@ -1,6 +1,6 @@
 ## 2025-12-04: Hybrid Safety Filter Fallback System
 
-**Commit:** `6b1d128` - feat: add hybrid fallback for safety filter rejections
+**Commit:** `c6a394c` - feat: add hybrid fallback for safety filter rejections
 
 ### New Feature: Automatic Model Fallback on Safety Filter Rejection
 
@@ -32,6 +32,29 @@ private isSafetyFilterError(error: any): boolean
 - All Gemini variants reject → Tries OpenRouter Gemini
 - All free models reject → Falls back to DALL-E 3 (if available)
 - All models reject → Error with list of tried models
+
+### Generated TV-Style Gallery (Free Models)
+
+**Directory:** `imaginize_allsystemsred_tv/`
+**HTML Gallery:** `All_Systems_Red_The_Murderbot_Diaries.html` (46.4 MB)
+**Images:** 10 photorealistic TV-screenshot style images
+
+| Chapter | Scenes | Model | Status |
+|---------|--------|-------|--------|
+| Chapter 1 | 1 scene | gemini-pro-image | ✅ |
+| Chapter 3 | 2 scenes | gemini-pro-image | ✅ |
+| Chapter 4 | 1 scene | gemini-pro-image | ✅ |
+| Chapter 5 | 1 scene | gemini-pro-image | ✅ |
+| Chapter 6 | 2 scenes | gemini-pro-image | ✅ |
+| Chapter 7 | 2 scenes | gemini-pro-image | ✅ |
+| Chapter 8 | 1 scene | gemini-pro-image | ✅ |
+
+**Features Used:**
+- Photorealistic TV-screenshot prefix
+- Character visual overrides (SecUnit, Mensah)
+- DALLE_SAFETY_REPLACEMENTS sanitization
+- Free model: `google/gemini-2.0-flash-exp:free` for text
+- Free model: `gemini-pro-image` for images
 
 ---
 

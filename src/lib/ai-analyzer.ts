@@ -27,6 +27,26 @@ function isChatCompletion(response: any): response is ChatCompletion {
 }
 
 /**
+ * Strip markdown code fences from AI response content
+ * Some models (e.g., Amazon Nova via OpenRouter) wrap JSON responses in ```json ... ``` blocks
+ * even when response_format: { type: 'json_object' } is specified
+ */
+function stripMarkdownFences(content: string): string {
+  const trimmed = content.trim();
+  // Match ```json ... ``` or ``` ... ``` patterns (with or without language identifier)
+  const match = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/);
+  return match ? match[1].trim() : trimmed;
+}
+
+/**
+ * Safely parse JSON from AI response, handling markdown code fences
+ */
+function safeJsonParse(content: string): any {
+  const cleaned = stripMarkdownFences(content);
+  return JSON.parse(cleaned);
+}
+
+/**
  * Element context for scene analysis
  * Contains formatted descriptions of known story elements
  */
@@ -134,7 +154,7 @@ Return your response as a JSON array with this structure:
       throw new Error('No response from AI');
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = safeJsonParse(content);
     const concepts = Array.isArray(parsed) ? parsed : parsed.concepts || [];
 
     interface RawConcept {
@@ -253,7 +273,7 @@ Return your full analysis in the JSON format demonstrated in the example above. 
       throw new Error('No response from AI');
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = safeJsonParse(content);
 
     // Parse scenes
     const rawScenes = Array.isArray(parsed.scenes) ? parsed.scenes : [];
@@ -340,7 +360,7 @@ Return as JSON array:
       throw new Error('No response from AI');
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = safeJsonParse(content);
     return Array.isArray(parsed) ? parsed : parsed.elements || [];
   } catch (error) {
     console.error('Error extracting elements:', error);
@@ -417,7 +437,7 @@ Return as JSON array:
       throw new Error('No response from AI');
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = safeJsonParse(content);
     return Array.isArray(parsed) ? parsed : parsed.elements || [];
   } catch (error) {
     console.error(`Error extracting elements from chapter ${chapter.chapterNumber}:`, error);
@@ -520,7 +540,7 @@ Return JSON:
       throw new Error('No response from AI');
     }
 
-    const result = JSON.parse(content);
+    const result = safeJsonParse(content);
 
     if (
       result.is_match &&

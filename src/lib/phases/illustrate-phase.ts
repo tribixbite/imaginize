@@ -427,7 +427,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
             throw new Error('Image generation returned no URL');
           }
 
-          // Download image from temporary URL and save to disk
+          // Download image from temporary URL or decode from data URI and save to disk
           const chapterNum =
             concept.chapterNumber || this.getChapterNumber(concept.chapter);
 
@@ -435,16 +435,39 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
           const sceneNum = (sceneCounters.get(chapterNum) || 0) + 1;
           sceneCounters.set(chapterNum, sceneNum);
 
-          const filename = `chapter_${chapterNum}_scene_${sceneNum}.png`;
-          const filepath = join(outputDir, filename);
+          // Determine file extension and get image buffer
+          let imageBuffer: Buffer;
+          let extension = 'png'; // Default to PNG
 
-          const response = await fetch(imageUrl);
-          if (!response.ok) {
-            throw new Error(`Failed to download image: ${response.statusText}`);
+          if (imageUrl.startsWith('data:')) {
+            // Handle data URI (from Gemini native image generation)
+            // Format: data:image/jpeg;base64,/9j/4AAQSkZJRg...
+            const matches = imageUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+            if (!matches) {
+              throw new Error('Invalid data URI format');
+            }
+            extension = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+            imageBuffer = Buffer.from(matches[2], 'base64');
+          } else {
+            // Handle HTTP URL (from OpenAI, OpenRouter, etc.)
+            const response = await fetch(imageUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to download image: ${response.statusText}`);
+            }
+            imageBuffer = Buffer.from(await response.arrayBuffer());
+
+            // Try to detect format from Content-Type header
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('jpeg') || contentType?.includes('jpg')) {
+              extension = 'jpg';
+            } else if (contentType?.includes('webp')) {
+              extension = 'webp';
+            }
           }
 
-          const imageBuffer = await response.arrayBuffer();
-          await writeFile(filepath, Buffer.from(imageBuffer));
+          const filename = `chapter_${chapterNum}_scene_${sceneNum}.${extension}`;
+          const filepath = join(outputDir, filename);
+          await writeFile(filepath, imageBuffer);
 
           await progressTracker.log(`✅ Saved: ${filename}`, 'success');
 

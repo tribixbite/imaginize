@@ -190,6 +190,31 @@ function sanitizePromptForDalle(text: string): string {
   return sanitized;
 }
 
+/**
+ * Character visual reference overrides for consistency
+ * These provide detailed, fixed visual descriptions for main characters
+ * to ensure consistent appearance across all generated images
+ */
+const CHARACTER_VISUAL_OVERRIDES: Record<string, string> = {
+  // Murderbot Diaries characters
+  'secunit': 'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
+  'murderbot': 'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
+  'dr. mensah': 'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
+  'mensah': 'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
+  'ratthi': 'South Asian man, warm friendly face, dark hair, expressive eyes, often looks curious or concerned, wearing gray survey team uniform',
+  'pin-lee': 'East Asian woman, sharp professional appearance, dark hair pulled back, confident posture, wearing gray survey team uniform or formal business attire',
+  'gurathin': 'Tall thin man, pale skin, cold analytical expression, augmented with visible neural implants, wearing gray survey team uniform',
+  'arada': 'Young woman, friendly open face, wearing gray survey team uniform',
+  'overse': 'Woman with practical appearance, wearing gray survey team uniform',
+  'bharadwaj': 'Indian woman, scientist appearance, wearing environmental suit or medical attire',
+  'volescu': 'Man, nervous disposition, wearing environmental suit or survey uniform',
+};
+
+/**
+ * Photorealistic style prefix for TV-screenshot quality
+ */
+const PHOTOREALISTIC_PREFIX = 'Photorealistic, high-budget science fiction TV series screenshot, cinematic 35mm film look, professional lighting, sharp focus, 8K detail. ';
+
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
   private elements: BookElement[] = [];
@@ -684,22 +709,26 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
   /**
    * Build image prompt from concept with element cross-referencing and style guide
    * Ensures prompt stays within DALL-E-3's 4000 character limit
+   * Now includes photorealistic prefix and character consistency overrides
    */
   private buildImagePrompt(concept: ImageConcept): string {
     const maxLength = DALLE_MAX_PROMPT_LENGTH - PROMPT_BUFFER;
 
     // Required parts (always included, may be truncated)
-    const technicalReqs = '\nTECHNICAL: Cinematic composition, detailed illustration, high-quality art\nCRITICAL: No text, letters, words, or writing in the image';
+    const technicalReqs = '\nTECHNICAL: Cinematic composition, realistic lighting, shallow depth of field\nCRITICAL: No text, letters, words, or writing in the image';
     const technicalLen = technicalReqs.length;
 
-    // Style guide - sanitize and truncate if too long (max 400 chars)
+    // Start with photorealistic prefix for TV-screenshot quality
+    let prompt = PHOTOREALISTIC_PREFIX;
+
+    // Style guide - sanitize and truncate if too long (max 300 chars, reduced to make room for prefix)
     let styleSection = '';
     if (this.styleGuide) {
       // Apply DALL-E-3 safety sanitization to style guide as well
       styleSection = sanitizePromptForDalle(this.styleGuide);
-      styleSection = this.truncateText(styleSection, 400);
+      styleSection = this.truncateText(styleSection, 300);
     } else {
-      styleSection = 'GENRE: Detailed illustration with atmospheric detail';
+      styleSection = 'GENRE: Science fiction with detailed realistic environments';
     }
 
     // Mood and lighting (compact)
@@ -714,8 +743,8 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
     // Scene description - the most important part
     // Calculate available space for scene after other parts
-    const fixedPartsLen = styleSection.length + moodLighting.length + technicalLen + 50; // 50 for labels/newlines
-    const elementBudget = 600; // Reserve for element descriptions
+    const fixedPartsLen = prompt.length + styleSection.length + moodLighting.length + technicalLen + 50;
+    const elementBudget = 800; // Increased for character consistency descriptions
     const sceneMaxLen = maxLength - fixedPartsLen - elementBudget;
 
     let sceneDescription = concept.description || '';
@@ -723,19 +752,19 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     sceneDescription = sanitizePromptForDalle(sceneDescription);
     sceneDescription = this.truncateText(sceneDescription, Math.max(sceneMaxLen, 500));
 
-    // Build base prompt
-    let prompt = styleSection;
+    // Build prompt with style section
+    prompt += styleSection;
     if (moodLighting) {
       prompt += '\n' + moodLighting;
     }
     prompt += `\nSCENE: ${sceneDescription}`;
 
-    // Add element details if space allows
+    // Add character/element details with visual consistency overrides
     const currentLen = prompt.length + technicalLen;
     const remainingBudget = maxLength - currentLen - 50;
 
-    if (remainingBudget > 100 && this.elements.length > 0) {
-      const elementDescriptions = this.buildElementSection(concept, remainingBudget);
+    if (remainingBudget > 100) {
+      const elementDescriptions = this.buildElementSectionWithOverrides(concept, remainingBudget);
       if (elementDescriptions) {
         prompt += elementDescriptions;
       }
@@ -753,7 +782,60 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
   }
 
   /**
-   * Build element section within budget
+   * Build element section with character visual overrides for consistency
+   * Prioritizes hardcoded visual descriptions over extracted book descriptions
+   */
+  private buildElementSectionWithOverrides(concept: ImageConcept, maxLen: number): string {
+    const referencedElements: string[] = [];
+
+    // Get entity names from elements_present or extract from text
+    const entityNames = concept.elements_present && concept.elements_present.length > 0
+      ? concept.elements_present
+      : this.extractEntityNames(concept.description || '', concept.quote || '');
+
+    for (const entityName of entityNames) {
+      // First check for visual override (character consistency)
+      const overrideKey = entityName.toLowerCase();
+      const visualOverride = CHARACTER_VISUAL_OVERRIDES[overrideKey];
+
+      if (visualOverride) {
+        // Use the hardcoded visual description for consistency
+        referencedElements.push(`- ${entityName}: ${visualOverride}`);
+      } else {
+        // Fall back to extracted element description
+        const element = this.findElement(entityName);
+        if (element && element.description) {
+          // Sanitize and truncate each element description to 150 chars
+          const sanitizedDesc = sanitizePromptForDalle(element.description);
+          const shortDesc = this.truncateText(sanitizedDesc, 150);
+          referencedElements.push(`- ${element.name}: ${shortDesc}`);
+        }
+      }
+    }
+
+    if (referencedElements.length === 0) {
+      return '';
+    }
+
+    // Build section and truncate to budget
+    let section = '\nCHARACTERS:\n' + referencedElements.join('\n');
+    if (section.length > maxLen) {
+      // Remove elements from end until it fits
+      while (section.length > maxLen && referencedElements.length > 1) {
+        referencedElements.pop();
+        section = '\nCHARACTERS:\n' + referencedElements.join('\n');
+      }
+      // If still too long, truncate the remaining
+      if (section.length > maxLen) {
+        section = section.substring(0, maxLen - 3) + '...';
+      }
+    }
+
+    return section;
+  }
+
+  /**
+   * Build element section within budget (legacy method for backwards compatibility)
    */
   private buildElementSection(concept: ImageConcept, maxLen: number): string {
     const referencedElements: string[] = [];

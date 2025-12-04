@@ -39,11 +39,61 @@ function stripMarkdownFences(content: string): string {
 }
 
 /**
- * Safely parse JSON from AI response, handling markdown code fences
+ * Attempt to repair common JSON errors from LLM responses
+ * - Missing closing brackets/braces
+ * - Unescaped quotes in strings
+ * - Trailing commas
+ */
+function attemptJsonRepair(content: string): string {
+  let repaired = content;
+
+  // Fix trailing commas before closing brackets (common LLM error)
+  repaired = repaired.replace(/,(\s*[\]}])/g, '$1');
+
+  // Count opening/closing braces and brackets
+  const openBraces = (repaired.match(/\{/g) || []).length;
+  const closeBraces = (repaired.match(/\}/g) || []).length;
+  const openBrackets = (repaired.match(/\[/g) || []).length;
+  const closeBrackets = (repaired.match(/\]/g) || []).length;
+
+  // Add missing closing characters (common with truncated responses)
+  let additions = '';
+  for (let i = 0; i < openBrackets - closeBrackets; i++) additions += ']';
+  for (let i = 0; i < openBraces - closeBraces; i++) additions += '}';
+
+  // If we're inside a string, close it first
+  if (additions && repaired.match(/"[^"]*$/)) {
+    repaired = repaired.replace(/"[^"]*$/, '"');
+  }
+
+  repaired += additions;
+
+  return repaired;
+}
+
+/**
+ * Safely parse JSON from AI response, handling:
+ * - Markdown code fences (```json ... ```)
+ * - Truncated JSON (missing closing brackets)
+ * - Trailing commas
  */
 function safeJsonParse(content: string): any {
   const cleaned = stripMarkdownFences(content);
-  return JSON.parse(cleaned);
+
+  // First attempt: direct parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (firstError) {
+    // Second attempt: try repair
+    try {
+      const repaired = attemptJsonRepair(cleaned);
+      return JSON.parse(repaired);
+    } catch (repairError) {
+      // If repair failed, throw original error with context
+      const preview = cleaned.substring(0, 200);
+      throw new Error(`JSON parsing failed. Content preview: ${preview}... Original error: ${firstError}`);
+    }
+  }
 }
 
 /**

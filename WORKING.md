@@ -1,3 +1,40 @@
+## 2025-12-04: Hybrid Safety Filter Fallback System
+
+**Commit:** `6b1d128` - feat: add hybrid fallback for safety filter rejections
+
+### New Feature: Automatic Model Fallback on Safety Filter Rejection
+
+When an image model rejects a prompt due to safety filters (400 error), the system now automatically tries alternative models in a fallback chain:
+
+**Fallback Chain Logic:**
+```
+Primary: gemini-pro-image
+  → Fallback 1: gemini-flash-image (same API, more permissive)
+  → Fallback 2: google/gemini-2.5-flash-image (OpenRouter)
+  → Fallback 3: dall-e-3 (if OPENAI_API_KEY available)
+```
+
+**Safety Filter Detection:**
+```typescript
+// Detects 400 errors with safety-related messages:
+// - "safety system", "content policy", "blocked", "prohibited", etc.
+private isSafetyFilterError(error: any): boolean
+```
+
+**Key Changes (illustrate-phase.ts):**
+- `isSafetyFilterError()` - Detects 400 safety rejections
+- `getFallbackChain()` - Builds model fallback chain based on primary model
+- `tryGenerateWithModel()` - Attempts image generation with specific model
+- `generateImage()` - Refactored to iterate through fallback chain
+
+**Expected Behavior:**
+- Scene rejected by Gemini Pro → Automatically tries Gemini Flash
+- All Gemini variants reject → Tries OpenRouter Gemini
+- All free models reject → Falls back to DALL-E 3 (if available)
+- All models reject → Error with list of tried models
+
+---
+
 ## 2025-12-04: Photorealistic TV-Screenshot Mode + Character Consistency System
 
 **Commits:**

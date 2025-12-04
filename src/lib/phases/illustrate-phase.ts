@@ -961,8 +961,44 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
   }
 
   /**
-   * Generate image using best available API
+   * Check if an error is a safety filter rejection
+   * Returns true for 400 errors containing safety-related messages
+   */
+  private isSafetyFilterError(error: any): boolean {
+    if (!error) return false;
+    const message = error.message || error.toString() || '';
+    const status = error.status || error.code;
+
+    // Check for 400 status with safety-related messages
+    if (status === 400 || message.includes('400')) {
+      const safetyKeywords = [
+        'safety system',
+        'content policy',
+        'policy violation',
+        'blocked',
+        'inappropriate',
+        'harmful content',
+        'safety filter',
+        'content filter',
+        'SAFETY',
+        'prohibited',
+      ];
+      return safetyKeywords.some(keyword =>
+        message.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+    return false;
+  }
+
+  /**
+   * Generate image using best available API with hybrid fallback for safety rejections
    * Supports: OpenRouter image models, gpt-image-1, Gemini Imagen, dall-e-3
+   *
+   * Fallback chain for safety filter rejections:
+   * 1. Primary model (configured imageModel)
+   * 2. gemini-flash-image (if primary was gemini-pro-image)
+   * 3. OpenRouter google/gemini-2.5-flash-image (free tier)
+   * 4. dall-e-3 with heavily sanitized prompt (last resort)
    */
   private async generateImage(
     imageOpenai: any,
@@ -977,139 +1013,213 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const imageModel = config.imageModel || (typeof model === 'string' ? model : model?.model) || 'dall-e-3';
     await progressTracker.log(`Using image model: ${imageModel}`, 'info');
 
-    // Try OpenRouter image models (via chat completions)
-    if (imageModel.includes('google/') && imageModel.includes('image')) {
+    // Build fallback chain based on primary model
+    const fallbackChain = this.getFallbackChain(imageModel);
+    const triedModels = new Set<string>();
+    let lastError: any = null;
+    let safetyFilterTriggered = false;
+
+    // Try each model in the fallback chain
+    for (const currentModel of fallbackChain) {
+      if (triedModels.has(currentModel)) continue;
+      triedModels.add(currentModel);
+
       try {
-        await progressTracker.log(`Trying OpenRouter model: ${imageModel}`, 'info');
-        const url = await this.generateOpenRouterImage(
+        const url = await this.tryGenerateWithModel(
           imageOpenai,
           prompt,
-          imageModel,
+          currentModel,
+          config,
           size
         );
         if (url) {
-          await progressTracker.log(`Using OpenRouter ${imageModel}`, 'info');
+          if (safetyFilterTriggered) {
+            await progressTracker.log(
+              `✓ Fallback successful with ${currentModel} after safety filter rejection`,
+              'success'
+            );
+          }
           return url;
         }
       } catch (error: any) {
-        await progressTracker.log(
-          `OpenRouter ${imageModel} failed (${error.message}), falling back`,
-          'warning'
-        );
-      }
-    }
+        lastError = error;
+        const isSafety = this.isSafetyFilterError(error);
 
-    // Try gpt-image-1 (if configured)
-    if (imageModel === 'gpt-image-1') {
-      try {
-        // gpt-image-1 quality: 'low', 'medium', 'high', 'auto'
-        const qualityMap: Record<string, string> = {
-          standard: 'medium',
-          hd: 'high',
-        };
-        const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
-
-        const response = await imageOpenai.images.generate({
-          model: 'gpt-image-1',
-          prompt: prompt,
-          n: 1,
-          size: size,
-          quality: quality,
-        });
-
-        const url = response.data?.[0]?.url;
-        if (url) {
-          await progressTracker.log('Using gpt-image-1', 'info');
-          return url;
+        if (isSafety) {
+          safetyFilterTriggered = true;
+          await progressTracker.log(
+            `⚠️ Safety filter rejection from ${currentModel}, trying fallback...`,
+            'warning'
+          );
+        } else {
+          await progressTracker.log(
+            `${currentModel} failed (${error.message}), trying next fallback...`,
+            'warning'
+          );
         }
-
-        // No URL returned - fall back
-        await progressTracker.log(
-          'gpt-image-1 returned no URL, falling back to dall-e-3',
-          'warning'
-        );
-      } catch (error: any) {
-        await progressTracker.log(
-          `gpt-image-1 failed (${error.message}), falling back to dall-e-3`,
-          'warning'
-        );
       }
     }
 
-    // Try Gemini native image generation (Nano Banana models)
-    // gemini-flash-image = gemini-2.0-flash-exp-image-generation (fast)
-    // gemini-pro-image = gemini-2.0-flash-preview-image-generation (pro, 4K support)
+    // All models in chain exhausted - throw final error
+    const errorMsg = safetyFilterTriggered
+      ? `All image models rejected prompt due to safety filters. Tried: ${Array.from(triedModels).join(', ')}`
+      : `Image generation failed after trying all fallbacks: ${lastError?.message || 'Unknown error'}`;
+    throw new Error(errorMsg);
+  }
+
+  /**
+   * Get fallback chain of models to try for image generation
+   * Prioritizes free models when possible
+   */
+  private getFallbackChain(primaryModel: string): string[] {
+    const chain: string[] = [primaryModel];
+
+    // If primary is Gemini Pro, add Flash as fallback (more permissive)
+    if (primaryModel === 'gemini-pro-image' || primaryModel === 'gemini-2.0-flash-preview-image-generation') {
+      chain.push('gemini-flash-image');
+    }
+
+    // If primary is Gemini native, add OpenRouter Gemini image as fallback
+    if (primaryModel.startsWith('gemini-') && !primaryModel.includes('google/')) {
+      chain.push('google/gemini-2.5-flash-image');
+    }
+
+    // If primary is OpenRouter, add Gemini native as fallback
+    if (primaryModel.includes('google/') && primaryModel.includes('image')) {
+      chain.push('gemini-flash-image');
+    }
+
+    // Always add DALL-E-3 as last resort (if OpenAI key available)
+    if (!chain.includes('dall-e-3')) {
+      chain.push('dall-e-3');
+    }
+
+    return chain;
+  }
+
+  /**
+   * Try generating image with a specific model
+   * Returns URL on success, throws on failure
+   */
+  private async tryGenerateWithModel(
+    imageOpenai: any,
+    prompt: string,
+    currentModel: string,
+    config: any,
+    size: string
+  ): Promise<string | null> {
+    const { progressTracker } = this.context;
+    await progressTracker.log(`Trying image model: ${currentModel}`, 'info');
+
+    // OpenRouter image models (via chat completions)
+    if (currentModel.includes('google/') && currentModel.includes('image')) {
+      const url = await this.generateOpenRouterImage(
+        imageOpenai,
+        prompt,
+        currentModel,
+        size
+      );
+      if (url) {
+        await progressTracker.log(`Using OpenRouter ${currentModel}`, 'info');
+        return url;
+      }
+      return null;
+    }
+
+    // gpt-image-1
+    if (currentModel === 'gpt-image-1') {
+      const qualityMap: Record<string, string> = {
+        standard: 'medium',
+        hd: 'high',
+      };
+      const quality = qualityMap[config.imageQuality || 'standard'] || 'high';
+
+      const response = await imageOpenai.images.generate({
+        model: 'gpt-image-1',
+        prompt: prompt,
+        n: 1,
+        size: size,
+        quality: quality,
+      });
+
+      const url = response.data?.[0]?.url;
+      if (url) {
+        await progressTracker.log('Using gpt-image-1', 'info');
+        return url;
+      }
+      return null;
+    }
+
+    // Gemini native image generation (Nano Banana models)
     const isGeminiNative =
-      imageModel === 'gemini-flash-image' ||
-      imageModel === 'gemini-2.5-flash-image' ||
-      imageModel === 'gemini-pro-image' ||
-      imageModel === 'gemini-2.0-flash-preview-image-generation';
+      currentModel === 'gemini-flash-image' ||
+      currentModel === 'gemini-2.5-flash-image' ||
+      currentModel === 'gemini-pro-image' ||
+      currentModel === 'gemini-2.0-flash-preview-image-generation';
 
     if (isGeminiNative) {
-      try {
-        const geminiApiKey = (config as any).geminiApiKey;
-        if (!geminiApiKey) {
-          await progressTracker.log(
-            'Gemini API key not found, skipping Gemini native image generation',
-            'warning'
-          );
-        } else {
-          // Determine which model to use
-          const isPro =
-            imageModel === 'gemini-pro-image' ||
-            imageModel === 'gemini-2.0-flash-preview-image-generation';
-          const url = await this.generateGeminiNativeImage(prompt, geminiApiKey, isPro);
-          if (url) {
-            const modelName = isPro ? 'Gemini Pro Image (Nano Banana Pro)' : 'Gemini Flash Image';
-            await progressTracker.log(`Using ${modelName}`, 'info');
-            return url;
-          }
-        }
-      } catch (error: any) {
+      const geminiApiKey = (config as any).geminiApiKey;
+      if (!geminiApiKey) {
         await progressTracker.log(
-          `Gemini native image failed (${error.message}), falling back to dall-e-3`,
+          `Gemini API key not found, skipping ${currentModel}`,
           'warning'
         );
+        return null;
       }
+
+      const isPro =
+        currentModel === 'gemini-pro-image' ||
+        currentModel === 'gemini-2.0-flash-preview-image-generation';
+      const url = await this.generateGeminiNativeImage(prompt, geminiApiKey, isPro);
+      if (url) {
+        const modelName = isPro ? 'Gemini Pro Image' : 'Gemini Flash Image';
+        await progressTracker.log(`Using ${modelName}`, 'info');
+        return url;
+      }
+      return null;
     }
 
-    // Try Gemini Imagen (if configured) - requires paid Blaze plan
-    if (imageModel.includes('imagen')) {
-      try {
-        const geminiApiKey = (config as any).geminiApiKey;
-        if (!geminiApiKey) {
-          await progressTracker.log(
-            'Gemini API key not found, skipping Imagen',
-            'warning'
-          );
-        } else {
-          const url = await this.generateImagenImage(prompt, geminiApiKey);
-          if (url) {
-            await progressTracker.log(`Using Gemini ${imageModel}`, 'info');
-            return url;
-          }
-        }
-      } catch (error: any) {
+    // Gemini Imagen (requires paid Blaze plan)
+    if (currentModel.includes('imagen')) {
+      const geminiApiKey = (config as any).geminiApiKey;
+      if (!geminiApiKey) {
         await progressTracker.log(
-          `Gemini Imagen failed (${error.message}), falling back to dall-e-3`,
+          'Gemini API key not found, skipping Imagen',
           'warning'
         );
+        return null;
       }
+
+      const url = await this.generateImagenImage(prompt, geminiApiKey);
+      if (url) {
+        await progressTracker.log(`Using Gemini ${currentModel}`, 'info');
+        return url;
+      }
+      return null;
     }
 
-    // Fallback to dall-e-3
-    const quality = config.imageQuality || 'standard';
+    // DALL-E-3 fallback
+    if (currentModel === 'dall-e-3') {
+      const quality = config.imageQuality || 'standard';
+      const response = await imageOpenai.images.generate({
+        model: 'dall-e-3',
+        prompt: prompt,
+        n: 1,
+        size: size,
+        quality: quality,
+      });
 
-    const response = await imageOpenai.images.generate({
-      model: 'dall-e-3',
-      prompt: prompt,
-      n: 1,
-      size: size,
-      quality: quality,
-    });
+      const url = response.data?.[0]?.url;
+      if (url) {
+        await progressTracker.log('Using dall-e-3', 'info');
+        return url;
+      }
+      return null;
+    }
 
-    await progressTracker.log('Using dall-e-3', 'info');
-    return response.data[0].url;
+    // Unknown model
+    await progressTracker.log(`Unknown image model: ${currentModel}`, 'warning');
+    return null;
   }
 
   /**

@@ -1,3 +1,100 @@
+## 2025-12-04: Multi-Provider End-to-End Testing Complete ✅✅✅
+
+**Status:** Both requested end-to-end tests completed successfully
+
+### Test 1: GPT-4o Mini + Gemini Pro Image ✅
+
+**Configuration:**
+- Text analysis model: `gpt-4o-mini` (OpenAI)
+- Image generation model: `gemini-pro-image` (Gemini native API)
+- Book: All Systems Red: The Murderbot Diaries
+
+**Results:**
+| Phase | Status | Details |
+|-------|--------|---------|
+| Analyze | ✅ | 8 chapters, 14 visual concepts |
+| Extract | ✅ | 43 elements |
+| Enrich | ✅ | 14 scenes enriched |
+| Illustrate | ✅ | 14/14 images generated |
+| Compile | ✅ | All 6 formats generated |
+
+**Output Files:**
+- PDF: 17.5 MB (14 images, 9 pages)
+- CBZ: 20.8 MB (17 pages)
+- EPUB: 11.5 MB
+- HTML: 30.8 MB
+- WebP album: 2.0 MB (83.1% savings)
+- WebP strip: 2.9 MB
+
+**Tokens Used:** 54,485
+**Processing Time:** ~11 minutes
+
+---
+
+### Test 2: Amazon Nova 2 Lite (Free) + Gemini Pro Image ✅
+
+**Configuration:**
+- Text analysis model: `amazon/nova-2-lite-v1:free` (OpenRouter)
+- Image generation model: `gemini-pro-image` (Gemini native API)
+- Book: All Systems Red: The Murderbot Diaries
+
+**Results:**
+| Phase | Status | Details |
+|-------|--------|---------|
+| Analyze | ✅ | 6/8 chapters parsed successfully (2 JSON errors) |
+| Extract | ✅ | 54 elements from unified analysis |
+| Enrich | ✅ | 5 scenes enriched |
+| Illustrate | ✅ | 12/12 images generated |
+| Compile | ✅ | All 6 formats generated |
+
+**Output Files:**
+- PDF: 12.1 MB (12 images, 7 pages)
+- CBZ: 17.4 MB (15 pages)
+- EPUB: 9.7 MB
+- HTML: 25.8 MB
+- WebP album: 1.6 MB (83.9% savings)
+- WebP strip: 2.1 MB (1024x8496px)
+
+**Tokens Used:** 55,435
+**Processing Time:** ~7 minutes
+
+---
+
+### JSON Parsing Improvements for Nova 2 Lite
+
+**Problem:** Nova 2 Lite model often returns malformed JSON with:
+1. Single-quoted strings instead of double-quoted
+2. Invalid escape sequences
+3. Trailing commas
+4. Markdown code fences around JSON
+
+**Solutions Implemented in `attemptJsonRepair()`:**
+1. ✅ Strip markdown code fences (`stripMarkdownFences()`)
+2. ✅ Remove trailing commas before `]` or `}`
+3. ✅ **NEW:** Convert single-quoted strings to double-quoted (commit 9be98eb)
+4. ✅ Fix invalid escape sequences (`\n` → `\\n`, `\"` handling)
+5. ✅ Repair missing closing brackets
+
+**Remaining Edge Case:**
+- 2/8 chapters still failed with "Expected ',' or '}' after property value"
+- Cause: Likely unescaped double quotes within JSON string values
+- Workaround: Pipeline continues with partial data (75% chapter success rate)
+
+---
+
+### Image Model Pricing Verified
+
+| Model | Provider | Price |
+|-------|----------|-------|
+| gemini-pro-image | Gemini Native | **FREE** (recommended) |
+| gemini-flash-image | Gemini Native | **FREE** |
+| imagen-3.0 | Gemini Native | $0.03/image |
+| dall-e-3 | OpenAI | $0.04/image (standard) |
+
+**Recommendation:** Use `gemini-pro-image` for cost-effective image generation.
+
+---
+
 ## 2025-12-04: GEMINI_API_KEY Environment Variable Fix + Hybrid Provider Test ✅
 
 **Enhancement:** Fixed GEMINI_API_KEY environment variable not being read into config, enabling hybrid provider configurations (e.g., OpenAI for text, Gemini for images).

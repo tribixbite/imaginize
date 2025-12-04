@@ -44,6 +44,7 @@ function stripMarkdownFences(content: string): string {
  * - Invalid escape sequences
  * - Trailing commas
  * - Control characters in strings
+ * - Single-quoted strings (convert to double quotes)
  */
 function attemptJsonRepair(content: string): string {
   let repaired = content;
@@ -51,12 +52,32 @@ function attemptJsonRepair(content: string): string {
   // Fix trailing commas before closing brackets (common LLM error)
   repaired = repaired.replace(/,(\s*[\]}])/g, '$1');
 
+  // Convert single-quoted strings to double-quoted strings (very common with Nova models)
+  // This is tricky because we need to handle nested quotes carefully
+  // Strategy: Find property names and string values with single quotes and convert them
+  // Pattern: 'property': or : 'value' (outside of double-quoted strings)
+  repaired = repaired.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match, content) => {
+    // Convert the content: escape any unescaped double quotes, unescape single quotes
+    const converted = content
+      .replace(/"/g, '\\"')  // Escape double quotes
+      .replace(/\\'/g, "'"); // Unescape single quotes
+    return `: "${converted}"`;
+  });
+
+  // Fix single-quoted property names: 'key':
+  repaired = repaired.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, (match, content) => {
+    const converted = content
+      .replace(/"/g, '\\"')
+      .replace(/\\'/g, "'");
+    return `"${converted}":`;
+  });
+
   // Fix invalid escape sequences in JSON strings
   // Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
   // Invalid escapes like \' \a \q etc need to be double-escaped or removed
   repaired = repaired.replace(/\\([^"\\/bfnrtu])/g, (match, char) => {
-    // If it's a single quote, keep it escaped as \'
-    if (char === "'") return "\\'";
+    // If it's a single quote, just use the single quote (no need to escape in JSON)
+    if (char === "'") return "'";
     // For other invalid escapes, just use the character without backslash
     return char;
   });

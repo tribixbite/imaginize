@@ -50,8 +50,9 @@ export async function retryWithBackoff<T>(
       let waitTime = timeout;
 
       if (isRateLimit) {
-        // For rate limits, wait longer (60s for OpenRouter free tier)
-        waitTime = attempt === 0 ? 65000 : Math.min(timeout * 2, 120000);
+        // For rate limits, wait longer (65s baseline for OpenRouter free tier: 16 req/min)
+        // Each subsequent retry adds exponential backoff capped at 120s
+        waitTime = attempt === 0 ? 65000 : Math.min(65000 + (timeout * Math.pow(2, attempt)), 180000);
       }
 
       // Call retry callback if provided

@@ -55,6 +55,8 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
       // Use free model for OpenRouter by default
       config.model = getRecommendedFreeTextModel().name;
     }
+    // Free models have strict rate limits (16 req/min) - process sequentially
+    config.maxConcurrency = 1;
 
     // Set OpenRouter for images if no explicit image endpoint configured
     if (!config.imageEndpoint?.apiKey) {

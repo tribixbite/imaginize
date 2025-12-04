@@ -925,25 +925,38 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       }
     }
 
-    // Try Gemini 2.5 Flash Image (Nano Banana) - native Gemini image generation
-    if (imageModel === 'gemini-flash-image' || imageModel === 'gemini-2.5-flash-image') {
+    // Try Gemini native image generation (Nano Banana models)
+    // gemini-flash-image = gemini-2.0-flash-exp-image-generation (fast)
+    // gemini-pro-image = gemini-2.0-flash-preview-image-generation (pro, 4K support)
+    const isGeminiNative =
+      imageModel === 'gemini-flash-image' ||
+      imageModel === 'gemini-2.5-flash-image' ||
+      imageModel === 'gemini-pro-image' ||
+      imageModel === 'gemini-2.0-flash-preview-image-generation';
+
+    if (isGeminiNative) {
       try {
         const geminiApiKey = (config as any).geminiApiKey;
         if (!geminiApiKey) {
           await progressTracker.log(
-            'Gemini API key not found, skipping Gemini Flash Image',
+            'Gemini API key not found, skipping Gemini native image generation',
             'warning'
           );
         } else {
-          const url = await this.generateGeminiFlashImage(prompt, geminiApiKey);
+          // Determine which model to use
+          const isPro =
+            imageModel === 'gemini-pro-image' ||
+            imageModel === 'gemini-2.0-flash-preview-image-generation';
+          const url = await this.generateGeminiNativeImage(prompt, geminiApiKey, isPro);
           if (url) {
-            await progressTracker.log(`Using Gemini 2.5 Flash Image`, 'info');
+            const modelName = isPro ? 'Gemini Pro Image (Nano Banana Pro)' : 'Gemini Flash Image';
+            await progressTracker.log(`Using ${modelName}`, 'info');
             return url;
           }
         }
       } catch (error: any) {
         await progressTracker.log(
-          `Gemini Flash Image failed (${error.message}), falling back to dall-e-3`,
+          `Gemini native image failed (${error.message}), falling back to dall-e-3`,
           'warning'
         );
       }
@@ -1032,16 +1045,28 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
   }
 
   /**
-   * Generate image using Gemini 2.5 Flash Image (Nano Banana)
+   * Generate image using Gemini native image generation models (Nano Banana)
    * Uses generateContent endpoint with image response modality
    * Docs: https://ai.google.dev/gemini-api/docs/image-generation
+   *
+   * @param prompt - Image generation prompt
+   * @param apiKey - Gemini API key
+   * @param isPro - Use Pro model (gemini-3-pro-image-preview) for higher quality
    */
-  private async generateGeminiFlashImage(prompt: string, apiKey: string): Promise<string> {
-    const { progressTracker } = this.context;
+  private async generateGeminiNativeImage(
+    prompt: string,
+    apiKey: string,
+    isPro: boolean = false
+  ): Promise<string> {
+    // Model selection:
+    // - Flash: gemini-2.0-flash-exp-image-generation (fast, standard quality)
+    // - Pro: gemini-3-pro-image-preview (slower, 4K support, better quality)
+    const modelName = isPro
+      ? 'gemini-3-pro-image-preview'
+      : 'gemini-2.0-flash-exp-image-generation';
 
-    // Use Gemini 2.5 Flash Image via generateContent endpoint
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -1066,7 +1091,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Gemini Flash Image API error: ${response.status} ${errorText}`);
+      throw new Error(`Gemini native image API error: ${response.status} ${errorText}`);
     }
 
     const data = (await response.json()) as any;
@@ -1083,7 +1108,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       }
     }
 
-    throw new Error('No image data returned from Gemini Flash Image');
+    throw new Error('No image data returned from Gemini native image');
   }
 
   /**

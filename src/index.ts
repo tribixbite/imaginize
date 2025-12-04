@@ -110,7 +110,7 @@ export async function main(): Promise<void> {
     .option('--api-key <key>', 'Override API key')
     .option('--image-key <key>', 'Separate image API key')
     .option('--provider <provider>', 'Override AI provider (openai, openrouter, gemini, custom)')
-    .option('--image-model <model>', 'Image generation model (dall-e-3, gemini-flash-image, imagen-3.0, gpt-image-1)')
+    .option('--image-model <model>', 'Image generation model (dall-e-3, gemini-flash-image, gemini-pro-image, imagen-3.0, gpt-image-1)')
     // Output
     .option('--output-dir <dir>', 'Override output directory')
     .option('--verbose', 'Verbose logging')

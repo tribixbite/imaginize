@@ -65,8 +65,8 @@ export interface IllustrateConfig {
   /** Image quality (default: 'standard') */
   imageQuality?: 'standard' | 'hd';
 
-  /** Image generation model (default: 'dall-e-3', options: 'dall-e-3', 'imagen-3.0', 'gemini-flash-image', 'gpt-image-1') */
-  imageModel?: 'dall-e-3' | 'imagen-3.0' | 'gemini-flash-image' | 'gpt-image-1' | string;
+  /** Image generation model (default: 'dall-e-3', options: 'dall-e-3', 'imagen-3.0', 'gemini-flash-image', 'gemini-pro-image', 'gpt-image-1') */
+  imageModel?: 'dall-e-3' | 'imagen-3.0' | 'gemini-flash-image' | 'gemini-pro-image' | 'gpt-image-1' | string;
 
   /** Gemini API key (for Imagen, falls back to main apiKey if not specified) */
   geminiApiKey?: string;

@@ -41,14 +41,35 @@ function stripMarkdownFences(content: string): string {
 /**
  * Attempt to repair common JSON errors from LLM responses
  * - Missing closing brackets/braces
- * - Unescaped quotes in strings
+ * - Invalid escape sequences
  * - Trailing commas
+ * - Control characters in strings
  */
 function attemptJsonRepair(content: string): string {
   let repaired = content;
 
   // Fix trailing commas before closing brackets (common LLM error)
   repaired = repaired.replace(/,(\s*[\]}])/g, '$1');
+
+  // Fix invalid escape sequences in JSON strings
+  // Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+  // Invalid escapes like \' \a \q etc need to be double-escaped or removed
+  repaired = repaired.replace(/\\([^"\\/bfnrtu])/g, (match, char) => {
+    // If it's a single quote, keep it escaped as \'
+    if (char === "'") return "\\'";
+    // For other invalid escapes, just use the character without backslash
+    return char;
+  });
+
+  // Fix unescaped control characters in strings (tabs, newlines within strings)
+  // This handles actual control chars, not escape sequences
+  repaired = repaired.replace(/[\x00-\x1F]/g, (char) => {
+    if (char === '\n') return '\\n';
+    if (char === '\r') return '\\r';
+    if (char === '\t') return '\\t';
+    // Remove other control characters
+    return '';
+  });
 
   // Count opening/closing braces and brackets
   const openBraces = (repaired.match(/\{/g) || []).length;

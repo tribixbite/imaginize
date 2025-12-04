@@ -9,6 +9,67 @@ import { load } from 'cheerio';
 import type { BookMetadata, ChapterContent } from '../types/config.js';
 
 /**
+ * Patterns for detecting non-story front-matter and back-matter content
+ * These should be filtered out to avoid generating images of book covers, TOCs, etc.
+ */
+const FRONT_MATTER_TITLE_PATTERNS = [
+  /^cover$/i,
+  /^title\s*page$/i,
+  /^half\s*title$/i,
+  /^copyright$/i,
+  /^table\s*of\s*contents$/i,
+  /^contents$/i,
+  /^toc$/i,
+  /^dedication$/i,
+  /^acknowledgment/i,
+  /^about\s*the\s*author/i,
+  /^also\s*by/i,
+  /^other\s*books/i,
+  /^praise\s*for/i,
+  /^mini\s*toc$/i,
+];
+
+const BACK_MATTER_TITLE_PATTERNS = [
+  /^about\s*the\s*author/i,
+  /^also\s*by/i,
+  /^other\s*books/i,
+  /^newsletter/i,
+  /^sign\s*up/i,
+  /^connect\s*with/i,
+  /^follow\s*us/i,
+  /^advertisement/i,
+  /^preview/i,
+  /^excerpt/i,
+  /^teaser/i,
+  /^bonus/i,
+  /^afterword/i,
+  /^appendix/i,
+  /^glossary/i,
+  /^index$/i,
+  /^bibliography/i,
+  /^notes$/i,
+  /^endnotes/i,
+];
+
+/**
+ * Content patterns that indicate non-story material
+ */
+const NON_STORY_CONTENT_PATTERNS = [
+  /sign\s*up\s*(for|to)\s*(our|the|a)?\s*newsletter/i,
+  /subscribe\s*(to|for)\s*(our|the|a)?\s*newsletter/i,
+  /join\s*(our|the)?\s*(mailing\s*list|newsletter)/i,
+  /tor\.com/i,
+  /visit\s*(us\s*at|our\s*website)/i,
+  /follow\s*(us\s*on|@)/i,
+  /copyright\s*©?\s*\d{4}/i,
+  /all\s*rights\s*reserved/i,
+  /isbn[:\s]*[\d-]+/i,
+  /printed\s*in\s*(the\s*)?(united\s*states|usa|u\.s\.a)/i,
+  /first\s*(edition|printing)/i,
+  /library\s*of\s*congress/i,
+];
+
+/**
  * Parse EPUB file and extract all content
  */
 export async function parseEpub(filePath: string): Promise<{
@@ -97,11 +158,6 @@ export async function parseEpub(filePath: string): Promise<{
       const textContent = extractTextFromHtml(htmlContent);
 
       if (textContent.trim().length > 0) {
-        // Estimate pages (roughly 300 words per page)
-        const wordCount = textContent.split(/\s+/).length;
-        const estimatedPages = Math.ceil(wordCount / 300);
-        const pageRange = `${currentPage}-${currentPage + estimatedPages - 1}`;
-
         // Try to get chapter title from HTML
         const $ = load(htmlContent);
         const chapterTitle =
@@ -110,14 +166,33 @@ export async function parseEpub(filePath: string): Promise<{
           $('title').text() ||
           `Chapter ${i + 1}`;
 
+        const trimmedTitle = chapterTitle.trim();
+
+        // Skip non-story content based on title patterns
+        if (isFrontMatter(trimmedTitle) || isBackMatter(trimmedTitle)) {
+          console.log(`[epub-parser] Skipping front/back matter: "${trimmedTitle}"`);
+          continue;
+        }
+
+        // Skip non-story content based on content patterns
+        if (isNonStoryContent(textContent)) {
+          console.log(`[epub-parser] Skipping promotional/marketing content: "${trimmedTitle}"`);
+          continue;
+        }
+
+        // Estimate pages (roughly 300 words per page)
+        const wordCount = textContent.split(/\s+/).length;
+        const estimatedPages = Math.ceil(wordCount / 300);
+        const pageRange = `${currentPage}-${currentPage + estimatedPages - 1}`;
+
         // Count lines in this chapter
         const lineCount = textContent.split('\n').length;
         const lineStart = currentLine;
         const lineEnd = currentLine + lineCount - 1;
 
         chapters.push({
-          chapterNumber: i + 1,
-          chapterTitle: chapterTitle.trim(),
+          chapterNumber: chapters.length + 1, // Sequential numbering after filtering
+          chapterTitle: trimmedTitle,
           pageRange,
           content: textContent,
           lineNumbers: { start: lineStart, end: lineEnd },
@@ -152,6 +227,59 @@ function extractTextFromHtml(html: string): string {
 
   // Clean up whitespace
   return text.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Check if a chapter title matches front-matter patterns
+ */
+function isFrontMatter(title: string): boolean {
+  return FRONT_MATTER_TITLE_PATTERNS.some((pattern) => pattern.test(title));
+}
+
+/**
+ * Check if a chapter title matches back-matter patterns
+ */
+function isBackMatter(title: string): boolean {
+  return BACK_MATTER_TITLE_PATTERNS.some((pattern) => pattern.test(title));
+}
+
+/**
+ * Check if content contains non-story material (marketing, promotional, legal)
+ * Returns true if more than 30% of the content matches non-story patterns
+ * or if the content is very short with mostly non-story indicators
+ */
+function isNonStoryContent(content: string): boolean {
+  const lowercaseContent = content.toLowerCase();
+  const wordCount = content.split(/\s+/).length;
+
+  // Short content with multiple non-story indicators is likely promotional
+  if (wordCount < 200) {
+    const matchCount = NON_STORY_CONTENT_PATTERNS.filter((pattern) =>
+      pattern.test(content)
+    ).length;
+    // If more than 2 patterns match in short content, skip it
+    if (matchCount >= 2) {
+      return true;
+    }
+  }
+
+  // Check for specific promotional content that should always be skipped
+  if (
+    lowercaseContent.includes('sign up for') &&
+    lowercaseContent.includes('newsletter')
+  ) {
+    return true;
+  }
+
+  // Check for ISBN/copyright blocks that indicate title/copyright pages
+  if (
+    lowercaseContent.includes('isbn') &&
+    (lowercaseContent.includes('copyright') || lowercaseContent.includes('published'))
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

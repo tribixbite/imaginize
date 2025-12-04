@@ -340,6 +340,7 @@ export interface CommandOptions {
   webpAlbum?: boolean;
   webpStrip?: boolean;
   allFormats?: boolean;
+  output?: string; // 'full' (all phases + formats), 'quick' (text only)
 
   // Filtering
   chapters?: string; // e.g., "1,2,5-10"

@@ -88,6 +88,7 @@ export async function main(): Promise<void> {
     .option('--webp-album', 'Compile WebP album (smaller than PDF)')
     .option('--webp-strip', 'Create single vertical strip WebP image')
     .option('--all-formats', 'Generate all output formats (PDF, CBZ, EPUB, HTML, WebP)')
+    .option('--output <mode>', 'Output mode: full (all phases + all formats), quick (text only)')
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
     .option(
@@ -761,10 +762,20 @@ export async function main(): Promise<void> {
     await stateManager.save();
 
     // Determine which phases to run
-    const needsText = options.text || (!options.elements && !options.enrich && !options.images);
-    const needsElements = !!options.elements;
-    const needsEnrich = !!options.enrich;
-    const needsImages = !!options.images;
+    // --output full enables all phases and all formats
+    const isFullOutput = options.output === 'full';
+    const isQuickOutput = options.output === 'quick';
+
+    const needsText = options.text || isFullOutput || isQuickOutput || (!options.elements && !options.enrich && !options.images && !options.output);
+    const needsElements = options.elements || isFullOutput;
+    const needsEnrich = options.enrich || isFullOutput;
+    const needsImages = options.images || isFullOutput;
+
+    // Enable all formats if --output full
+    if (isFullOutput) {
+      options.allFormats = true;
+      options.pdf = true; // PDF is not included in allFormats
+    }
 
     // Filter chapters if requested
     let chaptersToProcess = chapters;

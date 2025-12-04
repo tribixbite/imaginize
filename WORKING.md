@@ -1,3 +1,51 @@
+## 2025-12-04: GEMINI_API_KEY Environment Variable Fix + Hybrid Provider Test ✅
+
+**Enhancement:** Fixed GEMINI_API_KEY environment variable not being read into config, enabling hybrid provider configurations (e.g., OpenAI for text, Gemini for images).
+
+**Problem:**
+- When using `--provider openai` with `--image-model gemini-pro-image`, images failed with "Gemini API key not found, skipping Gemini native image generation"
+- GEMINI_API_KEY was set in environment but never loaded into `config.geminiApiKey`
+
+**Root Cause:**
+- `src/lib/config.ts` had no code to read GEMINI_API_KEY env var
+- `illustrate-phase.ts` checked `config.geminiApiKey` but it was always undefined
+
+**Solution:**
+Added GEMINI_API_KEY handling in `src/lib/config.ts`:
+```typescript
+// Handle GEMINI_API_KEY environment variable for native Gemini image generation
+// This is separate from the main apiKey and used specifically for gemini-pro-image,
+// gemini-flash-image, and imagen models
+if (process.env.GEMINI_API_KEY) {
+  config.geminiApiKey = process.env.GEMINI_API_KEY;
+}
+```
+
+**Test Results (AllSystemsRed with GPT-4o Mini + Gemini Pro Image):**
+- ✅ Text analysis: GPT-4o Mini (OpenAI API)
+- ✅ Element extraction: GPT-4o Mini (OpenAI API)
+- ✅ Scene enrichment: GPT-4o Mini (OpenAI API)
+- ✅ Image generation: gemini-pro-image (Gemini API via GEMINI_API_KEY)
+- ✅ **14/14 images generated successfully**
+- ✅ All 6 compilation formats generated (PDF, CBZ, EPUB, HTML, WebP Album, WebP Strip)
+
+**Output Summary:**
+| Phase | Model | Status |
+|-------|-------|--------|
+| Analyze | gpt-4o-mini | ✅ 8 chapters, 14 visual concepts |
+| Extract | gpt-4o-mini | ✅ 43 elements |
+| Enrich | gpt-4o-mini | ✅ 14 scenes enriched |
+| Illustrate | gemini-pro-image | ✅ 14/14 images saved |
+| Compile | Python scripts | ✅ PDF (17.5 MB), CBZ (20.8 MB), EPUB (11.5 MB), HTML (30.8 MB), WebP (2.0 MB, 83% savings) |
+
+**Processing Time:** ~11 minutes total
+**Tokens Used:** 54,485
+
+**Files Modified:**
+- `src/lib/config.ts` - Added GEMINI_API_KEY env var reading
+
+---
+
 ## 2025-12-04: Gemini Pro Image (Nano Banana Pro) Support ✅
 
 **Enhancement:** Added Gemini Pro Image support, which uses the `gemini-3-pro-image-preview` model for higher quality 4K image generation.

@@ -323,23 +323,29 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const modelConfig = resolveModelConfig(this.context.config.model, this.context.config);
     const modelName = typeof modelConfig === 'string' ? modelConfig : modelConfig.name;
 
-    const response = await openai.chat.completions.create({
-      model: modelName,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a visual style analyst for book illustrations.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 200,
-    }) as ChatCompletion;
+    try {
+      const response = await openai.chat.completions.create({
+        model: modelName,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a visual style analyst for book illustrations.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 500, // Increased from 200 to handle longer responses
+      }) as ChatCompletion;
 
-    return (
-      response.choices[0]?.message?.content ||
-      'Detailed fantasy illustration with rich atmospheric detail.'
-    );
+      return (
+        response.choices[0]?.message?.content ||
+        'Detailed fantasy illustration with rich atmospheric detail.'
+      );
+    } catch (error) {
+      // Fallback to default style guide if API fails (e.g., due to rate limits or token limits)
+      console.warn(`Style guide generation failed, using fallback: ${error instanceof Error ? error.message : error}`);
+      return `GENRE: Science Fiction. A cinematic, high-contrast illustration style with metallic textures, cool blue and gray tones, dramatic lighting, and detailed technology elements. Focus on tension and atmosphere with realistic human figures.`;
+    }
   }
 
   /**

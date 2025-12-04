@@ -111,9 +111,14 @@ export class GoogleGeminiAdapter implements IAiClient {
    * Convert Google Gemini response to OpenAI chat completion format
    */
   private convertFromGoogleFormat(response: GoogleGenerateContentResponse, model: string): ChatCompletion {
-    const candidate = response.candidates[0];
+    const candidate = response.candidates?.[0];
     if (!candidate) {
       throw new Error('No candidates in Google Gemini response');
+    }
+
+    // Handle cases where content or parts may be undefined (e.g., safety filters)
+    if (!candidate.content || !candidate.content.parts) {
+      throw new Error(`Google Gemini response has no content. Finish reason: ${candidate.finishReason || 'unknown'}`);
     }
 
     const content = candidate.content.parts.map(part => part.text).join('');

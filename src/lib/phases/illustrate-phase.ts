@@ -18,6 +18,178 @@ const DALLE_MAX_PROMPT_LENGTH = 4000;
 // Reserve space for required elements (style, scene, technical requirements)
 const PROMPT_BUFFER = 200;
 
+/**
+ * DALL-E-3 safety sanitization patterns
+ * Replaces violent/weapon terms with safer alternatives to avoid content policy rejections
+ * Ordered from most specific to least specific to prevent double-replacement issues
+ */
+const DALLE_SAFETY_REPLACEMENTS: Array<[RegExp, string]> = [
+  // Specific phrases first (before individual words get replaced)
+  [/\btooth-lined\b/gi, 'detailed'],
+  [/\bpool of blood\b/gi, 'liquid residue'],
+  [/\bbrutal attack\b/gi, 'intense encounter'],
+  [/\bbrutal\b/gi, 'intense'],
+  [/\bfirefight\b/gi, 'intense standoff'],
+  [/\bheavily armed\b/gi, 'well-equipped'],
+  [/\bpale flesh\b/gi, 'pale material'],
+  [/\braw,?\s*pink(ish)?\s*flesh\b/gi, 'exposed synthetic material'],
+  [/\borganic flesh\b/gi, 'organic components'],
+  [/\bflesh beneath\b/gi, 'material beneath'],
+  [/\bexposed\s+(flesh|skin|organic)\b/gi, 'visible $1 components'],
+  [/\btorn\s+flesh\b/gi, 'damaged surface'],
+  [/\bflesh\b/gi, 'bio-material'],
+  [/\bgrabbed?\s+(\w+\s+)?by\s+the\s+throat\b/gi, 'restrained'],
+  [/\bpinned?\s+(him|her|them|it)\s+to\s+the\s+wall\b/gi, 'held $1 against the wall'],
+  [/\bpinned?\s+(him|her|them|to)\b/gi, 'restrained $1'],
+  [/\bclamped?\s+(around|on)\b/gi, 'held $1'],
+  [/\bchoked?\b/gi, 'restrained'],
+  [/\bopened?\s+fire\b/gi, 'engaged'],
+  [/\bscoring hits\b/gi, 'making contact'],
+  [/\btaking hits\b/gi, 'receiving impacts'],
+
+  // Weapons - must come before generic replacements
+  [/\b(projectile weapon|projectile weapons)\b/gi, 'handheld device'],
+  [/\benergy weapon(s)?\b/gi, 'glowing device$1'],
+  [/\b(gun|guns|firearm|firearms)\b/gi, 'device'],
+  [/\bweapon(s)?\b/gi, 'equipment'],
+  [/\barmed\b/gi, 'equipped'],
+  [/\bfiring\b/gi, 'activating'],
+  [/\b(fired|fires)\b/gi, 'activates'],
+  [/\bshoot(s|ing)?\b/gi, 'activat$1'],
+  [/\bshot\b/gi, 'activated'],
+  [/\bdischarged?\b/gi, 'activated'],
+
+  // Violence terms
+  [/\bviolent\b/gi, 'intense'],
+  [/\bviolence\b/gi, 'tension'],
+  [/\bkill(s|ed|ing)?\b/gi, 'defeat$1'],
+  [/\bdeath\b/gi, 'danger'],
+  [/\bdead\b/gi, 'fallen'],
+  [/\bdying\b/gi, 'falling'],
+  [/\bmurderbot\b/gi, 'Security Unit'], // Book-specific - Murderbot Diaries
+  [/\bmurder(s|ed|ing|ous)?\b/gi, 'confront$1'],
+  [/\bbloody\b/gi, 'stained'],
+  [/\bblood\b/gi, 'fluid'],
+  [/\bgore\b/gi, 'damage'],
+  [/\bgory\b/gi, 'damaged'],
+  [/\bwound(s|ed)?\b/gi, 'injur$1'],
+  [/\binjuries\b/gi, 'damage'],
+  [/\binjured\b/gi, 'affected'],
+  [/\bdesperate\b/gi, 'urgent'],
+  [/\bdesparate\b/gi, 'urgent'], // Common misspelling
+  [/\bfrantic\b/gi, 'urgent'],
+  [/\bpanic(ked)?\b/gi, 'urgent'],
+  [/\bterror\b/gi, 'tension'],
+  [/\bterrified\b/gi, 'alarmed'],
+  [/\bterrifying\b/gi, 'dramatic'],
+  [/\bfear\b/gi, 'concern'],
+  [/\bscreaming?\b/gi, 'calling'],
+  [/\byelling\b/gi, 'calling'],
+
+  // Combat terms
+  [/\bcombat\b/gi, 'confrontation'],
+  [/\bfight(s|ing)?\b/gi, 'action$1'],
+  [/\bbattle(s)?\b/gi, 'encounter$1'],
+  [/\battack(s|ed|ing)?\b/gi, 'approach$1'],
+  [/\bassault(s|ed|ing)?\b/gi, 'approach$1'],
+  [/\bstruggle\b/gi, 'effort'],
+  [/\bgrapple(s|d)?\b/gi, 'engage$1'],
+  [/\bclaws?\b/gi, 'grips'],
+  [/\bslash(es|ed|ing)?\b/gi, 'sweep$1'],
+  [/\bstab(s|bed|bing)?\b/gi, 'press$1'],
+  [/\bhit(s|ting)?\b/gi, 'contact$1'],
+  [/\bpunch(es|ed|ing)?\b/gi, 'push$1'],
+  [/\bkick(s|ed|ing)?\b/gi, 'push$1'],
+
+  // Body horror terms
+  [/\bnightmarish\b/gi, 'dramatic'],
+  [/\bhorrified\b/gi, 'surprised'],
+  [/\bhorror\b/gi, 'concern'],
+  [/\bgruesome\b/gi, 'striking'],
+  [/\bmaw\b/gi, 'opening'],
+  [/\bteeth\b/gi, 'structures'],
+  [/\btooth\b/gi, 'structure'],
+  [/\bfangs?\b/gi, 'protrusions'],
+  [/\bmouth\b(?!\s*(of|piece))/gi, 'cavity'],
+  [/\bthroat\b/gi, 'interior'],
+  [/\bviscera\b/gi, 'internals'],
+  [/\bentrails\b/gi, 'internals'],
+  [/\bguts\b/gi, 'internals'],
+  [/\bintestines?\b/gi, 'internals'],
+  [/\bsevered\b/gi, 'separated'],
+  [/\bdismember(ed|ment)?\b/gi, 'disassembl$1'],
+  [/\bdecapitat(e|ed|ion)?\b/gi, 'separat$1'],
+  [/\bmaim(ed|ing)?\b/gi, 'damag$1'],
+  [/\bmutilat(e|ed|ion)?\b/gi, 'damag$1'],
+
+  // Aggressive postures and actions
+  [/\bgrabbed?\b/gi, 'held'],
+  [/\bpinned?\b/gi, 'restrained'],
+  [/\bslammed?\b/gi, 'placed firmly'],
+  [/\bsmashed?\b/gi, 'pressed'],
+  [/\bcrushed?\b/gi, 'pressed'],
+  [/\bthrottl(e|ed|ing)?\b/gi, 'restrain$1'],
+  [/\bstrangl(e|ed|ing)?\b/gi, 'restrain$1'],
+
+  // Creature/monster terms
+  [/\bmonster(s|ous)?\b/gi, 'creature$1'],
+  [/\bbeast(s|ly)?\b/gi, 'creature$1'],
+  [/\bpredator(s|y)?\b/gi, 'hunter$1'],
+  [/\bprey\b/gi, 'target'],
+  [/\bhunting\b/gi, 'tracking'],
+  [/\bdevour(s|ed|ing)?\b/gi, 'consum$1'],
+  [/\bswallow(s|ed|ing)?\b/gi, 'engulf$1'],
+
+  // Security/cyber terms that can trigger false positives
+  [/\bhacked?\b/gi, 'modified'],
+  [/\bhacking\b/gi, 'modifying'],
+  [/\bmalicious\b/gi, 'irregular'],
+  [/\binfiltrat(e|ed|ing|ion)?\b/gi, 'enter$1'],
+  [/\binternal\s+conflict\b/gi, 'inner tension'],
+  [/\bconflict\b/gi, 'tension'],
+
+  // Additional violence terms
+  [/\bshov(e|ed|ing)\b/gi, 'push$1'],
+  [/\bdrag(ged|ging)?\b/gi, 'pull$1'],
+  [/\bjammed?\b/gi, 'stuck'],
+  [/\bformidable\b/gi, 'impressive'],
+  [/\bferocity\b/gi, 'intensity'],
+  [/\bferocious\b/gi, 'intense'],
+  [/\bforced?\b/gi, 'moved'],
+  [/\bforcing\b/gi, 'moving'],
+  [/\bvicious\b/gi, 'strong'],
+  [/\bsavage\b/gi, 'wild'],
+  [/\blethal\b/gi, 'powerful'],
+  [/\bthreat(s|ened|ening)?\b/gi, 'challeng$1'],
+  [/\bdanger(ous)?\b/gi, 'challenging'],
+  [/\bhazard(ous)?\b/gi, 'challenging'],
+  [/\bsubterranean\s+creature\b/gi, 'underground entity'],
+  [/\bcreature(s)?\b/gi, 'entity'],
+
+  // Damage descriptions
+  [/\bsparking\b/gi, 'glowing'],
+  [/\bcrack(s|ed|ing)?\b/gi, 'mark$1'],
+  [/\bshatter(s|ed|ing)?\b/gi, 'break$1'],
+  [/\bcrumbl(e|ed|ing)?\b/gi, 'wear$1'],
+  [/\bruin(s|ed)?\b/gi, 'mark$1'],
+  [/\bdestruc(t|tion|tive)?\b/gi, 'intens$1'],
+  [/\bdevasta(te|ted|ting|tion)?\b/gi, 'affect$1'],
+  [/\bannihilat(e|ed|ing|ion)?\b/gi, 'overcom$1'],
+  [/\bobliterat(e|ed|ing|ion)?\b/gi, 'overcom$1'],
+];
+
+/**
+ * Sanitize prompt text for DALL-E-3 safety compliance
+ * Replaces violent/weapon terms with safer alternatives
+ */
+function sanitizePromptForDalle(text: string): string {
+  let sanitized = text;
+  for (const [pattern, replacement] of DALLE_SAFETY_REPLACEMENTS) {
+    sanitized = sanitized.replace(pattern, replacement);
+  }
+  return sanitized;
+}
+
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
   private elements: BookElement[] = [];
@@ -234,6 +406,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
           // Build prompt from description
           const prompt = this.buildImagePrompt(concept);
+
+          // Debug: Save sanitized prompt to file for inspection
+          const debugPath = join(outputDir, `debug_prompt_${concept.chapter.replace(/\s+/g, '_')}.txt`);
+          await writeFile(debugPath, `=== Sanitized Prompt for ${concept.chapter} ===\n\n${prompt}\n\n=== Original Description ===\n\n${concept.description || 'N/A'}`);
 
           // Generate image
           const imageUrl = await this.executeWithRetry(
@@ -487,10 +663,12 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const technicalReqs = '\nTECHNICAL: Cinematic composition, detailed illustration, high-quality art\nCRITICAL: No text, letters, words, or writing in the image';
     const technicalLen = technicalReqs.length;
 
-    // Style guide - truncate if too long (max 400 chars)
+    // Style guide - sanitize and truncate if too long (max 400 chars)
     let styleSection = '';
     if (this.styleGuide) {
-      styleSection = this.truncateText(this.styleGuide, 400);
+      // Apply DALL-E-3 safety sanitization to style guide as well
+      styleSection = sanitizePromptForDalle(this.styleGuide);
+      styleSection = this.truncateText(styleSection, 400);
     } else {
       styleSection = 'GENRE: Detailed illustration with atmospheric detail';
     }
@@ -512,6 +690,8 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const sceneMaxLen = maxLength - fixedPartsLen - elementBudget;
 
     let sceneDescription = concept.description || '';
+    // Apply DALL-E-3 safety sanitization to avoid content policy rejections
+    sceneDescription = sanitizePromptForDalle(sceneDescription);
     sceneDescription = this.truncateText(sceneDescription, Math.max(sceneMaxLen, 500));
 
     // Build base prompt
@@ -557,8 +737,9 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     for (const entityName of entityNames) {
       const element = this.findElement(entityName);
       if (element && element.description) {
-        // Truncate each element description to 150 chars
-        const shortDesc = this.truncateText(element.description, 150);
+        // Sanitize and truncate each element description to 150 chars
+        const sanitizedDesc = sanitizePromptForDalle(element.description);
+        const shortDesc = this.truncateText(sanitizedDesc, 150);
         referencedElements.push(`- ${element.name}: ${shortDesc}`);
       }
     }
@@ -681,8 +862,9 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const size = config.imageSize || '1024x1024';
     const { progressTracker } = this.context;
 
-    // Determine which model to use
-    const imageModel = typeof model === 'string' ? model : model?.model || 'dall-e-3';
+    // Determine which model to use - prioritize config.imageModel, then model param, then default
+    const imageModel = config.imageModel || (typeof model === 'string' ? model : model?.model) || 'dall-e-3';
+    await progressTracker.log(`Using image model: ${imageModel}`, 'info');
 
     // Try OpenRouter image models (via chat completions)
     if (imageModel.includes('google/') && imageModel.includes('image')) {
@@ -743,7 +925,31 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       }
     }
 
-    // Try Gemini Imagen (if configured)
+    // Try Gemini 2.5 Flash Image (Nano Banana) - native Gemini image generation
+    if (imageModel === 'gemini-flash-image' || imageModel === 'gemini-2.5-flash-image') {
+      try {
+        const geminiApiKey = (config as any).geminiApiKey;
+        if (!geminiApiKey) {
+          await progressTracker.log(
+            'Gemini API key not found, skipping Gemini Flash Image',
+            'warning'
+          );
+        } else {
+          const url = await this.generateGeminiFlashImage(prompt, geminiApiKey);
+          if (url) {
+            await progressTracker.log(`Using Gemini 2.5 Flash Image`, 'info');
+            return url;
+          }
+        }
+      } catch (error: any) {
+        await progressTracker.log(
+          `Gemini Flash Image failed (${error.message}), falling back to dall-e-3`,
+          'warning'
+        );
+      }
+    }
+
+    // Try Gemini Imagen (if configured) - requires paid Blaze plan
     if (imageModel.includes('imagen')) {
       try {
         const geminiApiKey = (config as any).geminiApiKey;
@@ -790,7 +996,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
     // Use Imagen via Google AI API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -823,6 +1029,61 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     }
 
     throw new Error('No image data returned from Imagen');
+  }
+
+  /**
+   * Generate image using Gemini 2.5 Flash Image (Nano Banana)
+   * Uses generateContent endpoint with image response modality
+   * Docs: https://ai.google.dev/gemini-api/docs/image-generation
+   */
+  private async generateGeminiFlashImage(prompt: string, apiKey: string): Promise<string> {
+    const { progressTracker } = this.context;
+
+    // Use Gemini 2.5 Flash Image via generateContent endpoint
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Generate an image: ${prompt}`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini Flash Image API error: ${response.status} ${errorText}`);
+    }
+
+    const data = (await response.json()) as any;
+
+    // Extract base64 image from response
+    // Response format: { candidates: [{ content: { parts: [{ inlineData: { data, mimeType } }] } }] }
+    const parts = data.candidates?.[0]?.content?.parts;
+    if (parts) {
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${part.inlineData.data}`;
+        }
+      }
+    }
+
+    throw new Error('No image data returned from Gemini Flash Image');
   }
 
   /**

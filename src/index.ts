@@ -110,6 +110,7 @@ export async function main(): Promise<void> {
     .option('--api-key <key>', 'Override API key')
     .option('--image-key <key>', 'Separate image API key')
     .option('--provider <provider>', 'Override AI provider (openai, openrouter, gemini, custom)')
+    .option('--image-model <model>', 'Image generation model (dall-e-3, gemini-flash-image, imagen-3.0, gpt-image-1)')
     // Output
     .option('--output-dir <dir>', 'Override output directory')
     .option('--verbose', 'Verbose logging')
@@ -598,6 +599,16 @@ export async function main(): Promise<void> {
       } else if (options.provider === 'openrouter' && !config.baseUrl) {
         config.baseUrl = 'https://openrouter.ai/api/v1';
       }
+    }
+
+    // Handle image model selection
+    if (options.imageModel) {
+      config.imageModel = options.imageModel;
+    }
+
+    // For Gemini provider, set geminiApiKey to main apiKey if not separately configured
+    if (config.provider === 'gemini' && !config.geminiApiKey) {
+      config.geminiApiKey = config.apiKey;
     }
 
     // Validate API key after all overrides

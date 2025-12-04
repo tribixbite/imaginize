@@ -1,3 +1,39 @@
+## 2025-12-03: Gemini Flash Image (Nano Banana) Support ✅
+
+**Problem:** DALL-E-3 repeatedly rejected prompts for sci-fi action content in "All Systems Red: The Murderbot Diaries" due to safety system filters. The error `400: Your request was rejected as a result of our safety system` occurred on every retry, even with prompt sanitization in place.
+
+Additionally, Imagen 3.0 API returned `404: models/imagen-3.0-generate-002 is not found` because it requires a paid Blaze plan, not available on free-tier API keys.
+
+**Solution:** Added support for Gemini 2.5 Flash Image (codenamed "Nano Banana") which uses the `generateContent` endpoint with image response modality. This model:
+- Works with free-tier Gemini API keys
+- Has more permissive content policies for fictional/sci-fi content
+- Returns base64 PNG images directly in the response
+
+**Implementation:**
+- Added `generateGeminiFlashImage()` method in `illustrate-phase.ts`
+- Uses `gemini-2.0-flash-exp-image-generation` model via REST API
+- Returns data URI (`data:image/png;base64,...`) which is then saved as PNG
+- Added `gemini-flash-image` to supported image models in config types
+- Updated CLI help to include new model option
+
+**CLI Usage:**
+```bash
+npx imaginize --images --image-model gemini-flash-image --provider gemini
+```
+
+**Test Results (AllSystemsRed):**
+- Image successfully generated for Chapter One scene
+- No safety system rejections
+- PNG output: 1024x424 pixels, 560KB
+- Processing time: ~7 seconds per image
+
+**Files Modified:**
+- `src/lib/phases/illustrate-phase.ts` - Added Gemini Flash Image support
+- `src/types/config.ts` - Added 'gemini-flash-image' to imageModel type
+- `src/index.ts` - Updated CLI help text
+
+---
+
 ## 2025-11-28: Full Pipeline Test - All 6 Compilation Formats ✅
 
 **Test Book:** All Systems Red: The Murderbot Diaries (Martha Wells)

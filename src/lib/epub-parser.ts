@@ -16,7 +16,7 @@ const FRONT_MATTER_TITLE_PATTERNS = [
   /^cover$/i,
   /^title\s*page$/i,
   /^half\s*title$/i,
-  /^copyright$/i,
+  /^copyright/i, // Matches "Copyright", "Copyright Notice", "Copyright Page"
   /^table\s*of\s*contents$/i,
   /^contents$/i,
   /^toc$/i,
@@ -27,6 +27,8 @@ const FRONT_MATTER_TITLE_PATTERNS = [
   /^other\s*books/i,
   /^praise\s*for/i,
   /^mini\s*toc$/i,
+  /^legal\s*(notice|disclaimer)/i,
+  /^imprint$/i,
 ];
 
 const BACK_MATTER_TITLE_PATTERNS = [
@@ -49,6 +51,9 @@ const BACK_MATTER_TITLE_PATTERNS = [
   /^bibliography/i,
   /^notes$/i,
   /^endnotes/i,
+  /tor\.?com/i, // Tor.com publisher ads
+  /back\s*ad/i, // Generic back ads
+  /publisher\s*(ad|promo)/i,
 ];
 
 /**

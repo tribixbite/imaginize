@@ -77,6 +77,12 @@ export async function loadConfig(): Promise<Required<IllustrateConfig>> {
     config.model = process.env.OPENROUTER_MODEL || process.env.OPENAI_MODEL!;
   }
 
+  // Handle GEMINI_API_KEY environment variable for native Gemini image generation
+  // This is separate from the main apiKey and used specifically for gemini-pro-image, gemini-flash-image, and imagen models
+  if (process.env.GEMINI_API_KEY) {
+    config.geminiApiKey = process.env.GEMINI_API_KEY;
+  }
+
   // Handle image endpoint env vars
   // If both OpenAI and OpenRouter exist but no image endpoint set, prefer OpenAI for images (DALL-E better quality)
   if (

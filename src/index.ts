@@ -591,13 +591,26 @@ export async function main(): Promise<void> {
     }
     if (options.provider) {
       config.provider = options.provider as AIProvider;
-      // Set appropriate baseUrl for the provider if not already set
-      if (options.provider === 'gemini' && !config.baseUrl?.includes('generativelanguage.googleapis.com')) {
+      // When provider is explicitly specified via CLI, ALWAYS set the correct baseUrl and API key
+      // This ensures CLI --provider flag takes precedence over config file settings
+      if (options.provider === 'gemini') {
         config.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-      } else if (options.provider === 'openai' && !config.baseUrl) {
+        // Use GEMINI_API_KEY if apiKey not already set or looks like a different provider's key
+        if (process.env.GEMINI_API_KEY && (!config.apiKey || !config.apiKey.startsWith('AIza'))) {
+          config.apiKey = process.env.GEMINI_API_KEY;
+        }
+      } else if (options.provider === 'openai') {
         config.baseUrl = 'https://api.openai.com/v1';
-      } else if (options.provider === 'openrouter' && !config.baseUrl) {
+        // Use OPENAI_API_KEY if apiKey not already set or looks like a different provider's key
+        if (process.env.OPENAI_API_KEY && (!config.apiKey || !config.apiKey.startsWith('sk-'))) {
+          config.apiKey = process.env.OPENAI_API_KEY;
+        }
+      } else if (options.provider === 'openrouter') {
         config.baseUrl = 'https://openrouter.ai/api/v1';
+        // Use OPENROUTER_API_KEY if apiKey not already set or looks like a different provider's key
+        if (process.env.OPENROUTER_API_KEY && (!config.apiKey || !config.apiKey.startsWith('sk-or-'))) {
+          config.apiKey = process.env.OPENROUTER_API_KEY;
+        }
       }
     }
 

@@ -1,3 +1,36 @@
+## 2025-12-04: Gemini Pro Image (Nano Banana Pro) Support ✅
+
+**Enhancement:** Added Gemini Pro Image support, which uses the `gemini-3-pro-image-preview` model for higher quality 4K image generation.
+
+**Implementation:**
+- Refactored `generateGeminiFlashImage()` to `generateGeminiNativeImage()` with `isPro` parameter
+- Flash model: `gemini-2.0-flash-exp-image-generation` (fast, standard quality)
+- Pro model: `gemini-3-pro-image-preview` (slower, 4K support, better quality)
+- Added `gemini-pro-image` to supported image models in config types
+- Updated CLI help text
+
+**CLI Usage:**
+```bash
+# Flash (fast, standard)
+npx imaginize --images --image-model gemini-flash-image --provider gemini
+
+# Pro (slower, higher quality)
+npx imaginize --images --image-model gemini-pro-image --provider gemini
+```
+
+**Test Results (AllSystemsRed with Pro):**
+- Image successfully generated for Chapter One scene using `gemini-3-pro-image-preview`
+- No safety system rejections
+- PNG output: 873KB
+- Processing time: ~17 seconds per image (slower than Flash's ~7s)
+
+**Files Modified:**
+- `src/lib/phases/illustrate-phase.ts` - Refactored to `generateGeminiNativeImage()` with isPro param
+- `src/types/config.ts` - Added 'gemini-pro-image' to imageModel type
+- `src/index.ts` - Updated CLI help text
+
+---
+
 ## 2025-12-03: Gemini Flash Image (Nano Banana) Support ✅
 
 **Problem:** DALL-E-3 repeatedly rejected prompts for sci-fi action content in "All Systems Red: The Murderbot Diaries" due to safety system filters. The error `400: Your request was rejected as a result of our safety system` occurred on every retry, even with prompt sanitization in place.

@@ -1,3 +1,54 @@
+## 2025-12-04: Photorealistic TV-Screenshot Mode + Character Consistency System
+
+**Commit:** `038dcfe` - feat: add photorealistic TV-screenshot mode and character consistency system
+
+### Image Quality Critique (Gemini 2.5 Flash v3 Output)
+
+**Overall Score: 7/10**
+
+| Criterion | Score | Notes |
+|-----------|-------|-------|
+| Art Style Consistency | 9/10 | All images have cohesive blue-gray sci-fi aesthetic |
+| Scene Accuracy | 8/10 | Scenes match source text well |
+| **Character Consistency** | **4/10** ❌ | SecUnit varies wildly: bulky armor → gaunt humanoid → sleek suit |
+| Mensah Appearance | 5/10 | Skin tone varies between images |
+| TV-Screenshot Quality | 5/10 | Current output is illustrated/painterly, not photorealistic |
+
+### Issues Identified
+
+1. **SecUnit Inconsistency (CRITICAL):**
+   - Ch1: Bulky Halo-style silver armor
+   - Ch2: Tall gaunt humanoid with facial implants
+   - Ch3: Back to tank-like bulky armor
+   - Ch5: Sleek dark suit with blue accents
+   - Book says: "standard, generic human" face, dark armor, opaque helmet
+
+2. **Style Issue:** Current images look like concept art, not TV screenshots
+
+### Implementation (New Features)
+
+**1. Character Visual Overrides** (`CHARACTER_VISUAL_OVERRIDES` map):
+```typescript
+'secunit': 'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face...'
+'dr. mensah': 'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression...'
+```
+
+**2. Photorealistic Prefix:**
+```typescript
+const PHOTOREALISTIC_PREFIX = 'Photorealistic, high-budget science fiction TV series screenshot, cinematic 35mm film look, professional lighting, sharp focus, 8K detail. ';
+```
+
+**3. New Method:** `buildElementSectionWithOverrides()` prioritizes hardcoded visual descriptions over extracted book descriptions for character consistency.
+
+### Testing Status
+
+⚠️ **API Key Leaked** - The Gemini API key was flagged during testing. Need fresh API key to test v4 output.
+
+**Files Changed:**
+- `src/lib/phases/illustrate-phase.ts` (+94 lines)
+
+---
+
 ## 2025-12-04: Three-Model Comparison Test with Expert Review ✅✅✅
 
 **Status:** Complete comparison of 3 text analysis models + Gemini Pro expert review

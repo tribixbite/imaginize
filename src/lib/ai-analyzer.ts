@@ -59,16 +59,14 @@ function attemptJsonRepair(content: string): string {
   repaired = repaired.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match, content) => {
     // Convert the content: escape any unescaped double quotes, unescape single quotes
     const converted = content
-      .replace(/"/g, '\\"')  // Escape double quotes
+      .replace(/"/g, '\\"') // Escape double quotes
       .replace(/\\'/g, "'"); // Unescape single quotes
     return `: "${converted}"`;
   });
 
   // Fix single-quoted property names: 'key':
   repaired = repaired.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, (match, content) => {
-    const converted = content
-      .replace(/"/g, '\\"')
-      .replace(/\\'/g, "'");
+    const converted = content.replace(/"/g, '\\"').replace(/\\'/g, "'");
     return `"${converted}":`;
   });
 
@@ -84,7 +82,8 @@ function attemptJsonRepair(content: string): string {
 
   // Fix unescaped control characters in strings (tabs, newlines within strings)
   // This handles actual control chars, not escape sequences
-  repaired = repaired.replace(/[\x00-\x1F]/g, (char) => {
+  // eslint-disable-next-line no-control-regex
+  repaired = repaired.replace(/[\x00-\x1f]/g, (char) => {
     if (char === '\n') return '\\n';
     if (char === '\r') return '\\r';
     if (char === '\t') return '\\t';
@@ -133,7 +132,9 @@ function safeJsonParse(content: string): any {
     } catch (repairError) {
       // If repair failed, throw original error with context
       const preview = cleaned.substring(0, 200);
-      throw new Error(`JSON parsing failed. Content preview: ${preview}... Original error: ${firstError}`);
+      throw new Error(
+        `JSON parsing failed. Content preview: ${preview}... Original error: ${firstError}`
+      );
     }
   }
 }
@@ -153,7 +154,10 @@ export interface ElementContext {
  * Centralized helper to avoid code duplication
  */
 function buildElementContextSection(elementContext?: ElementContext): string {
-  if (!elementContext || (!elementContext.characters && !elementContext.places && !elementContext.items)) {
+  if (
+    !elementContext ||
+    (!elementContext.characters && !elementContext.places && !elementContext.items)
+  ) {
     return '';
   }
 
@@ -167,7 +171,8 @@ function buildElementContextSection(elementContext?: ElementContext): string {
   if (elementContext.items) {
     section += `\nITEMS:\n${elementContext.items}\n`;
   }
-  section += '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
+  section +=
+    '\nIMPORTANT: When these elements appear in scenes, use their descriptions above to ensure visual consistency.\n';
   return section;
 }
 
@@ -196,7 +201,7 @@ export async function analyzeChapter(
 ): Promise<ImageConcept[]> {
   // Calculate images based on actual page range (more accurate than word count)
   const [startPage, endPage] = chapter.pageRange.split('-').map(Number);
-  const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
+  const pageCount = endPage && startPage ? endPage - startPage + 1 : 1;
   const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
   // Build element context section if available (using centralized helper)
@@ -227,7 +232,7 @@ Return your response as a JSON array with this structure:
 
   try {
     const modelName = typeof config.model === 'string' ? config.model : config.model.name;
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelName,
       messages: [
         {
@@ -239,7 +244,7 @@ Return your response as a JSON array with this structure:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -289,7 +294,7 @@ export async function analyzeChapterUnified(
 ): Promise<UnifiedAnalysisResult> {
   // Calculate images based on actual page range
   const [startPage, endPage] = chapter.pageRange.split('-').map(Number);
-  const pageCount = (endPage && startPage) ? (endPage - startPage + 1) : 1;
+  const pageCount = endPage && startPage ? endPage - startPage + 1 : 1;
   const numImages = Math.max(1, Math.ceil(pageCount / config.pagesPerImage));
 
   // Build element context section if available (using centralized helper)
@@ -346,7 +351,7 @@ Return your full analysis in the JSON format demonstrated in the example above. 
 
   try {
     const modelName = typeof config.model === 'string' ? config.model : config.model.name;
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelName,
       messages: [
         {
@@ -358,7 +363,7 @@ Return your full analysis in the JSON format demonstrated in the example above. 
       ],
       response_format: { type: 'json_object' },
       temperature: 0.6,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -377,7 +382,9 @@ Return your full analysis in the JSON format demonstrated in the example above. 
       reasoning: s.reasoning || '',
       mood: s.mood || undefined,
       lighting: s.lighting || undefined,
-      elements_present: Array.isArray(s.elements_present) ? s.elements_present : undefined,
+      elements_present: Array.isArray(s.elements_present)
+        ? s.elements_present
+        : undefined,
     }));
 
     // Parse elements
@@ -392,7 +399,10 @@ Return your full analysis in the JSON format demonstrated in the example above. 
 
     return { scenes, elements };
   } catch (error) {
-    console.error(`Error in unified analysis for chapter ${chapter.chapterTitle}:`, error);
+    console.error(
+      `Error in unified analysis for chapter ${chapter.chapterTitle}:`,
+      error
+    );
     return { scenes: [], elements: [] };
   }
 }
@@ -510,7 +520,7 @@ Return as JSON array:
 
   try {
     const modelName = typeof config.model === 'string' ? config.model : config.model.name;
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelName,
       messages: [
         {
@@ -522,7 +532,7 @@ Return as JSON array:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.5,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -532,7 +542,10 @@ Return as JSON array:
     const parsed = safeJsonParse(content);
     return Array.isArray(parsed) ? parsed : parsed.elements || [];
   } catch (error) {
-    console.error(`Error extracting elements from chapter ${chapter.chapterNumber}:`, error);
+    console.error(
+      `Error extracting elements from chapter ${chapter.chapterNumber}:`,
+      error
+    );
     return [];
   }
 }
@@ -613,7 +626,7 @@ Return JSON:
 
   try {
     const modelName = typeof config.model === 'string' ? config.model : config.model.name;
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelName,
       messages: [
         {
@@ -625,7 +638,7 @@ Return JSON:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -662,7 +675,8 @@ Return JSON:
       if (newElement.description && merged.description !== newElement.description) {
         const useAIEnrichment = config.aiDescriptionEnrichment === true;
         if (useAIEnrichment) {
-          const modelName = typeof config.model === 'string' ? config.model : config.model.name;
+          const modelName =
+            typeof config.model === 'string' ? config.model : config.model.name;
           merged.description = await enrichDescriptionWithAI(
             merged.description || '',
             newElement.description,
@@ -672,7 +686,10 @@ Return JSON:
             true
           );
         } else {
-          merged.description = enrichDescription(merged.description || '', newElement.description);
+          merged.description = enrichDescription(
+            merged.description || '',
+            newElement.description
+          );
         }
       }
 
@@ -745,11 +762,11 @@ New Details: "${additional}"
 
 Return only the new, consolidated description as a single string.`;
 
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     return response.choices[0]?.message?.content || `${existing}. ${additional}`;
   } catch (error) {

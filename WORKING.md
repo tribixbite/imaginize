@@ -1,3 +1,31 @@
+## 2025-12-05: CI Quality Fixes
+
+**Commits:**
+- `c2470fa` - fix: add eslint-disable for intentional control regex in JSON repair
+- `790fbf8` - style: format all TypeScript files with Prettier
+
+### ESLint no-control-regex Fix
+
+The `attemptJsonRepair()` function in `ai-analyzer.ts` uses a regex with control characters (`[\x00-\x1f]`) to sanitize malformed JSON responses from LLMs. This intentionally matches control characters like tabs, newlines, and null bytes to fix common JSON parsing issues.
+
+ESLint's `no-control-regex` rule was flagging this as an error. Added `eslint-disable-next-line` comment to suppress the intentional usage:
+
+```typescript
+// eslint-disable-next-line no-control-regex
+repaired = repaired.replace(/[\x00-\x1f]/g, (char) => {
+  if (char === '\n') return '\\n';
+  if (char === '\r') return '\\r';
+  if (char === '\t') return '\\t';
+  return '';
+});
+```
+
+### Prettier Formatting
+
+Formatted all 35 TypeScript files in `src/` to comply with Prettier code style. CI now passes all quality checks.
+
+---
+
 ## 2025-12-04: Hybrid Safety Filter Fallback System
 
 **Commit:** `c6a394c` - feat: add hybrid fallback for safety filter rejections

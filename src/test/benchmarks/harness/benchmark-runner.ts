@@ -40,7 +40,9 @@ function calculateStats(measurements: number[]): {
   const avg = sum / measurements.length;
 
   // Standard deviation
-  const variance = measurements.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / measurements.length;
+  const variance =
+    measurements.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
+    measurements.length;
   const stdDev = Math.sqrt(variance);
 
   // Percentiles
@@ -105,11 +107,17 @@ async function runBenchmark(
 
   // Calculate statistics
   const stats = calculateStats(measurements);
-  const memory = mergedConfig.collectMemory ? metricsCollector.getMemoryMetrics() : undefined;
-  const tokens = mergedConfig.collectTokens ? metricsCollector.getTokenMetrics() : undefined;
+  const memory = mergedConfig.collectMemory
+    ? metricsCollector.getMemoryMetrics()
+    : undefined;
+  const tokens = mergedConfig.collectTokens
+    ? metricsCollector.getTokenMetrics()
+    : undefined;
   const api = mergedConfig.collectTokens ? metricsCollector.getApiMetrics() : undefined;
 
-  console.log(`    ✓ ${benchmark.name}: ${stats.avg.toFixed(2)}ms (±${stats.stdDev.toFixed(2)}ms)`);
+  console.log(
+    `    ✓ ${benchmark.name}: ${stats.avg.toFixed(2)}ms (±${stats.stdDev.toFixed(2)}ms)`
+  );
 
   return {
     name: benchmark.name,
@@ -155,7 +163,9 @@ export async function runSuite(
     }
   }
 
-  console.log(`\n✓ Suite complete: ${results.length}/${suite.benchmarks.length} benchmarks passed\n`);
+  console.log(
+    `\n✓ Suite complete: ${results.length}/${suite.benchmarks.length} benchmarks passed\n`
+  );
 
   return results;
 }

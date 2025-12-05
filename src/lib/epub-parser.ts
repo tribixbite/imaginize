@@ -181,7 +181,9 @@ export async function parseEpub(filePath: string): Promise<{
 
         // Skip non-story content based on content patterns
         if (isNonStoryContent(textContent)) {
-          console.log(`[epub-parser] Skipping promotional/marketing content: "${trimmedTitle}"`);
+          console.log(
+            `[epub-parser] Skipping promotional/marketing content: "${trimmedTitle}"`
+          );
           continue;
         }
 

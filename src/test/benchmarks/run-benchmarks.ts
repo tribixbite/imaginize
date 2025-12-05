@@ -73,12 +73,7 @@ async function main() {
   };
 
   // Run all suites
-  const suites = [
-    stateSuite,
-    parsingSuite,
-    processingSuite,
-    outputSuite,
-  ];
+  const suites = [stateSuite, parsingSuite, processingSuite, outputSuite];
 
   const results = await runSuites(suites, config, version);
 

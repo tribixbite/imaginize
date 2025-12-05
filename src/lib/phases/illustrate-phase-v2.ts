@@ -184,7 +184,7 @@ Create a brief style guide (3-4 sentences) covering:
 
 Return ONLY the style guide text, no JSON or formatting.`;
 
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
@@ -195,7 +195,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
       ],
       temperature: 0.7,
       max_tokens: 200,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     return (
       response.choices[0]?.message?.content ||
@@ -615,7 +615,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
 
     if (isGemini) {
       // Gemini 2.5 Flash Image via OpenRouter
-      const response = await imageOpenai.chat.completions.create({
+      const response = (await imageOpenai.chat.completions.create({
         model,
         messages: [
           {
@@ -631,7 +631,7 @@ Return ONLY the style guide text, no JSON or formatting.`;
             aspect_ratio: config.imageEndpoint.aspectRatio,
           },
         }),
-      }) as ChatCompletion;
+      })) as ChatCompletion;
 
       // Check multiple possible response formats
       const imageUrl =

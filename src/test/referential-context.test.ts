@@ -198,8 +198,18 @@ describe('Referential Context System', () => {
               content: JSON.stringify({
                 elements: [
                   { type: 'character', name: 'John', description: 'Hero', quotes: [] },
-                  { type: 'creature', name: 'Dragon', description: 'Large beast', quotes: [] },
-                  { type: 'place', name: 'Castle', description: 'Stone fortress', quotes: [] },
+                  {
+                    type: 'creature',
+                    name: 'Dragon',
+                    description: 'Large beast',
+                    quotes: [],
+                  },
+                  {
+                    type: 'place',
+                    name: 'Castle',
+                    description: 'Stone fortress',
+                    quotes: [],
+                  },
                   { type: 'item', name: 'Sword', description: 'Steel blade', quotes: [] },
                   { type: 'object', name: 'Crown', description: 'Golden', quotes: [] },
                 ],
@@ -399,7 +409,9 @@ describe('Referential Context System', () => {
       // Simple enrichment
       const result = `${existing}. Additional details: ${additional}`;
 
-      expect(result).toBe('John has dark hair. Additional details: wears a leather jacket');
+      expect(result).toBe(
+        'John has dark hair. Additional details: wears a leather jacket'
+      );
       expect(result).toContain(existing);
       expect(result).toContain(additional);
     });
@@ -467,7 +479,12 @@ describe('Referential Context System', () => {
       await stateManager.save();
 
       // Load state from disk
-      const newStateManager = new StateManager(testOutputDir, 'test.epub', 'Test Book', 100);
+      const newStateManager = new StateManager(
+        testOutputDir,
+        'test.epub',
+        'Test Book',
+        100
+      );
       await newStateManager.load();
       const loadedState = newStateManager.getState();
 
@@ -493,7 +510,12 @@ describe('Referential Context System', () => {
       await stateManager.save();
 
       // Simulate regeneration
-      const newStateManager = new StateManager(testOutputDir, 'test.epub', 'Test Book', 100);
+      const newStateManager = new StateManager(
+        testOutputDir,
+        'test.epub',
+        'Test Book',
+        100
+      );
       await newStateManager.load();
       const loadedElements = newStateManager.getState().elements || [];
 
@@ -502,7 +524,12 @@ describe('Referential Context System', () => {
     });
 
     it('should handle missing state gracefully', async () => {
-      const newStateManager = new StateManager(testOutputDir, 'test.epub', 'Test Book', 100);
+      const newStateManager = new StateManager(
+        testOutputDir,
+        'test.epub',
+        'Test Book',
+        100
+      );
       const loaded = await newStateManager.load();
 
       expect(loaded).toBe(false);
@@ -520,13 +547,18 @@ describe('Referential Context System', () => {
           { text: 'the bastard sword', page: '15' },
         ],
         imageUrl: 'https://example.com/longclaw.png',
-        aliases: ['the bastard sword', 'Jon\'s sword'],
+        aliases: ['the bastard sword', "Jon's sword"],
       };
 
       stateManager.setElements([element]);
       await stateManager.save();
 
-      const newStateManager = new StateManager(testOutputDir, 'test.epub', 'Test Book', 100);
+      const newStateManager = new StateManager(
+        testOutputDir,
+        'test.epub',
+        'Test Book',
+        100
+      );
       await newStateManager.load();
       const loadedElement = newStateManager.getState().elements![0];
 

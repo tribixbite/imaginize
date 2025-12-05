@@ -243,7 +243,8 @@ export class BenchmarkDatabase {
       const baseline = baselineMap.get(current.benchmark_name);
       if (!baseline) continue;
 
-      const percentChange = ((current.avg_time - baseline.avg_time) / baseline.avg_time) * 100;
+      const percentChange =
+        ((current.avg_time - baseline.avg_time) / baseline.avg_time) * 100;
       const isRegression = percentChange > threshold * 100;
       const isImprovement = percentChange < -threshold * 100;
 

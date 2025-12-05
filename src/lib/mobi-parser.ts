@@ -142,7 +142,11 @@ function extractTextFromHtml(html: string): string {
  * Find TOC item by href/id
  */
 function findTocItemByHref(
-  toc: Array<{ label: string; href: string; children?: Array<{ label: string; href: string }> }>,
+  toc: Array<{
+    label: string;
+    href: string;
+    children?: Array<{ label: string; href: string }>;
+  }>,
   targetId: string
 ): { label: string; href: string } | null {
   for (const item of toc) {

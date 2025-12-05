@@ -9,7 +9,7 @@ import type { Stream } from 'openai/streaming';
 import type {
   ChatCompletion,
   ChatCompletionChunk,
-  ChatCompletionCreateParams
+  ChatCompletionCreateParams,
 } from 'openai/resources/chat/completions';
 
 /**

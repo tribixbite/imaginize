@@ -153,7 +153,7 @@ async function createStyleGuideFromText(
   // Use AI to expand the description into a full style guide
   const prompt = buildStyleGenerationPrompt(description, bookGenre);
 
-  const response = await openai.chat.completions.create({
+  const response = (await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
@@ -168,7 +168,7 @@ async function createStyleGuideFromText(
     ],
     temperature: 0.7,
     max_tokens: 800,
-  }) as ChatCompletion;
+  })) as ChatCompletion;
 
   const content = response.choices[0]?.message?.content || '{}';
 

@@ -235,10 +235,7 @@ export class AnalyzePhaseV2 extends BasePhase {
 
         const bookId = config.series.bookId || 'unknown';
 
-        const importResult = await this.seriesElements.importToBook(
-          bookId,
-          outputDir
-        );
+        const importResult = await this.seriesElements.importToBook(bookId, outputDir);
 
         if (importResult.count > 0) {
           await progressTracker.log(
@@ -807,7 +804,7 @@ export class AnalyzePhaseV2 extends BasePhase {
     const basePrompt = this.templateLoader.renderTemplate(analyzeTemplate, templateVars);
 
     // Call AI with enriched prompt
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelConfig.name,
       messages: [
         {
@@ -822,7 +819,7 @@ export class AnalyzePhaseV2 extends BasePhase {
       ],
       temperature: 0.7,
       max_tokens: 2000,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '[]';
 

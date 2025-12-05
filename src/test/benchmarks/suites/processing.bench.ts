@@ -29,14 +29,14 @@ const GPT4O_MINI: ModelConfig = {
   name: 'gpt-4o-mini',
   contextLength: 128_000,
   inputCostPer1M: 0.15,
-  outputCostPer1M: 0.60,
+  outputCostPer1M: 0.6,
 };
 
 const GPT4O: ModelConfig = {
   name: 'gpt-4o',
   contextLength: 128_000,
-  inputCostPer1M: 2.50,
-  outputCostPer1M: 10.00,
+  inputCostPer1M: 2.5,
+  outputCostPer1M: 10.0,
 };
 
 export const processingSuite: BenchmarkSuite = {

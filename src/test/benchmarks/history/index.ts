@@ -80,9 +80,13 @@ export class BenchmarkHistory {
       // Log regressions to console
       const regressions = comparisons.filter((c) => c.is_regression);
       if (regressions.length > 0) {
-        console.log(`\n📊 Detected ${regressions.length} performance regression(s) from baseline`);
+        console.log(
+          `\n📊 Detected ${regressions.length} performance regression(s) from baseline`
+        );
         for (const reg of regressions) {
-          console.log(`   - ${reg.benchmark_name}: ${reg.percent_change.toFixed(1)}% slower (${reg.severity})`);
+          console.log(
+            `   - ${reg.benchmark_name}: ${reg.percent_change.toFixed(1)}% slower (${reg.severity})`
+          );
         }
       }
     }
@@ -148,8 +152,7 @@ export class BenchmarkHistory {
       ? {
           total_benchmarks: summary.total_benchmarks,
           total_regressions: summary.total_regressions,
-          total_improvements:
-            comparisons?.filter((c) => c.is_improvement).length || 0,
+          total_improvements: comparisons?.filter((c) => c.is_improvement).length || 0,
           avg_execution_time: summary.avg_execution_time,
         }
       : undefined;
@@ -187,9 +190,7 @@ export class BenchmarkHistory {
    */
   getRegressionSummary(acknowledged: boolean = false): string {
     const alerts = this.db.getUnacknowledgedRegressions(100);
-    const filtered = acknowledged
-      ? alerts
-      : alerts.filter((a) => !a.acknowledged);
+    const filtered = acknowledged ? alerts : alerts.filter((a) => !a.acknowledged);
 
     if (filtered.length === 0) {
       return 'No regressions detected';

@@ -132,10 +132,7 @@ function buildChaptersMarkdown(
 }
 
 // Benchmark helper - build Elements.md string
-function buildElementsMarkdown(
-  metadata: BookMetadata,
-  elements: BookElement[]
-): string {
+function buildElementsMarkdown(metadata: BookMetadata, elements: BookElement[]): string {
   let content = `# Elements - ${metadata.title}\n\n`;
 
   if (metadata.author) {

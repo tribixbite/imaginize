@@ -21,7 +21,12 @@ export const stateSuite: BenchmarkSuite = {
         mkdirSync(TEST_DIR, { recursive: true });
       },
       fn: async () => {
-        const stateManager = new StateManager(TEST_DIR, 'test-book.epub', 'Test Book', 100);
+        const stateManager = new StateManager(
+          TEST_DIR,
+          'test-book.epub',
+          'Test Book',
+          100
+        );
 
         // Update some phase status
         stateManager.updatePhase('parse', 'completed');
@@ -42,7 +47,12 @@ export const stateSuite: BenchmarkSuite = {
       name: 'State file read',
       setup: async () => {
         mkdirSync(TEST_DIR, { recursive: true });
-        const stateManager = new StateManager(TEST_DIR, 'test-book.epub', 'Test Book', 100);
+        const stateManager = new StateManager(
+          TEST_DIR,
+          'test-book.epub',
+          'Test Book',
+          100
+        );
 
         stateManager.updatePhase('parse', 'completed');
         stateManager.updatePhase('analyze', 'in_progress');
@@ -50,7 +60,12 @@ export const stateSuite: BenchmarkSuite = {
         await stateManager.save();
       },
       fn: async () => {
-        const stateManager = new StateManager(TEST_DIR, 'test-book.epub', 'Test Book', 100);
+        const stateManager = new StateManager(
+          TEST_DIR,
+          'test-book.epub',
+          'Test Book',
+          100
+        );
         await stateManager.load();
       },
       teardown: () => {

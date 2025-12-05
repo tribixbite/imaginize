@@ -10,7 +10,10 @@ import { join } from 'path';
 import type { BenchmarkSuite } from '../harness/types.js';
 
 // Use integration test fixtures
-const EPUB_FIXTURE = join(process.cwd(), 'src/test/integration/fixtures/epub/simple.epub');
+const EPUB_FIXTURE = join(
+  process.cwd(),
+  'src/test/integration/fixtures/epub/simple.epub'
+);
 const PDF_FIXTURE = join(process.cwd(), 'src/test/integration/fixtures/pdf/simple.pdf');
 
 export const parsingSuite: BenchmarkSuite = {

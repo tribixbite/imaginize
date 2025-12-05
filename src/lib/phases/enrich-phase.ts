@@ -38,7 +38,7 @@ const INITIAL_RETRY_DELAY_MS = 20000; // Start with 20s for 429 errors
  * Sleep utility for rate limiting
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class EnrichPhase extends BasePhase {
@@ -149,7 +149,7 @@ export class EnrichPhase extends BasePhase {
 
     // Deduplicate by name (case-insensitive)
     const seen = new Set<string>();
-    return elements.filter(el => {
+    return elements.filter((el) => {
       const key = el.name.toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
@@ -184,10 +184,10 @@ export class EnrichPhase extends BasePhase {
     await progressTracker.log('Building element lookup tables...', 'info');
 
     // Log element summary
-    const characterCount = this.elements.filter(e => e.type === 'character').length;
-    const placeCount = this.elements.filter(e => e.type === 'place').length;
-    const itemCount = this.elements.filter(e => e.type === 'item').length;
-    const creatureCount = this.elements.filter(e => e.type === 'creature').length;
+    const characterCount = this.elements.filter((e) => e.type === 'character').length;
+    const placeCount = this.elements.filter((e) => e.type === 'place').length;
+    const itemCount = this.elements.filter((e) => e.type === 'item').length;
+    const creatureCount = this.elements.filter((e) => e.type === 'creature').length;
 
     await progressTracker.log(
       `Elements: ${characterCount} characters, ${placeCount} places, ${itemCount} items, ${creatureCount} creatures`,
@@ -213,7 +213,10 @@ export class EnrichPhase extends BasePhase {
     const modelName = typeof modelConfig === 'string' ? modelConfig : modelConfig.name;
 
     await progressTracker.log(`Using model: ${modelName}`, 'info');
-    await progressTracker.log(`Rate limiting: ${Math.round(60000 / RATE_LIMIT_DELAY_MS)} requests/min`, 'info');
+    await progressTracker.log(
+      `Rate limiting: ${Math.round(60000 / RATE_LIMIT_DELAY_MS)} requests/min`,
+      'info'
+    );
 
     let enrichedCount = 0;
     let skippedCount = 0;
@@ -253,7 +256,7 @@ export class EnrichPhase extends BasePhase {
 
           if (enrichedDescription && enrichedDescription !== concept.description) {
             concept.enrichedDescription = enrichedDescription;
-            concept.elementsInjected = relevantElements.map(e => e.name);
+            concept.elementsInjected = relevantElements.map((e) => e.name);
             enrichedCount++;
 
             // Update progress periodically
@@ -270,10 +273,11 @@ export class EnrichPhase extends BasePhase {
           const errorMessage = error.message || String(error);
 
           // Check if it's a rate limit error (429)
-          const isRateLimitError = errorMessage.includes('429') ||
-                                   errorMessage.includes('RESOURCE_EXHAUSTED') ||
-                                   errorMessage.includes('rate') ||
-                                   errorMessage.includes('quota');
+          const isRateLimitError =
+            errorMessage.includes('429') ||
+            errorMessage.includes('RESOURCE_EXHAUSTED') ||
+            errorMessage.includes('rate') ||
+            errorMessage.includes('quota');
 
           if (isRateLimitError && attempt < MAX_RETRIES - 1) {
             // Exponential backoff: 20s, 40s, 80s
@@ -357,22 +361,24 @@ export class EnrichPhase extends BasePhase {
     const normalizedName = name.toLowerCase().trim();
 
     // Exact match first
-    let element = this.elements.find(
-      e => e.name.toLowerCase() === normalizedName
-    );
+    let element = this.elements.find((e) => e.name.toLowerCase() === normalizedName);
     if (element) return element;
 
     // Try without "Dr.", "Mr.", "Mrs." etc.
-    const withoutTitle = normalizedName.replace(/^(dr\.|mr\.|mrs\.|ms\.|sir|lord|lady)\s*/i, '');
+    const withoutTitle = normalizedName.replace(
+      /^(dr\.|mr\.|mrs\.|ms\.|sir|lord|lady)\s*/i,
+      ''
+    );
     element = this.elements.find(
-      e => e.name.toLowerCase().includes(withoutTitle) ||
-           withoutTitle.includes(e.name.toLowerCase())
+      (e) =>
+        e.name.toLowerCase().includes(withoutTitle) ||
+        withoutTitle.includes(e.name.toLowerCase())
     );
     if (element) return element;
 
     // Try aliases
-    element = this.elements.find(e =>
-      e.aliases?.some(alias => alias.toLowerCase() === normalizedName)
+    element = this.elements.find((e) =>
+      e.aliases?.some((alias) => alias.toLowerCase() === normalizedName)
     );
 
     return element;
@@ -392,7 +398,8 @@ export class EnrichPhase extends BasePhase {
     }
 
     // Pattern 2: Titles followed by names
-    const titledPattern = /\b(Dr\.|Mr\.|Mrs\.|Ms\.|Sir|Lord|Lady)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi;
+    const titledPattern =
+      /\b(Dr\.|Mr\.|Mrs\.|Ms\.|Sir|Lord|Lady)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi;
     while ((match = titledPattern.exec(text)) !== null) {
       names.push(match[0]); // Include title
       names.push(match[2]); // Also try just the name
@@ -455,7 +462,9 @@ export class EnrichPhase extends BasePhase {
     // If we filtered out too much, return a minimal description
     if (filtered.length < 20) {
       // Try to extract just the core identity
-      const typeMatch = description.match(/^(A |An )?(human |alien )?(client|scientist|doctor|soldier|guard|construct|creature|robot)/i);
+      const typeMatch = description.match(
+        /^(A |An )?(human |alien )?(client|scientist|doctor|soldier|guard|construct|creature|robot)/i
+      );
       if (typeMatch) {
         return typeMatch[0];
       }
@@ -478,9 +487,14 @@ export class EnrichPhase extends BasePhase {
     const fullDescription = element.description || '';
 
     // Check if this scene mentions injury/unconsciousness for this character
-    const namePattern = new RegExp(element.name.replace(/^(Dr\.|Mr\.|Mrs\.)\s*/i, ''), 'i');
+    const namePattern = new RegExp(
+      element.name.replace(/^(Dr\.|Mr\.|Mrs\.)\s*/i, ''),
+      'i'
+    );
     const sceneContext = `${sceneQuote} ${sceneDescription}`.toLowerCase();
-    const elementNameLower = element.name.toLowerCase().replace(/^(dr\.|mr\.|mrs\.)\s*/i, '');
+    const elementNameLower = element.name
+      .toLowerCase()
+      .replace(/^(dr\.|mr\.|mrs\.)\s*/i, '');
 
     // Scene-specific states to check
     const stateChecks = [
@@ -516,7 +530,9 @@ export class EnrichPhase extends BasePhase {
       }
       if (activeStates.includes('injured')) {
         // Extract injury details from original if present in scene
-        const injuryMatch = fullDescription.match(/((massive |severe )?(wounds?|injuries|bleeding)[^,.]*)/i);
+        const injuryMatch = fullDescription.match(
+          /((massive |severe )?(wounds?|injuries|bleeding)[^,.]*)/i
+        );
         if (injuryMatch) {
           stateAdditions.push(injuryMatch[1].trim());
         } else {
@@ -546,7 +562,7 @@ export class EnrichPhase extends BasePhase {
   ): Promise<string> {
     // Build element context with scene-appropriate filtering
     const elementDescriptions = elements
-      .map(e => {
+      .map((e) => {
         const appropriateDesc = this.getSceneAppropriateDescription(
           e,
           concept.quote,
@@ -586,18 +602,19 @@ CRITICAL: Return ONLY the enriched scene description, no explanations or preambl
 
 ENRICHED SCENE DESCRIPTION:`;
 
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: modelName,
       messages: [
         {
           role: 'system',
-          content: 'You are a visual description enrichment specialist. You integrate character and element visual details into scene descriptions for book illustration.',
+          content:
+            'You are a visual description enrichment specialist. You integrate character and element visual details into scene descriptions for book illustration.',
         },
         { role: 'user', content: prompt },
       ],
       temperature: 0.3, // Low temperature for consistency
       max_tokens: 800,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     return response.choices[0]?.message?.content?.trim() || concept.description;
   }

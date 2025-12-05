@@ -129,9 +129,14 @@ export class ElementsLookup {
           if (descMatch) {
             currentDesc = descMatch[1].trim();
           }
-        } else if (line.startsWith('**Appears in:**') || line.startsWith('**Reference Quotes:**')) {
+        } else if (
+          line.startsWith('**Appears in:**') ||
+          line.startsWith('**Reference Quotes:**')
+        ) {
           // Extract chapter numbers or note presence
-          const chapterMatch = line.match(/\*\*(?:Appears in|Reference Quotes):\*\*\s*(.+)/);
+          const chapterMatch = line.match(
+            /\*\*(?:Appears in|Reference Quotes):\*\*\s*(.+)/
+          );
           if (chapterMatch) {
             currentAppearances = chapterMatch[1]
               .split(',')
@@ -180,14 +185,19 @@ export class ElementsLookup {
 
     // Get all characters
     const characters = this.getElementsByType('character');
-    const items = [...this.getElementsByType('object'), ...this.getElementsByType('creature')];
+    const items = [
+      ...this.getElementsByType('object'),
+      ...this.getElementsByType('creature'),
+    ];
 
     for (const character of characters) {
       const charName = character.name.toLowerCase();
       const relatedItems: string[] = [];
 
       // Extract key name parts (e.g., "The Deliverator" -> ["deliverator", "the deliverator"])
-      const nameParts = charName.split(/\s+/).filter(p => !['the', 'a', 'an'].includes(p));
+      const nameParts = charName
+        .split(/\s+/)
+        .filter((p) => !['the', 'a', 'an'].includes(p));
       const keyNames = [charName, ...nameParts]; // Full name and individual significant parts
 
       // Check each item for character name reference
@@ -199,12 +209,8 @@ export class ElementsLookup {
         // Also check possessive forms for each key name variation
         let nameMatch = false;
         for (const keyName of keyNames) {
-          const possessiveForms = [
-            `${keyName}'s`,
-            `${keyName}s`,
-            keyName,
-          ];
-          if (possessiveForms.some(form => itemNameLower.includes(form))) {
+          const possessiveForms = [`${keyName}'s`, `${keyName}s`, keyName];
+          if (possessiveForms.some((form) => itemNameLower.includes(form))) {
             nameMatch = true;
             break;
           }
@@ -213,9 +219,11 @@ export class ElementsLookup {
         // Also check if description explicitly mentions ownership
         let descMatch = false;
         for (const keyName of keyNames) {
-          if (itemDescLower.includes(`${keyName}'s`) ||
-              itemDescLower.includes(`belongs to ${keyName}`) ||
-              itemDescLower.includes(`owned by ${keyName}`)) {
+          if (
+            itemDescLower.includes(`${keyName}'s`) ||
+            itemDescLower.includes(`belongs to ${keyName}`) ||
+            itemDescLower.includes(`owned by ${keyName}`)
+          ) {
             descMatch = true;
             break;
           }

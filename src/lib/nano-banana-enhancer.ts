@@ -107,9 +107,15 @@ function addPhotographyContext(description: string): string {
 
   if (description.toLowerCase().includes('portrait')) {
     context = contexts[3]; // Vanity Fair style for portraits
-  } else if (description.toLowerCase().includes('nature') || description.toLowerCase().includes('landscape')) {
+  } else if (
+    description.toLowerCase().includes('nature') ||
+    description.toLowerCase().includes('landscape')
+  ) {
     context = contexts[4]; // National Geographic for nature
-  } else if (description.toLowerCase().includes('dramatic') || description.toLowerCase().includes('intense')) {
+  } else if (
+    description.toLowerCase().includes('dramatic') ||
+    description.toLowerCase().includes('intense')
+  ) {
     context = contexts[2]; // Pulitzer Prize for dramatic scenes
   }
 
@@ -160,7 +166,10 @@ function convertToJsonPrompt(description: string): string {
  * Extract color palette and convert to hex codes
  * Useful for precise color control in Nano Banana
  */
-export function addHexColors(description: string, colorMap: Record<string, string>): string {
+export function addHexColors(
+  description: string,
+  colorMap: Record<string, string>
+): string {
   let enhanced = description;
 
   // Replace color names with hex codes

@@ -5,11 +5,7 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
-import type {
-  SeriesConfig,
-  BookInfo,
-  SeriesStats,
-} from './types.js';
+import type { SeriesConfig, BookInfo, SeriesStats } from './types.js';
 
 const SERIES_CONFIG_FILE = '.imaginize.series.json';
 
@@ -49,11 +45,7 @@ export function createSeriesManager(seriesRoot: string) {
       config.lastUpdated = new Date().toISOString();
 
       // Write config
-      await writeFile(
-        seriesConfigPath,
-        JSON.stringify(config, null, 2),
-        'utf-8'
-      );
+      await writeFile(seriesConfigPath, JSON.stringify(config, null, 2), 'utf-8');
     } catch (error: any) {
       throw new Error(`Failed to save series config: ${error.message}`);
     }

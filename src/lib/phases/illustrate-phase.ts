@@ -197,23 +197,32 @@ function sanitizePromptForDalle(text: string): string {
  */
 const CHARACTER_VISUAL_OVERRIDES: Record<string, string> = {
   // Murderbot Diaries characters
-  'secunit': 'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
-  'murderbot': 'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
-  'dr. mensah': 'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
-  'mensah': 'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
-  'ratthi': 'South Asian man, warm friendly face, dark hair, expressive eyes, often looks curious or concerned, wearing gray survey team uniform',
-  'pin-lee': 'East Asian woman, sharp professional appearance, dark hair pulled back, confident posture, wearing gray survey team uniform or formal business attire',
-  'gurathin': 'Tall thin man, pale skin, cold analytical expression, augmented with visible neural implants, wearing gray survey team uniform',
-  'arada': 'Young woman, friendly open face, wearing gray survey team uniform',
-  'overse': 'Woman with practical appearance, wearing gray survey team uniform',
-  'bharadwaj': 'Indian woman, scientist appearance, wearing environmental suit or medical attire',
-  'volescu': 'Man, nervous disposition, wearing environmental suit or survey uniform',
+  secunit:
+    'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
+  murderbot:
+    'Tall humanoid figure (6ft) in dark gray tactical armor with matte black finish, smooth featureless helmet with opaque reflective visor, no visible face, built-in arm weapons visible as subtle panels, large rifle-style weapon on back, lean athletic build, genderless appearance',
+  'dr. mensah':
+    'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
+  mensah:
+    'Middle-aged woman with dark brown skin, very short light brown hair, intelligent eyes, calm authoritative expression, wearing utilitarian gray jumpsuit or business attire depending on scene',
+  ratthi:
+    'South Asian man, warm friendly face, dark hair, expressive eyes, often looks curious or concerned, wearing gray survey team uniform',
+  'pin-lee':
+    'East Asian woman, sharp professional appearance, dark hair pulled back, confident posture, wearing gray survey team uniform or formal business attire',
+  gurathin:
+    'Tall thin man, pale skin, cold analytical expression, augmented with visible neural implants, wearing gray survey team uniform',
+  arada: 'Young woman, friendly open face, wearing gray survey team uniform',
+  overse: 'Woman with practical appearance, wearing gray survey team uniform',
+  bharadwaj:
+    'Indian woman, scientist appearance, wearing environmental suit or medical attire',
+  volescu: 'Man, nervous disposition, wearing environmental suit or survey uniform',
 };
 
 /**
  * Photorealistic style prefix for TV-screenshot quality
  */
-const PHOTOREALISTIC_PREFIX = 'Photorealistic, high-budget science fiction TV series screenshot, cinematic 35mm film look, professional lighting, sharp focus, 8K detail. ';
+const PHOTOREALISTIC_PREFIX =
+  'Photorealistic, high-budget science fiction TV series screenshot, cinematic 35mm film look, professional lighting, sharp focus, 8K detail. ';
 
 export class IllustratePhase extends BasePhase {
   private concepts: ImageConcept[] = [];
@@ -345,11 +354,14 @@ Return ONLY the style guide text, starting with "GENRE: [Identified Genre]. " fo
 Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, earthy tones..."`;
 
     // Resolve model config to get model name string
-    const modelConfig = resolveModelConfig(this.context.config.model, this.context.config);
+    const modelConfig = resolveModelConfig(
+      this.context.config.model,
+      this.context.config
+    );
     const modelName = typeof modelConfig === 'string' ? modelConfig : modelConfig.name;
 
     try {
-      const response = await openai.chat.completions.create({
+      const response = (await openai.chat.completions.create({
         model: modelName,
         messages: [
           {
@@ -360,7 +372,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
         ],
         temperature: 0.7,
         max_tokens: 500, // Increased from 200 to handle longer responses
-      }) as ChatCompletion;
+      })) as ChatCompletion;
 
       return (
         response.choices[0]?.message?.content ||
@@ -368,7 +380,9 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       );
     } catch (error) {
       // Fallback to default style guide if API fails (e.g., due to rate limits or token limits)
-      console.warn(`Style guide generation failed, using fallback: ${error instanceof Error ? error.message : error}`);
+      console.warn(
+        `Style guide generation failed, using fallback: ${error instanceof Error ? error.message : error}`
+      );
       return `GENRE: Science Fiction. A cinematic, high-contrast illustration style with metallic textures, cool blue and gray tones, dramatic lighting, and detailed technology elements. Focus on tension and atmosphere with realistic human figures.`;
     }
   }
@@ -439,8 +453,14 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
           const prompt = this.buildImagePrompt(concept);
 
           // Debug: Save sanitized prompt to file for inspection
-          const debugPath = join(outputDir, `debug_prompt_${concept.chapter.replace(/\s+/g, '_')}.txt`);
-          await writeFile(debugPath, `=== Sanitized Prompt for ${concept.chapter} ===\n\n${prompt}\n\n=== Original Description ===\n\n${concept.description || 'N/A'}`);
+          const debugPath = join(
+            outputDir,
+            `debug_prompt_${concept.chapter.replace(/\s+/g, '_')}.txt`
+          );
+          await writeFile(
+            debugPath,
+            `=== Sanitized Prompt for ${concept.chapter} ===\n\n${prompt}\n\n=== Original Description ===\n\n${concept.description || 'N/A'}`
+          );
 
           // Generate image
           const imageUrl = await this.executeWithRetry(
@@ -715,7 +735,8 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const maxLength = DALLE_MAX_PROMPT_LENGTH - PROMPT_BUFFER;
 
     // Required parts (always included, may be truncated)
-    const technicalReqs = '\nTECHNICAL: Cinematic composition, realistic lighting, shallow depth of field\nCRITICAL: No text, letters, words, or writing in the image';
+    const technicalReqs =
+      '\nTECHNICAL: Cinematic composition, realistic lighting, shallow depth of field\nCRITICAL: No text, letters, words, or writing in the image';
     const technicalLen = technicalReqs.length;
 
     // Start with photorealistic prefix for TV-screenshot quality
@@ -743,7 +764,8 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
 
     // Scene description - the most important part
     // Calculate available space for scene after other parts
-    const fixedPartsLen = prompt.length + styleSection.length + moodLighting.length + technicalLen + 50;
+    const fixedPartsLen =
+      prompt.length + styleSection.length + moodLighting.length + technicalLen + 50;
     const elementBudget = 800; // Increased for character consistency descriptions
     const sceneMaxLen = maxLength - fixedPartsLen - elementBudget;
 
@@ -764,7 +786,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const remainingBudget = maxLength - currentLen - 50;
 
     if (remainingBudget > 100) {
-      const elementDescriptions = this.buildElementSectionWithOverrides(concept, remainingBudget);
+      const elementDescriptions = this.buildElementSectionWithOverrides(
+        concept,
+        remainingBudget
+      );
       if (elementDescriptions) {
         prompt += elementDescriptions;
       }
@@ -785,13 +810,17 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
    * Build element section with character visual overrides for consistency
    * Prioritizes hardcoded visual descriptions over extracted book descriptions
    */
-  private buildElementSectionWithOverrides(concept: ImageConcept, maxLen: number): string {
+  private buildElementSectionWithOverrides(
+    concept: ImageConcept,
+    maxLen: number
+  ): string {
     const referencedElements: string[] = [];
 
     // Get entity names from elements_present or extract from text
-    const entityNames = concept.elements_present && concept.elements_present.length > 0
-      ? concept.elements_present
-      : this.extractEntityNames(concept.description || '', concept.quote || '');
+    const entityNames =
+      concept.elements_present && concept.elements_present.length > 0
+        ? concept.elements_present
+        : this.extractEntityNames(concept.description || '', concept.quote || '');
 
     for (const entityName of entityNames) {
       // First check for visual override (character consistency)
@@ -841,9 +870,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const referencedElements: string[] = [];
 
     // Get entity names from elements_present or extract from text
-    const entityNames = concept.elements_present && concept.elements_present.length > 0
-      ? concept.elements_present
-      : this.extractEntityNames(concept.description || '', concept.quote || '');
+    const entityNames =
+      concept.elements_present && concept.elements_present.length > 0
+        ? concept.elements_present
+        : this.extractEntityNames(concept.description || '', concept.quote || '');
 
     for (const entityName of entityNames) {
       const element = this.findElement(entityName);
@@ -983,7 +1013,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
         'SAFETY',
         'prohibited',
       ];
-      return safetyKeywords.some(keyword =>
+      return safetyKeywords.some((keyword) =>
         message.toLowerCase().includes(keyword.toLowerCase())
       );
     }
@@ -1010,7 +1040,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const { progressTracker } = this.context;
 
     // Determine which model to use - prioritize config.imageModel, then model param, then default
-    const imageModel = config.imageModel || (typeof model === 'string' ? model : model?.model) || 'dall-e-3';
+    const imageModel =
+      config.imageModel ||
+      (typeof model === 'string' ? model : model?.model) ||
+      'dall-e-3';
     await progressTracker.log(`Using image model: ${imageModel}`, 'info');
 
     // Build fallback chain based on primary model
@@ -1075,7 +1108,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     const chain: string[] = [primaryModel];
 
     // If primary is Gemini Pro, add Flash as fallback (more permissive)
-    if (primaryModel === 'gemini-pro-image' || primaryModel === 'gemini-2.0-flash-preview-image-generation') {
+    if (
+      primaryModel === 'gemini-pro-image' ||
+      primaryModel === 'gemini-2.0-flash-preview-image-generation'
+    ) {
       chain.push('gemini-flash-image');
     }
 
@@ -1183,10 +1219,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
     if (currentModel.includes('imagen')) {
       const geminiApiKey = (config as any).geminiApiKey;
       if (!geminiApiKey) {
-        await progressTracker.log(
-          'Gemini API key not found, skipping Imagen',
-          'warning'
-        );
+        await progressTracker.log('Gemini API key not found, skipping Imagen', 'warning');
         return null;
       }
 
@@ -1349,7 +1382,7 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       size === '1024x1792' ? '9:16' : size === '1792x1024' ? '16:9' : '1:1';
 
     // OpenRouter image models require modalities parameter
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: model,
       messages: [
         {
@@ -1361,10 +1394,10 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
       image_config: {
         aspect_ratio: aspectRatio,
       },
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     // Images returned in message.images array
-          // @ts-expect-error - DALL-E specific response format
+    // @ts-expect-error - DALL-E specific response format
     const images = response.choices[0]?.message?.images;
     if (images && images.length > 0) {
       const imageUrl = images[0]?.image_url?.url;

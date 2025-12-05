@@ -79,7 +79,7 @@ Text:
 ${truncated}`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model,
       messages: [
         {
@@ -94,7 +94,7 @@ ${truncated}`;
       ],
       temperature: 0.3, // Low temperature for consistent extraction
       max_tokens: 1000, // Keep response short - just entity lists
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '[]';
 

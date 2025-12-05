@@ -40,7 +40,9 @@ const regressions = db.getUnacknowledgedRegressions(10);
 console.log(`\nUnacknowledged Regressions: ${regressions.length}`);
 if (regressions.length > 0) {
   regressions.slice(0, 5).forEach((reg) => {
-    console.log(`  - ${reg.benchmark_name}: ${reg.percent_change.toFixed(1)}% slower (${reg.severity})`);
+    console.log(
+      `  - ${reg.benchmark_name}: ${reg.percent_change.toFixed(1)}% slower (${reg.severity})`
+    );
   });
 }
 

@@ -17,7 +17,10 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { Command } from 'commander';
 import readline from 'readline';
-import { GoogleGeminiAdapter, isGoogleNativeEndpoint } from './lib/google-gemini-adapter.js';
+import {
+  GoogleGeminiAdapter,
+  isGoogleNativeEndpoint,
+} from './lib/google-gemini-adapter.js';
 import type { IAiClient } from './lib/ai-client.js';
 
 import { loadConfig, getSampleConfig } from './lib/config.js';
@@ -76,7 +79,10 @@ export async function main(): Promise<void> {
     // Phase selection
     .option('--text', 'Generate Chapters.md with visual scenes (analyze phase)')
     .option('--elements', 'Generate Elements.md with story elements (extract phase)')
-    .option('--enrich', 'Enrich scene descriptions with element visual details (enrich phase)')
+    .option(
+      '--enrich',
+      'Enrich scene descriptions with element visual details (enrich phase)'
+    )
     .option(
       '--images',
       'Generate images with DALL-E and update Chapters.md (illustrate phase)'
@@ -88,7 +94,10 @@ export async function main(): Promise<void> {
     .option('--webp-album', 'Compile WebP album (smaller than PDF)')
     .option('--webp-strip', 'Create single vertical strip WebP image')
     .option('--all-formats', 'Generate all output formats (PDF, CBZ, EPUB, HTML, WebP)')
-    .option('--output <mode>', 'Output mode: full (all phases + all formats), quick (text only)')
+    .option(
+      '--output <mode>',
+      'Output mode: full (all phases + all formats), quick (text only)'
+    )
     // Filtering
     .option('--chapters <range>', 'Process specific chapters (e.g., "1-5,10")')
     .option(
@@ -109,8 +118,14 @@ export async function main(): Promise<void> {
     .option('--model <name>', 'Override model (e.g., "gpt-4o")')
     .option('--api-key <key>', 'Override API key')
     .option('--image-key <key>', 'Separate image API key')
-    .option('--provider <provider>', 'Override AI provider (openai, openrouter, gemini, custom)')
-    .option('--image-model <model>', 'Image generation model (dall-e-3, gemini-flash-image, gemini-pro-image, imagen-3.0, gpt-image-1)')
+    .option(
+      '--provider <provider>',
+      'Override AI provider (openai, openrouter, gemini, custom)'
+    )
+    .option(
+      '--image-model <model>',
+      'Image generation model (dall-e-3, gemini-flash-image, gemini-pro-image, imagen-3.0, gpt-image-1)'
+    )
     // Output
     .option('--output-dir <dir>', 'Override output directory')
     .option('--verbose', 'Verbose logging')
@@ -411,9 +426,7 @@ export async function main(): Promise<void> {
     });
 
   // Series management command
-  const seriesCmd = program
-    .command('series')
-    .description('Multi-book series management');
+  const seriesCmd = program.command('series').description('Multi-book series management');
 
   // series init - Initialize a new series
   seriesCmd
@@ -422,8 +435,16 @@ export async function main(): Promise<void> {
     .argument('[series-root]', 'Series root directory (default: current directory)')
     .option('--name <name>', 'Series name')
     .option('--shared-elements', 'Enable shared elements (default: true)', true)
-    .option('--mode <mode>', 'Shared elements mode: progressive or manual (default: progressive)', 'progressive')
-    .option('--merge-strategy <strategy>', 'Merge strategy: enrich, union, or override (default: enrich)', 'enrich')
+    .option(
+      '--mode <mode>',
+      'Shared elements mode: progressive or manual (default: progressive)',
+      'progressive'
+    )
+    .option(
+      '--merge-strategy <strategy>',
+      'Merge strategy: enrich, union, or override (default: enrich)',
+      'enrich'
+    )
     .action(async (seriesRoot, cmdOptions) => {
       try {
         const { createSeriesManager } = await import('./lib/series/series-manager.js');
@@ -437,11 +458,21 @@ export async function main(): Promise<void> {
 
         console.log(chalk.green(`\n✅ Series "${config.name}" initialized`));
         console.log(chalk.gray(`   Location: ${resolvedRoot}`));
-        console.log(chalk.gray(`   Shared elements: ${config.sharedElements.enabled ? 'enabled' : 'disabled'}`));
+        console.log(
+          chalk.gray(
+            `   Shared elements: ${config.sharedElements.enabled ? 'enabled' : 'disabled'}`
+          )
+        );
         console.log(chalk.gray(`   Mode: ${config.sharedElements.mode}`));
-        console.log(chalk.gray(`   Merge strategy: ${config.sharedElements.mergeStrategy}`));
+        console.log(
+          chalk.gray(`   Merge strategy: ${config.sharedElements.mergeStrategy}`)
+        );
         console.log(chalk.cyan('\nNext steps:'));
-        console.log(chalk.gray('  1. Add books using: imaginize series add-book <book-id> <title> <path>'));
+        console.log(
+          chalk.gray(
+            '  1. Add books using: imaginize series add-book <book-id> <title> <path>'
+          )
+        );
         console.log(chalk.gray('  2. Process each book with series integration enabled'));
 
         process.exit(0);
@@ -478,7 +509,9 @@ export async function main(): Promise<void> {
         console.log(chalk.gray(`   File: ${filePath}`));
         console.log(chalk.gray(`   Status: pending`));
         console.log(chalk.cyan('\nNext steps:'));
-        console.log(chalk.gray(`  Process this book with: imaginize --file "${filePath}"`));
+        console.log(
+          chalk.gray(`  Process this book with: imaginize --file "${filePath}"`)
+        );
 
         process.exit(0);
       } catch (error: any) {
@@ -538,7 +571,9 @@ export async function main(): Promise<void> {
     .option('--output <file>', 'Output file path (default: ./SeriesCatalog.md)')
     .action(async (cmdOptions) => {
       try {
-        const { createSeriesElementsManager } = await import('./lib/series/series-elements.js');
+        const { createSeriesElementsManager } = await import(
+          './lib/series/series-elements.js'
+        );
         const { createSeriesManager } = await import('./lib/series/series-manager.js');
         const resolvedRoot = cmdOptions.seriesRoot || process.cwd();
 
@@ -596,19 +631,28 @@ export async function main(): Promise<void> {
       if (options.provider === 'gemini') {
         config.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
         // Use GEMINI_API_KEY if apiKey not already set or looks like a different provider's key
-        if (process.env.GEMINI_API_KEY && (!config.apiKey || !config.apiKey.startsWith('AIza'))) {
+        if (
+          process.env.GEMINI_API_KEY &&
+          (!config.apiKey || !config.apiKey.startsWith('AIza'))
+        ) {
           config.apiKey = process.env.GEMINI_API_KEY;
         }
       } else if (options.provider === 'openai') {
         config.baseUrl = 'https://api.openai.com/v1';
         // Use OPENAI_API_KEY if apiKey not already set or looks like a different provider's key
-        if (process.env.OPENAI_API_KEY && (!config.apiKey || !config.apiKey.startsWith('sk-'))) {
+        if (
+          process.env.OPENAI_API_KEY &&
+          (!config.apiKey || !config.apiKey.startsWith('sk-'))
+        ) {
           config.apiKey = process.env.OPENAI_API_KEY;
         }
       } else if (options.provider === 'openrouter') {
         config.baseUrl = 'https://openrouter.ai/api/v1';
         // Use OPENROUTER_API_KEY if apiKey not already set or looks like a different provider's key
-        if (process.env.OPENROUTER_API_KEY && (!config.apiKey || !config.apiKey.startsWith('sk-or-'))) {
+        if (
+          process.env.OPENROUTER_API_KEY &&
+          (!config.apiKey || !config.apiKey.startsWith('sk-or-'))
+        ) {
           config.apiKey = process.env.OPENROUTER_API_KEY;
         }
       }
@@ -627,9 +671,21 @@ export async function main(): Promise<void> {
     // Validate API key after all overrides
     if (!config.apiKey) {
       spinner.fail('Configuration loaded');
-      console.error(chalk.red('\n❌ Error: API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .imaginize.config\n'));
-      console.log(chalk.yellow('💡 Tip: Run "imaginize --init-config" to create a configuration file'));
-      console.log(chalk.yellow('   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable'));
+      console.error(
+        chalk.red(
+          '\n❌ Error: API key is required. Set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable, or add apiKey to .imaginize.config\n'
+        )
+      );
+      console.log(
+        chalk.yellow(
+          '💡 Tip: Run "imaginize --init-config" to create a configuration file'
+        )
+      );
+      console.log(
+        chalk.yellow(
+          '   Or set OPENROUTER_API_KEY or OPENAI_API_KEY environment variable'
+        )
+      );
       process.exit(1);
     }
 
@@ -672,7 +728,11 @@ export async function main(): Promise<void> {
     // Parse the book
     spinner.start('Parsing book file...');
     const ext = extname(bookFile).toLowerCase();
-    let parseResult: { metadata: BookMetadata; chapters: ChapterContent[]; fullText: string };
+    let parseResult: {
+      metadata: BookMetadata;
+      chapters: ChapterContent[];
+      fullText: string;
+    };
 
     if (ext === '.epub') {
       parseResult = await parseEpub(bookFile);
@@ -790,7 +850,11 @@ export async function main(): Promise<void> {
     const isFullOutput = options.output === 'full';
     const isQuickOutput = options.output === 'quick';
 
-    const needsText = options.text || isFullOutput || isQuickOutput || (!options.elements && !options.enrich && !options.images && !options.output);
+    const needsText =
+      options.text ||
+      isFullOutput ||
+      isQuickOutput ||
+      (!options.elements && !options.enrich && !options.images && !options.output);
     const needsElements = options.elements || isFullOutput;
     const needsEnrich = options.enrich || isFullOutput;
     const needsImages = options.images || isFullOutput;
@@ -858,7 +922,8 @@ export async function main(): Promise<void> {
       console.log(chalk.cyan('Using Google Gemini native API (direct endpoint)'));
       openai = new GoogleGeminiAdapter({
         apiKey: textConfig.apiKey,
-        model: typeof textConfig.model === 'string' ? textConfig.model : textConfig.model.name,
+        model:
+          typeof textConfig.model === 'string' ? textConfig.model : textConfig.model.name,
         baseUrl: textConfig.baseUrl,
       });
     } else {
@@ -1036,7 +1101,9 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ PDF successfully generated at: ${pdfOutputPath}`));
+            console.log(
+              chalk.green(`\n✅ PDF successfully generated at: ${pdfOutputPath}`)
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ PDF compilation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));
@@ -1080,7 +1147,9 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ CBZ successfully generated at: ${cbzOutputPath}`));
+            console.log(
+              chalk.green(`\n✅ CBZ successfully generated at: ${cbzOutputPath}`)
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ CBZ compilation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));
@@ -1103,7 +1172,9 @@ export async function main(): Promise<void> {
           );
           console.log(chalk.cyan('\n📖 Compiling EPUB eBook...\n'));
 
-          const epubSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const epubSanitizedName = sanitizeFilename(
+            metadata.title || basename(bookFile)
+          );
           const epubOutputPath = join(outputDir, '..', `${epubSanitizedName}.epub`);
           const scriptPath = join(__dirname, '..', 'scripts', 'compile_epub.py');
 
@@ -1119,7 +1190,9 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ EPUB successfully generated at: ${epubOutputPath}`));
+            console.log(
+              chalk.green(`\n✅ EPUB successfully generated at: ${epubOutputPath}`)
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ EPUB compilation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));
@@ -1142,7 +1215,9 @@ export async function main(): Promise<void> {
           );
           console.log(chalk.cyan('\n🌐 Generating HTML gallery...\n'));
 
-          const htmlSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const htmlSanitizedName = sanitizeFilename(
+            metadata.title || basename(bookFile)
+          );
           const htmlOutputPath = join(outputDir, '..', `${htmlSanitizedName}.html`);
           const scriptPath = join(__dirname, '..', 'scripts', 'compile_html.py');
 
@@ -1158,7 +1233,11 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ HTML gallery successfully generated at: ${htmlOutputPath}`));
+            console.log(
+              chalk.green(
+                `\n✅ HTML gallery successfully generated at: ${htmlOutputPath}`
+              )
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ HTML gallery generation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));
@@ -1181,7 +1260,9 @@ export async function main(): Promise<void> {
           );
           console.log(chalk.cyan('\n🖼️ Compiling WebP album...\n'));
 
-          const webpSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
+          const webpSanitizedName = sanitizeFilename(
+            metadata.title || basename(bookFile)
+          );
           const webpOutputDir = join(outputDir, '..', `${webpSanitizedName}_webp`);
           const scriptPath = join(__dirname, '..', 'scripts', 'compile_webp_album.py');
 
@@ -1197,7 +1278,9 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ WebP album successfully generated at: ${webpOutputDir}`));
+            console.log(
+              chalk.green(`\n✅ WebP album successfully generated at: ${webpOutputDir}`)
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ WebP album compilation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));
@@ -1220,8 +1303,14 @@ export async function main(): Promise<void> {
           );
           console.log(chalk.cyan('\n🎞️ Creating WebP strip...\n'));
 
-          const stripSanitizedName = sanitizeFilename(metadata.title || basename(bookFile));
-          const stripOutputPath = join(outputDir, '..', `${stripSanitizedName}_strip.webp`);
+          const stripSanitizedName = sanitizeFilename(
+            metadata.title || basename(bookFile)
+          );
+          const stripOutputPath = join(
+            outputDir,
+            '..',
+            `${stripSanitizedName}_strip.webp`
+          );
           const scriptPath = join(__dirname, '..', 'scripts', 'compile_webp_strip.py');
 
           try {
@@ -1236,7 +1325,9 @@ export async function main(): Promise<void> {
 
             console.log(chalk.gray(`> ${command}\n`));
             execSync(command, { stdio: 'inherit' });
-            console.log(chalk.green(`\n✅ WebP strip successfully generated at: ${stripOutputPath}`));
+            console.log(
+              chalk.green(`\n✅ WebP strip successfully generated at: ${stripOutputPath}`)
+            );
           } catch (error: any) {
             console.error(chalk.red('\n❌ WebP strip compilation failed.'));
             console.error(chalk.yellow(`   ${error.message || error}`));

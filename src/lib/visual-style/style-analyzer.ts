@@ -51,7 +51,7 @@ export async function analyzeStyleFromImages(
 
   try {
     // Call GPT-4 Vision for style analysis
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: 'gpt-4-vision-preview',
       messages: [
         {
@@ -78,7 +78,7 @@ export async function analyzeStyleFromImages(
       ],
       max_tokens: 1000,
       temperature: 0.3, // Lower temperature for more consistent analysis
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content || '{}';
 
@@ -287,7 +287,7 @@ export async function analyzeImageStyle(
   const imageData = await readFile(imagePath);
   const base64 = imageData.toString('base64');
 
-  const response = await openai.chat.completions.create({
+  const response = (await openai.chat.completions.create({
     model: 'gpt-4-vision-preview',
     messages: [
       {
@@ -313,7 +313,7 @@ export async function analyzeImageStyle(
     ],
     max_tokens: 500,
     temperature: 0.3,
-  }) as ChatCompletion;
+  })) as ChatCompletion;
 
   const content = response.choices[0]?.message?.content || '{}';
   return parseStyleAnalysis(content);

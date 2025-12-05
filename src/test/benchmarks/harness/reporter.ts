@@ -40,7 +40,10 @@ function formatTime(ms: number): string {
 /**
  * Generate console output for benchmark results
  */
-export function generateConsoleReport(results: BenchmarkResult[], comparisons?: ComparisonResult[]): void {
+export function generateConsoleReport(
+  results: BenchmarkResult[],
+  comparisons?: ComparisonResult[]
+): void {
   console.log('\n' + '='.repeat(80));
   console.log('📊 BENCHMARK RESULTS');
   console.log('='.repeat(80));
@@ -64,14 +67,24 @@ export function generateConsoleReport(results: BenchmarkResult[], comparisons?: 
       let changeStr = '';
       if (comparison) {
         const sign = comparison.change >= 0 ? '+' : '';
-        const emoji = comparison.isImprovement ? '🟢' : comparison.isRegression ? '🔴' : '⚪';
+        const emoji = comparison.isImprovement
+          ? '🟢'
+          : comparison.isRegression
+            ? '🔴'
+            : '⚪';
         changeStr = ` ${emoji} (${sign}${comparison.change.toFixed(1)}%)`;
       }
 
       console.log(`  ${result.name}:`);
-      console.log(`    Avg: ${formatTime(result.avgTime)} ± ${formatTime(result.stdDev)}${changeStr}`);
-      console.log(`    Min: ${formatTime(result.minTime)} | Max: ${formatTime(result.maxTime)}`);
-      console.log(`    P50: ${formatTime(result.p50)} | P90: ${formatTime(result.p90)} | P95: ${formatTime(result.p95)}`);
+      console.log(
+        `    Avg: ${formatTime(result.avgTime)} ± ${formatTime(result.stdDev)}${changeStr}`
+      );
+      console.log(
+        `    Min: ${formatTime(result.minTime)} | Max: ${formatTime(result.maxTime)}`
+      );
+      console.log(
+        `    P50: ${formatTime(result.p50)} | P90: ${formatTime(result.p90)} | P95: ${formatTime(result.p95)}`
+      );
       console.log(`    Ops/sec: ${formatNumber(result.opsPerSecond)}`);
 
       if (result.memory) {
@@ -79,7 +92,9 @@ export function generateConsoleReport(results: BenchmarkResult[], comparisons?: 
       }
 
       if (result.tokens) {
-        console.log(`    Tokens: ${formatNumber(result.tokens.totalTokens)} ($${result.tokens.estimatedCost.toFixed(4)})`);
+        console.log(
+          `    Tokens: ${formatNumber(result.tokens.totalTokens)} ($${result.tokens.estimatedCost.toFixed(4)})`
+        );
       }
 
       console.log('');
@@ -179,7 +194,11 @@ export async function generateMarkdownReport(
       let changeStr = '-';
       if (comparison) {
         const sign = comparison.change >= 0 ? '+' : '';
-        const emoji = comparison.isImprovement ? '🟢' : comparison.isRegression ? '🔴' : '⚪';
+        const emoji = comparison.isImprovement
+          ? '🟢'
+          : comparison.isRegression
+            ? '🔴'
+            : '⚪';
         changeStr = `${emoji} ${sign}${comparison.change.toFixed(1)}%`;
       }
 
@@ -200,7 +219,9 @@ export async function generateMarkdownReport(
 
     const regressions = comparisons.filter((c) => c.isRegression);
     for (const reg of regressions) {
-      lines.push(`- **${reg.name}**: ${reg.change.toFixed(1)}% slower (${formatTime(reg.baseline.avgTime)} → ${formatTime(reg.current.avgTime)})`);
+      lines.push(
+        `- **${reg.name}**: ${reg.change.toFixed(1)}% slower (${formatTime(reg.baseline.avgTime)} → ${formatTime(reg.current.avgTime)})`
+      );
     }
 
     lines.push(``);
@@ -229,7 +250,8 @@ export function compareWithBaseline(
       continue;
     }
 
-    const change = ((currentResult.avgTime - baselineResult.avgTime) / baselineResult.avgTime) * 100;
+    const change =
+      ((currentResult.avgTime - baselineResult.avgTime) / baselineResult.avgTime) * 100;
     const isRegression = change > threshold;
     const isImprovement = change < -threshold;
 

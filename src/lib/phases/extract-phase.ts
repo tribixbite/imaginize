@@ -169,12 +169,17 @@ export class ExtractPhase extends BasePhase {
 
         this.elements = await this.executeWithRetry(
           async () =>
-            await extractElementsIterative(chapters, config as any, openai, (current, total, title) => {
-              progressTracker.log(
-                `   ${current}/${total} - Extracting from ${title}...`,
-                'info'
-              );
-            }),
+            await extractElementsIterative(
+              chapters,
+              config as any,
+              openai,
+              (current, total, title) => {
+                progressTracker.log(
+                  `   ${current}/${total} - Extracting from ${title}...`,
+                  'info'
+                );
+              }
+            ),
           'extract story elements iteratively'
         );
 
@@ -223,7 +228,8 @@ export class ExtractPhase extends BasePhase {
     const state = stateManager.getState();
 
     // Load elements from memory if just extracted, or from state if regenerating
-    const elementsToSave = this.elements.length > 0 ? this.elements : state.elements || [];
+    const elementsToSave =
+      this.elements.length > 0 ? this.elements : state.elements || [];
 
     if (elementsToSave.length === 0) {
       await progressTracker.log('No elements found to save.', 'info');
@@ -248,7 +254,9 @@ export class ExtractPhase extends BasePhase {
    * Collect elements that were already extracted during analyze phase (Phase 3 improvement)
    * This eliminates redundant API calls when using unified analysis
    */
-  private collectElementsFromAnalyzePhase(state: Readonly<IllustrateState>): BookElement[] {
+  private collectElementsFromAnalyzePhase(
+    state: Readonly<IllustrateState>
+  ): BookElement[] {
     const elements: BookElement[] = [];
     const analyzeChapters = state.phases.analyze.chapters || {};
 
@@ -276,7 +284,9 @@ export class ExtractPhase extends BasePhase {
           existing.quotes = [...(existing.quotes || []), ...element.quotes];
         }
         if (element.aliases && element.aliases.length > 0) {
-          existing.aliases = [...new Set([...(existing.aliases || []), ...element.aliases])];
+          existing.aliases = [
+            ...new Set([...(existing.aliases || []), ...element.aliases]),
+          ];
         }
       }
     }
@@ -365,7 +375,7 @@ export class ExtractPhase extends BasePhase {
     // Render template with variables
     const prompt = this.templateLoader.renderTemplate(extractTemplate, templateVars);
 
-    const response = await openai.chat.completions.create({
+    const response = (await openai.chat.completions.create({
       model: typeof modelConfig === 'string' ? modelConfig : modelConfig.name,
       messages: [
         {
@@ -377,7 +387,7 @@ export class ExtractPhase extends BasePhase {
       ],
       response_format: { type: 'json_object' },
       temperature: 0.5,
-    }) as ChatCompletion;
+    })) as ChatCompletion;
 
     const content = response.choices[0]?.message?.content;
     if (!content) {

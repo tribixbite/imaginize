@@ -64,11 +64,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
         0
       );
 
-      await writeFile(
-        seriesElementsPath,
-        JSON.stringify(memory, null, 2),
-        'utf-8'
-      );
+      await writeFile(seriesElementsPath, JSON.stringify(memory, null, 2), 'utf-8');
     } catch (error: any) {
       throw new Error(`Failed to save series elements: ${error.message}`);
     }
@@ -77,7 +73,9 @@ export function createSeriesElementsManager(seriesRoot: string) {
   /**
    * Load book-specific elements memory
    */
-  async function loadBookElements(bookOutputDir: string): Promise<Map<string, BookEntityMemory>> {
+  async function loadBookElements(
+    bookOutputDir: string
+  ): Promise<Map<string, BookEntityMemory>> {
     const bookElementsPath = join(bookOutputDir, BOOK_ELEMENTS_FILE);
 
     if (!existsSync(bookElementsPath)) {
@@ -216,12 +214,13 @@ export function createSeriesElementsManager(seriesRoot: string) {
               chapters: bookEntity.appearsIn || [],
             },
           ],
-          enrichments: bookEntity.enrichments?.map((detail: string) => ({
-            detail,
-            sourceBook: bookId,
-            sourceChapter: 0, // Could be enhanced to track chapter
-            addedAt: new Date().toISOString(),
-          })) || [],
+          enrichments:
+            bookEntity.enrichments?.map((detail: string) => ({
+              detail,
+              sourceBook: bookId,
+              sourceChapter: 0, // Could be enhanced to track chapter
+              addedAt: new Date().toISOString(),
+            })) || [],
           lastUpdated: new Date().toISOString(),
         };
 
@@ -254,7 +253,9 @@ export function createSeriesElementsManager(seriesRoot: string) {
             if (bookEntity.enrichments && bookEntity.enrichments.length > 0) {
               for (const detail of bookEntity.enrichments) {
                 // Check if enrichment already exists
-                const exists = existingEntity.enrichments.some((e) => e.detail === detail);
+                const exists = existingEntity.enrichments.some(
+                  (e) => e.detail === detail
+                );
 
                 if (!exists) {
                   existingEntity.enrichments.push({
@@ -275,8 +276,7 @@ export function createSeriesElementsManager(seriesRoot: string) {
 
           case 'union': {
             // Combine descriptions
-            existingEntity.baseDescription +=
-              '\n\n' + bookEntity.description;
+            existingEntity.baseDescription += '\n\n' + bookEntity.description;
 
             // Add appearance
             existingEntity.appearances.push({

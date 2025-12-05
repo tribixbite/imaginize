@@ -69,12 +69,7 @@ export class EntityResolutionCache {
   /**
    * Store resolution decision in cache
    */
-  set(
-    key: CacheKey,
-    isMatch: boolean,
-    confidence: number,
-    reasoning: string
-  ): void {
+  set(key: CacheKey, isMatch: boolean, confidence: number, reasoning: string): void {
     // Enforce max size by removing oldest entries
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
@@ -149,10 +144,14 @@ export class EntityResolutionCache {
    * Export cache as JSON
    */
   toJSON(): string {
-    return JSON.stringify({
-      stats: this.getStats(),
-      entries: this.getAll(),
-    }, null, 2);
+    return JSON.stringify(
+      {
+        stats: this.getStats(),
+        entries: this.getAll(),
+      },
+      null,
+      2
+    );
   }
 
   /**

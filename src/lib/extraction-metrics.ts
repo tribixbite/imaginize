@@ -127,9 +127,14 @@ export class ExtractionMetricsCollector {
   /**
    * Record element extraction
    */
-  recordElementExtraction(type: string, hasDescription: boolean, quotesCount: number): void {
+  recordElementExtraction(
+    type: string,
+    hasDescription: boolean,
+    quotesCount: number
+  ): void {
     this.metrics.extraction.totalElements++;
-    this.metrics.extraction.byType[type] = (this.metrics.extraction.byType[type] || 0) + 1;
+    this.metrics.extraction.byType[type] =
+      (this.metrics.extraction.byType[type] || 0) + 1;
 
     if (hasDescription) {
       this.metrics.extraction.elementsWithDescriptions++;
@@ -138,14 +143,22 @@ export class ExtractionMetricsCollector {
     }
 
     // Update average quotes per element
-    const totalQuotes = this.metrics.extraction.avgQuotesPerElement * (this.metrics.extraction.totalElements - 1) + quotesCount;
-    this.metrics.extraction.avgQuotesPerElement = totalQuotes / this.metrics.extraction.totalElements;
+    const totalQuotes =
+      this.metrics.extraction.avgQuotesPerElement *
+        (this.metrics.extraction.totalElements - 1) +
+      quotesCount;
+    this.metrics.extraction.avgQuotesPerElement =
+      totalQuotes / this.metrics.extraction.totalElements;
   }
 
   /**
    * Record entity resolution attempt
    */
-  recordEntityResolution(isMatch: boolean, confidence: number, aliasDetected: boolean): void {
+  recordEntityResolution(
+    isMatch: boolean,
+    confidence: number,
+    aliasDetected: boolean
+  ): void {
     this.metrics.entityResolution.totalAttempts++;
 
     if (isMatch) {
@@ -264,7 +277,9 @@ export class ExtractionMetricsCollector {
     for (const [type, count] of Object.entries(this.metrics.extraction.byType)) {
       lines.push(`    - ${type}: ${count}`);
     }
-    lines.push(`  Avg Quotes/Element: ${this.metrics.extraction.avgQuotesPerElement.toFixed(1)}`);
+    lines.push(
+      `  Avg Quotes/Element: ${this.metrics.extraction.avgQuotesPerElement.toFixed(1)}`
+    );
     lines.push(
       `  With Descriptions: ${this.metrics.extraction.elementsWithDescriptions} (${((this.metrics.extraction.elementsWithDescriptions / Math.max(1, this.metrics.extraction.totalElements)) * 100).toFixed(1)}%)`
     );
@@ -275,18 +290,20 @@ export class ExtractionMetricsCollector {
     lines.push(`  Total Attempts: ${this.metrics.entityResolution.totalAttempts}`);
     lines.push(`  Successful Merges: ${this.metrics.entityResolution.successfulMerges}`);
     lines.push(`  Failed Merges: ${this.metrics.entityResolution.failedMerges}`);
-    lines.push(
-      `  Aliases Detected: ${this.metrics.entityResolution.aliasesDetected}`
-    );
+    lines.push(`  Aliases Detected: ${this.metrics.entityResolution.aliasesDetected}`);
     lines.push(
       `  Avg Confidence: ${this.metrics.entityResolution.avgConfidence.toFixed(3)}`
     );
     lines.push('  Confidence Distribution:');
-    lines.push(`    High (>0.8): ${this.metrics.entityResolution.confidenceDistribution.high}`);
+    lines.push(
+      `    High (>0.8): ${this.metrics.entityResolution.confidenceDistribution.high}`
+    );
     lines.push(
       `    Medium (0.6-0.8): ${this.metrics.entityResolution.confidenceDistribution.medium}`
     );
-    lines.push(`    Low (<0.6): ${this.metrics.entityResolution.confidenceDistribution.low}`);
+    lines.push(
+      `    Low (<0.6): ${this.metrics.entityResolution.confidenceDistribution.low}`
+    );
     lines.push('');
 
     // Description enrichment
@@ -402,7 +419,8 @@ export class ExtractionMetricsCollector {
       this.metrics.enrichment.redundanciesSkipped /
       Math.max(
         1,
-        this.metrics.enrichment.totalEnrichments + this.metrics.enrichment.redundanciesSkipped
+        this.metrics.enrichment.totalEnrichments +
+          this.metrics.enrichment.redundanciesSkipped
       );
     if (redundancyRatio > 0.5) {
       recommendations.push(

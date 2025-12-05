@@ -92,7 +92,11 @@ export class MetricsCollector {
   /**
    * Record API request metrics
    */
-  recordApiRequest(latencyMs: number, timeout: boolean = false, retry: boolean = false): void {
+  recordApiRequest(
+    latencyMs: number,
+    timeout: boolean = false,
+    retry: boolean = false
+  ): void {
     this.apiRequests++;
     this.apiLatencies.push(latencyMs);
     if (timeout) this.apiTimeouts++;
@@ -119,9 +123,10 @@ export class MetricsCollector {
     // Calculate growth rate (bytes per iteration)
     const firstSnapshot = this.memorySnapshots[0];
     const lastSnapshot = this.memorySnapshots[this.memorySnapshots.length - 1];
-    const growthRate = this.iterations > 1
-      ? (lastSnapshot.heapUsed - firstSnapshot.heapUsed) / this.iterations
-      : 0;
+    const growthRate =
+      this.iterations > 1
+        ? (lastSnapshot.heapUsed - firstSnapshot.heapUsed) / this.iterations
+        : 0;
 
     return {
       peakHeapUsed,
@@ -140,8 +145,7 @@ export class MetricsCollector {
     // Rough cost estimation (GPT-4o pricing as of 2024)
     // $2.50 per 1M input tokens, $10 per 1M output tokens
     const estimatedCost =
-      (this.promptTokens / 1_000_000) * 2.5 +
-      (this.completionTokens / 1_000_000) * 10;
+      (this.promptTokens / 1_000_000) * 2.5 + (this.completionTokens / 1_000_000) * 10;
 
     return {
       totalTokens: this.totalTokens,
@@ -173,7 +177,8 @@ export class MetricsCollector {
     const p95Latency = sorted[Math.max(0, p95Index)];
 
     const durationSeconds = (this.endTime - this.startTime) / 1000;
-    const requestsPerSecond = durationSeconds > 0 ? this.apiRequests / durationSeconds : 0;
+    const requestsPerSecond =
+      durationSeconds > 0 ? this.apiRequests / durationSeconds : 0;
 
     return {
       totalRequests: this.apiRequests,

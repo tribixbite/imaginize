@@ -24,8 +24,8 @@ interface AnalyzePlanData {
 
 // Token estimation constants for unified analysis output
 // These are rough approximations based on typical AI response verbosity
-const ESTIMATED_TOKENS_PER_SCENE = 200;    // Approx. tokens for scene object (quote, description, reasoning)
-const ESTIMATED_TOKENS_PER_ELEMENT = 150;  // Approx. tokens for element object (name, description, quotes)
+const ESTIMATED_TOKENS_PER_SCENE = 200; // Approx. tokens for scene object (quote, description, reasoning)
+const ESTIMATED_TOKENS_PER_ELEMENT = 150; // Approx. tokens for element object (name, description, quotes)
 
 export class AnalyzePhase extends BasePhase {
   private planData?: AnalyzePlanData;
@@ -146,11 +146,16 @@ export class AnalyzePhase extends BasePhase {
     // If series mode is enabled, import existing entities from series
     if (config.series?.enabled && config.series.seriesRoot && config.series.bookId) {
       try {
-        const { createSeriesElementsManager } = await import('../series/series-elements.js');
+        const { createSeriesElementsManager } = await import(
+          '../series/series-elements.js'
+        );
         const elementsManager = createSeriesElementsManager(config.series.seriesRoot);
 
         await progressTracker.log('Importing series elements...', 'info');
-        const result = await elementsManager.importToBook(config.series.bookId, outputDir);
+        const result = await elementsManager.importToBook(
+          config.series.bookId,
+          outputDir
+        );
 
         if (result.count > 0) {
           await progressTracker.log(
@@ -207,16 +212,17 @@ export class AnalyzePhase extends BasePhase {
         }
 
         // Estimate tokens used (input + output approximation using constants)
-        const tokensUsed = estimateTokens(chapter.content) +
-                          result.scenes.length * ESTIMATED_TOKENS_PER_SCENE +
-                          result.elements.length * ESTIMATED_TOKENS_PER_ELEMENT;
+        const tokensUsed =
+          estimateTokens(chapter.content) +
+          result.scenes.length * ESTIMATED_TOKENS_PER_SCENE +
+          result.elements.length * ESTIMATED_TOKENS_PER_ELEMENT;
         totalTokensUsed += tokensUsed;
 
         // Update state with BOTH scenes and elements
         stateManager.updateChapter('analyze', chapterNum, 'completed', {
           concepts: result.scenes.length, // DEPRECATED: For backward compatibility
-          sceneConcepts: result.scenes,   // NEW: Full scene data
-          elements: result.elements,      // NEW: Full element data
+          sceneConcepts: result.scenes, // NEW: Full scene data
+          elements: result.elements, // NEW: Full element data
           tokensUsed,
         });
         stateManager.updateTokenStats(tokensUsed);
@@ -264,7 +270,9 @@ export class AnalyzePhase extends BasePhase {
     // If series mode is enabled, export discovered entities to series
     if (config.series?.enabled && config.series.seriesRoot && config.series.bookId) {
       try {
-        const { createSeriesElementsManager } = await import('../series/series-elements.js');
+        const { createSeriesElementsManager } = await import(
+          '../series/series-elements.js'
+        );
         const elementsManager = createSeriesElementsManager(config.series.seriesRoot);
 
         await progressTracker.log('Exporting entities to series...', 'info');

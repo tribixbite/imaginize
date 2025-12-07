@@ -32,10 +32,33 @@
 
 ---
 
-### Snow Crash Pipeline (Running)
-- **Book:** Snow Crash (Neal Stephenson) - 55 chapters
+### Snow Crash - Complete ✅
+
+**Output:** `imaginize_snowcrash/` directory + `Snow_Crash.html` (233.7 MB)
+
+| Metric | Value |
+|--------|-------|
+| Images Generated | 51/53 (96.2% success) |
+| Elements Extracted | 100 |
+| Tokens Used | 26,869 |
+| Chapters Analyzed | 55/55 |
+
+**Safety Filter Analysis:**
+- Only 2 failures (vs 11 for Hyperion 1)
+- Failed scenes: "Enforcer impaled eight-foot-long bamboo spear" (violent imagery)
+- Cyberpunk/tech themes pass filters much better than Hyperion's gothic horror
+
+**Comparison:**
+| Book | Success Rate | Failures | Primary Blockers |
+|------|--------------|----------|------------------|
+| Hyperion 1 | 81% | 11 | Shrike, crucifixion, religious torture |
+| Snow Crash | 96.2% | 2 | Impalement scene only |
+
+---
+
+### Hyperion 2 - Running
 - **Status:** In progress
-- **Expectation:** Lower failure rate (cyberpunk/action vs gothic horror themes)
+- **Expected:** Similar to Hyperion 1 (dark themes likely)
 
 ---
 

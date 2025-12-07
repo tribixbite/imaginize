@@ -56,9 +56,30 @@
 
 ---
 
-### Hyperion 2 - Running
+### Hyperion 2 (The Fall of Hyperion) - Text Complete, Images Failed ⚠️
+
+**Output:** `imaginize_hyperion2/` directory (no HTML gallery - image generation failed)
+
+| Metric | Value |
+|--------|-------|
+| Images Generated | 0/89 (FAILED) |
+| Elements Extracted | 1264 |
+| Tokens Used | 617,191 |
+| Chapters Analyzed | 58/58 |
+
+**Failure Cause:** The epub metadata contains malformed chapter names (`file:///F|/rah/Dan%20Simmons/...`) which create invalid file paths for debug prompt files. The text analysis and element extraction completed successfully with excellent quality.
+
+**Text Quality:** Excellent - rich scene descriptions (Shrike scenes, Gladstone's office, combat sequences). The 1264 extracted elements is the most comprehensive of all books tested.
+
+**Resolution:** Needs either:
+1. Re-encoded epub with clean chapter names, or
+2. Pipeline fix to sanitize chapter names in output file paths
+
+---
+
+### Hyperion 3 (The Rise of Endymion) - Running
+- **Book:** 9 chapters, 886 pages
 - **Status:** In progress
-- **Expected:** Similar to Hyperion 1 (dark themes likely)
 
 ---
 

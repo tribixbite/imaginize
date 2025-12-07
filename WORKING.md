@@ -1,35 +1,41 @@
-## 2025-12-07: Hyperion 1 Full Pipeline Test
+## 2025-12-07: Multi-Book Pipeline Testing
+
+### Hyperion 1 - Expert Quality Review
 
 **Output:** `imaginize_hyperion1/` directory + `Hyperion_01_Hyperion.html` (220.4 MB)
 
-### Pipeline Configuration
-- **Text Model:** OpenRouter `google/gemini-2.5-flash`
-- **Image Model:** DALL-E 3
-- **Book:** Hyperion (Dan Simmons) - 14 chapters, 566 pages
-
-### Results
 | Metric | Value |
 |--------|-------|
 | Images Generated | 47/58 (81% success) |
 | Elements Extracted | 236 |
 | Tokens Used | 298,364 |
 | Chapters Analyzed | 14/14 |
-| HTML Gallery Size | 220.4 MB |
 
-### Safety Filter Blocks
-11 scenes (19%) were blocked by DALL-E 3's safety filters due to Hyperion's dark themes:
-- Shrike imagery (violence, impalement)
-- Crucifixion scenes (religious violence)
+**Gemini 2.5 Pro Expert Review (via Zen MCP):**
+- Scene extraction quality: **"sufficient and excellent"**
+- Character extraction: **"comprehensive"** (Colonel Kassad with multiple physical details)
+- 19% failure rate: **"critical flaw"** due to Hyperion's dark themes
+
+**Safety Filter Blockers:**
+- Shrike impalement scenes (metallic creature, thorns)
+- Tree of Pain/Cruciform imagery (religious torture)
 - War/combat descriptions
 
-The hybrid fallback system attempted all available models before marking scenes as failed after 10 retries each.
+**Existing Mitigation Already Implemented:**
+- 179 regex replacement patterns in `DALLE_SAFETY_REPLACEMENTS`
+- Hybrid fallback chain: primary → gemini-flash → openrouter gemini → dall-e-3
+- Safety filter detection for 400 errors with content policy messages
 
-### Files Generated
-- `Chapters.md` - Visual scenes (52 KB)
-- `Elements.md` - Characters/places/items (177 KB)
-- `Contents.md` - Table of contents
-- `.imaginize.state.json` - State for resume (706 KB)
-- 47 PNG images (~1.5-2.2 MB each)
+**Expert Verdict:** The "Prompt Sanitization Layer" suggestion is **already implemented** (179 patterns). The remaining 19% failures are from scene *concepts* that are fundamentally problematic (impalement, crucifixion), not fixable via word replacement.
+
+**Decision:** Proceed with other books - failures are content-inherent, not code-fixable.
+
+---
+
+### Snow Crash Pipeline (Running)
+- **Book:** Snow Crash (Neal Stephenson) - 55 chapters
+- **Status:** In progress
+- **Expectation:** Lower failure rate (cyberpunk/action vs gothic horror themes)
 
 ---
 

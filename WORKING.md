@@ -1,3 +1,38 @@
+## 2025-12-07: Hyperion 1 Full Pipeline Test
+
+**Output:** `imaginize_hyperion1/` directory + `Hyperion_01_Hyperion.html` (220.4 MB)
+
+### Pipeline Configuration
+- **Text Model:** OpenRouter `google/gemini-2.5-flash`
+- **Image Model:** DALL-E 3
+- **Book:** Hyperion (Dan Simmons) - 14 chapters, 566 pages
+
+### Results
+| Metric | Value |
+|--------|-------|
+| Images Generated | 47/58 (81% success) |
+| Elements Extracted | 236 |
+| Tokens Used | 298,364 |
+| Chapters Analyzed | 14/14 |
+| HTML Gallery Size | 220.4 MB |
+
+### Safety Filter Blocks
+11 scenes (19%) were blocked by DALL-E 3's safety filters due to Hyperion's dark themes:
+- Shrike imagery (violence, impalement)
+- Crucifixion scenes (religious violence)
+- War/combat descriptions
+
+The hybrid fallback system attempted all available models before marking scenes as failed after 10 retries each.
+
+### Files Generated
+- `Chapters.md` - Visual scenes (52 KB)
+- `Elements.md` - Characters/places/items (177 KB)
+- `Contents.md` - Table of contents
+- `.imaginize.state.json` - State for resume (706 KB)
+- 47 PNG images (~1.5-2.2 MB each)
+
+---
+
 ## 2025-12-05: CI Quality Fixes
 
 **Commits:**

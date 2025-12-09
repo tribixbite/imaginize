@@ -30,6 +30,9 @@
 
 **Decision:** Proceed with other books - failures are content-inherent, not code-fixable.
 
+**Image Model Used:** DALL-E 3 (via OpenAI API)
+**Gemini Comparison:** NOT run with Gemini 2.5 Flash Image - only DALL-E 3 was tested. Given Hyperion 3's dramatic improvement with Gemini (67.8% DALL-E → 98.9% Gemini), re-running Hyperion 1 with Gemini would likely yield similar improvements for religious/horror imagery.
+
 ---
 
 ### Snow Crash - Complete ✅
@@ -71,9 +74,11 @@
 
 **Text Quality:** Excellent - rich scene descriptions (Shrike scenes, Gladstone's office, combat sequences). The 1264 extracted elements is the most comprehensive of all books tested.
 
-**Resolution:** Needs either:
-1. Re-encoded epub with clean chapter names, or
-2. Pipeline fix to sanitize chapter names in output file paths
+**Resolution:** ✅ **FIXED** (commit a8001e5)
+- Added `sanitizeChapterTitle()` for filesystem-safe filename generation
+- Added `sanitizeChapterTitleForDisplay()` for human-readable titles
+- Handles file:// URLs, Windows paths, URL encoding, author prefixes
+- Hyperion 2 can now be re-run with the fixed pipeline
 
 ---
 

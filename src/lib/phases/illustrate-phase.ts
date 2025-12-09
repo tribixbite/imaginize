@@ -11,6 +11,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { generateChaptersFile } from '../output-generator.js';
+import { sanitizeChapterTitle } from '../epub-parser.js';
 import fetch from 'node-fetch';
 
 // DALL-E-3 has a maximum prompt length of 4000 characters
@@ -453,9 +454,11 @@ Example: "GENRE: Epic Fantasy. A painterly and atmospheric style with rich, eart
           const prompt = this.buildImagePrompt(concept);
 
           // Debug: Save sanitized prompt to file for inspection
+          // Use sanitizeChapterTitle to handle malformed chapter names (file:// URLs, etc.)
+          const safeChapterName = sanitizeChapterTitle(concept.chapter);
           const debugPath = join(
             outputDir,
-            `debug_prompt_${concept.chapter.replace(/\s+/g, '_')}.txt`
+            `debug_prompt_${safeChapterName}.txt`
           );
           await writeFile(
             debugPath,

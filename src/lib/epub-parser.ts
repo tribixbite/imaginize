@@ -171,7 +171,8 @@ export async function parseEpub(filePath: string): Promise<{
           $('title').text() ||
           `Chapter ${i + 1}`;
 
-        const trimmedTitle = chapterTitle.trim();
+        // Sanitize chapter title to handle malformed epub metadata (file:// URLs, etc.)
+        const trimmedTitle = sanitizeChapterTitleForDisplay(chapterTitle.trim());
 
         // Skip non-story content based on title patterns
         if (isFrontMatter(trimmedTitle) || isBackMatter(trimmedTitle)) {
@@ -301,4 +302,119 @@ export function sanitizeFilename(filename: string): string {
     .replace(/[^a-z0-9]/gi, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '');
+}
+
+/**
+ * Sanitize chapter title for display purposes
+ * Handles malformed epub chapter names like file:// URLs, Windows paths, etc.
+ * Returns a human-readable chapter title (preserves spaces)
+ */
+function sanitizeChapterTitleForDisplay(title: string): string {
+  let sanitized = title;
+
+  // Handle file:// URLs (common in malformed epubs)
+  if (sanitized.startsWith('file://')) {
+    // Remove protocol
+    sanitized = sanitized.replace(/^file:\/\/\/?/, '');
+    // Remove Windows drive letter patterns like "F|/" or "C:/"
+    sanitized = sanitized.replace(/^[A-Za-z][:|]\//, '');
+    // Decode URL encoding (%20 -> space, etc.)
+    try {
+      sanitized = decodeURIComponent(sanitized);
+    } catch {
+      // If decoding fails, continue with encoded string
+    }
+    // Get just the filename without path
+    const lastSlash = sanitized.lastIndexOf('/');
+    if (lastSlash >= 0) {
+      sanitized = sanitized.substring(lastSlash + 1);
+    }
+    // Remove file extension
+    sanitized = sanitized.replace(/\.(txt|html?|xhtml|xml)$/i, '');
+    // Clean up author prefix patterns like "Simmons, Dan - 02 - "
+    sanitized = sanitized.replace(/^[^-]+-\s*\d+\s*-\s*/, '');
+  }
+
+  // Remove Windows path prefixes
+  sanitized = sanitized.replace(/^[A-Za-z]:\\/, '');
+
+  // Get last path component if still contains separators
+  if (sanitized.includes('/') || sanitized.includes('\\')) {
+    const parts = sanitized.split(/[/\\]/);
+    sanitized = parts[parts.length - 1] || parts[parts.length - 2] || sanitized;
+  }
+
+  // Clean up multiple spaces
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+
+  // If nothing meaningful left, return a default
+  if (!sanitized || sanitized.length === 0) {
+    return 'Chapter';
+  }
+
+  return sanitized;
+}
+
+/**
+ * Sanitize chapter title for use as filename component
+ * Handles malformed epub chapter names like file:// URLs, Windows paths, etc.
+ * Returns a clean, filesystem-safe string suitable for filenames
+ */
+export function sanitizeChapterTitle(title: string): string {
+  let sanitized = title;
+
+  // Remove file:// URLs (common in malformed epubs)
+  // Pattern: file:///drive|/path/to/file.ext or file:///path/to/file
+  if (sanitized.startsWith('file://')) {
+    // Try to extract meaningful name from the URL
+    // Remove protocol
+    sanitized = sanitized.replace(/^file:\/\/\/?/, '');
+    // Remove Windows drive letter patterns like "F|/" or "C:/"
+    sanitized = sanitized.replace(/^[A-Za-z][:|]\//, '');
+    // Decode URL encoding (%20 -> space, etc.)
+    try {
+      sanitized = decodeURIComponent(sanitized);
+    } catch {
+      // If decoding fails, continue with encoded string
+    }
+    // Get just the filename without path
+    const lastSlash = sanitized.lastIndexOf('/');
+    if (lastSlash >= 0) {
+      sanitized = sanitized.substring(lastSlash + 1);
+    }
+    // Remove file extension
+    sanitized = sanitized.replace(/\.(txt|html?|xhtml|xml)$/i, '');
+  }
+
+  // Remove Windows path prefixes (C:\, D:\, etc.)
+  sanitized = sanitized.replace(/^[A-Za-z]:\\/, '');
+
+  // Remove any remaining path separators and get last component
+  if (sanitized.includes('/') || sanitized.includes('\\')) {
+    const parts = sanitized.split(/[/\\]/);
+    sanitized = parts[parts.length - 1] || parts[parts.length - 2] || sanitized;
+  }
+
+  // Replace invalid filename characters with underscores
+  // Invalid on Windows: < > : " / \ | ? *
+  // Invalid on Unix: / and null
+  sanitized = sanitized.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
+
+  // Replace multiple underscores/spaces with single underscore
+  sanitized = sanitized.replace(/[\s_]+/g, '_');
+
+  // Remove leading/trailing underscores
+  sanitized = sanitized.replace(/^_+|_+$/g, '');
+
+  // If nothing left, generate a fallback
+  if (!sanitized || sanitized.length === 0) {
+    sanitized = 'chapter';
+  }
+
+  // Truncate to reasonable length for filenames (max 100 chars)
+  if (sanitized.length > 100) {
+    sanitized = sanitized.substring(0, 100).replace(/_+$/, '');
+  }
+
+  return sanitized;
 }

@@ -77,9 +77,45 @@
 
 ---
 
-### Hyperion 3 (The Rise of Endymion) - Running
-- **Book:** 9 chapters, 886 pages
-- **Status:** In progress
+### Hyperion 3 (The Rise of Endymion) - Complete ✅
+
+**Output:** `imaginize_hyperion3/` directory
+
+| Metric | Value |
+|--------|-------|
+| Images Generated | 86/87 (98.9% success) |
+| Elements Extracted | 611 |
+| Tokens Used | 509,533 |
+| Chapters Analyzed | 9/9 |
+
+**Processing Notes:**
+- Initial run with DALL-E 3 hit significant safety filters (59/87 = 67.8%)
+- Session crashed at batch 84/87 - restarted with Gemini image model
+- Gemini 2.5 Flash Image achieved **98.9% success rate**
+- Only 1 scene failed (API errors, not safety filters)
+
+**Model Comparison:**
+| Model | Success Rate | Blockers |
+|-------|--------------|----------|
+| DALL-E 3 | 67.8% (59/87) | Religious imagery (crucifixion, Catholic Church in space) |
+| Gemini 2.5 Flash | 98.9% (86/87) | Minor API errors only |
+
+**Key Finding:** Gemini image models are significantly more permissive for fiction content with religious/spiritual themes compared to DALL-E 3.
+
+---
+
+### Hyperion 5 (Orphans of the Helix) - Complete ✅
+
+**Output:** `imaginize_hyperion5/` directory + `Simmons_Dan_Hyperion_5_Orphans_of_the_Helix.html` (33.8 MB)
+
+| Metric | Value |
+|--------|-------|
+| Images Generated | 7/7 (100% success) |
+| Elements Extracted | 29 |
+| Tokens Used | 35,563 |
+| Chapters Analyzed | 1/1 |
+
+**Notes:** Short novella, fully processed without issues.
 
 ---
 

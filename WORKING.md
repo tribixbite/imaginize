@@ -30,8 +30,13 @@
 
 **Decision:** Proceed with other books - failures are content-inherent, not code-fixable.
 
-**Image Model Used:** DALL-E 3 (via OpenAI API)
-**Gemini Comparison:** NOT run with Gemini 2.5 Flash Image - only DALL-E 3 was tested. Given Hyperion 3's dramatic improvement with Gemini (67.8% DALL-E → 98.9% Gemini), re-running Hyperion 1 with Gemini would likely yield similar improvements for religious/horror imagery.
+**Image Model Comparison (2025-12-10):**
+| Model | Success Rate | Improvement |
+|-------|--------------|-------------|
+| DALL-E 3 | 47/58 (81%) | - |
+| **Gemini Flash** | **62/62 (100%)** | **+19%** |
+
+**Gemini Re-Run Results:** Complete success with Gemini Flash Image - all 62 visual concepts generated without safety filter issues. Validates that Gemini is significantly more permissive for Hyperion's dark religious/horror themes.
 
 ---
 
@@ -59,26 +64,28 @@
 
 ---
 
-### Hyperion 2 (The Fall of Hyperion) - Text Complete, Images Failed ⚠️
+### Hyperion 2 (The Fall of Hyperion) - Complete ✅
 
-**Output:** `imaginize_hyperion2/` directory (no HTML gallery - image generation failed)
+**Output:** `imaginize_hyperion2/` directory
 
 | Metric | Value |
 |--------|-------|
-| Images Generated | 0/89 (FAILED) |
-| Elements Extracted | 1264 |
-| Tokens Used | 617,191 |
+| Images Generated | 89/91 (97.8% success) |
+| Elements Extracted | 505 |
+| Tokens Used | ~350,000 |
 | Chapters Analyzed | 58/58 |
 
-**Failure Cause:** The epub metadata contains malformed chapter names (`file:///F|/rah/Dan%20Simmons/...`) which create invalid file paths for debug prompt files. The text analysis and element extraction completed successfully with excellent quality.
+**Original Failure (2025-12-07):** The epub metadata contained malformed chapter names (`file:///F|/rah/Dan%20Simmons/...`) creating invalid file paths. Text analysis completed but images failed (0/89).
 
-**Text Quality:** Excellent - rich scene descriptions (Shrike scenes, Gladstone's office, combat sequences). The 1264 extracted elements is the most comprehensive of all books tested.
-
-**Resolution:** ✅ **FIXED** (commit a8001e5)
+**Fix Applied (commit a8001e5):**
 - Added `sanitizeChapterTitle()` for filesystem-safe filename generation
 - Added `sanitizeChapterTitleForDisplay()` for human-readable titles
 - Handles file:// URLs, Windows paths, URL encoding, author prefixes
-- Hyperion 2 can now be re-run with the fixed pipeline
+
+**Re-Run Results (2025-12-10):**
+- Successfully generated **89/91 images (97.8% success)**
+- Used Gemini Flash Image model
+- Only 2 images failed after 10 retries (likely safety filter content)
 
 ---
 
